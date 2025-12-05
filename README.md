@@ -65,3 +65,13 @@ This project is an **independent** tool and is not affiliated with or endorsed b
 
 If you run into issues or have any questions, feel free to open an issue on the GitHub repository, and I'll do my best to assist you.
 
+
+## Exporting JSON Files
+
+To use this viewer, you'll need to export your ChatGPT conversations as JSON files. One tool I recommend for this is the [ChatGPT Exporter](https://greasyfork.org/en/scripts/456055-chatgpt-exporter), which is available on GreasyFork.
+
+This tool is my personal favorite and works seamlessly with this viewer. However, you're free to use any tool that generates a compatible JSON file!
+
+- [ChatGPT Exporter on GreasyFork](https://greasyfork.org/en/scripts/456055-chatgpt-exporter)
+
+

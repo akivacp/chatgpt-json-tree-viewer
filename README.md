@@ -68,10 +68,17 @@ If you run into issues or have any questions, feel free to open an issue on the 
 
 ## Exporting JSON Files
 
-To use this viewer, you'll need to export your ChatGPT conversations as JSON files. One tool I recommend for this is the [ChatGPT Exporter](https://greasyfork.org/en/scripts/456055-chatgpt-exporter), which is available on GreasyFork.
+To use this viewer, you'll need to export your ChatGPT conversations as JSON files. There are two tools that can help you with this:
 
-This tool is my personal favorite and works seamlessly with this viewer. However, you're free to use any tool that generates a compatible JSON file!
+1. **[ChatGPT Multiverse Exporter (v8.3)](https://greasyfork.org/en/scripts/558044-chatgpt-multiverse-exporter-v8-3-draggable-linked-badge-button-keep-on-screen)**  
+   This is my personal favorite exporter. It captures **all conversation branches**, including regenerated messages, and allows you to export the conversation data as a **JSON file**.
 
+2. **[ChatGPT Exporter on GreasyFork](https://greasyfork.org/en/scripts/456055-chatgpt-exporter)**  
+   This tool is available on **GreasyFork** and works similarly. It also captures the conversation data and lets you export it as a **JSON file** that is compatible with this viewer.
+
+While I recommend the **ChatGPT Multiverse Exporter** for better integration with this viewer, you're free to use **any tool that generates a valid JSON file**.
+
+- [ChatGPT Multiverse Exporter on GreasyFork](https://greasyfork.org/en/scripts/558044-chatgpt-multiverse-exporter-v8-3-draggable-linked-badge-button-keep-on-screen)
 - [ChatGPT Exporter on GreasyFork](https://greasyfork.org/en/scripts/456055-chatgpt-exporter)
 
 

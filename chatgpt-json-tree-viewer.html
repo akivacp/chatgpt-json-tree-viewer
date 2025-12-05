@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auto-Convert Multiverse Viewer v4.5</title>
+
+<style>
+:root{
+  /* Dynamically replaced by JS */
+  --top-nav-height: 75px;
+}
+
+/* =============================== */
+/*            GLOBAL               */
+/* =============================== */
+
+html, body{
+  height: 100%;
+}
+
+body{
+  margin: 0;
+  overflow: hidden;
+  background: #fafafa;
+  font-family: Arial, sans-serif;
+}
+
+button{
+  font-family: inherit;
+}
+
+/* =============================== */
+/*             TOP BAR             */
+/* =============================== */
+
+#topNav{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: white;
+  border-bottom: 1px solid #ccc;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 100000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+#loadJsonBtn,
+#resetLayoutBtn{
+  background: #10a37f;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+#loadJsonBtn:hover,
+#resetLayoutBtn:hover{
+  background: #0e8e6c;
+}
+
+#fileLabel{
+  font-size: 14px;
+  color: #444;
+  user-select: none;
+}
+
+#conversionStatus{
+  font-size: 12px;
+  color: #666;
+  padding: 4px 8px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  display: none;
+}
+
+/* =============================== */
+/*        DEVELOPER TOOLS          */
+/* =============================== */
+
+#devToolsContainer{
+  position: relative;
+}
+
+#devToolsBtn{
+  background: #444;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+#devToolsBtn:hover{
+  background: #222;
+}
+
+#devToolsMenu{
+  position: absolute;
+  top: 42px;
+  left: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  padding: 10px 12px;
+  display: none;
+  z-index: 100001;
+  min-width: 180px;
+}
+
+.devToolsRow{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+/* =============================== */
+/*           LEFT SIDEBAR          */
+/* =============================== */
+
+#leftSidebar{
+  position: fixed;
+  top: var(--top-nav-height);
+  left: 0;
+  width: 260px;
+  height: calc(100vh - var(--top-nav-height));
+  background: #ffffff;
+  border-right: 1px solid #ccc;
+  overflow-y: auto;
+  z-index: 9999;
+}
+
+#searchBar{
+  width: 90%;
+  margin: 12px;
+  padding: 7px 10px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid #bbb;
+}
+
+#leftSearchResults{
+  padding: 10px;
+}
+
+.search-result-item{
+  padding: 10px;
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.search-result-item:hover{
+  background: #e6f7f1;
+  border-color: #10a37f;
+}
+
+/* =============================== */
+/*        RIGHT VIEWER PANEL       */
+/* =============================== */
+
+#rightViewer{
+  position: fixed;
+  top: var(--top-nav-height);
+  right: 0;
+  width: 420px;
+  height: calc(100vh - var(--top-nav-height));
+  background: white;
+  border-left: 1px solid #ccc;
+  overflow-y: auto;
+  z-index: 9999;
+}
+
+#viewerTabs{
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: #f2f2f2;
+  border-bottom: 1px solid #ccc;
+}
+
+.viewerTab{
+  padding: 6px 12px;
+  background: #ddd;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  user-select: none;
+}
+.viewerTab.active{
+  background: #10a37f;
+  color: white;
+}
+
+#viewerButtons{
+  display: flex;
+  gap: 10px;
+  margin: 10px;
+}
+
+#viewerButtons button{
+  background: #10a37f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+#viewerButtons button:hover{
+  background: #0e8e6c;
+}
+
+#copyBtn,
+#exportBtn,
+#popoutBtn{
+  display: none;
+}
+
+#viewerContent{
+  padding: 15px;
+  font-size: 14px;
+  white-space: normal;
+}
+
+/* =============================== */
+/*            MAIN GRAPH           */
+/* =============================== */
+
+#graph{
+  position: fixed;
+  left: 260px;
+  top: var(--top-nav-height);
+  width: calc(100vw - 260px - 420px);
+  height: calc(100vh - var(--top-nav-height));
+  background: #fafafa;
+  overflow: hidden;
+}
+
+/* =============================== */
+/*             MINIMAP             */
+/* =============================== */
+
+#minimap{
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  width: 200px;
+  height: 150px;
+  background: white;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  z-index: 999;
+}
+
+/* =============================== */
+/*        DRAG HANDLES (PANELS)    */
+/* =============================== */
+
+.drag-handle{
+  position: absolute;
+  width: 8px;
+  cursor: ew-resize;
+  top: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0);
+  z-index: 1000000;
+}
+
+#leftDragHandle{
+  right: 0;
+}
+
+#rightDragHandle{
+  left: 0;
+}
+
+/* =============================== */
+/*              TOOLTIP            */
+/* =============================== */
+
+#tooltip{
+  position: absolute;
+  max-width: 320px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 13px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 999999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* =============================== */
+/*            NODES/LINKS           */
+/* =============================== */
+
+.node-circle{
+  cursor: grab;
+  transition: fill .2s, stroke .2s;
+  pointer-events: all;
+}
+.node-circle:active{
+  cursor: grabbing;
+}
+
+.node-text{
+  font-size: 11px;
+  fill: #444;
+  cursor: pointer;
+  user-select: none;
+}
+
+.node-text:hover{
+  fill: #10a37f;
+  text-decoration: underline;
+}
+
+.match-check{
+  font-size: 18px;
+  fill: limegreen;
+  pointer-events: none;
+}
+
+.selected-node{
+  stroke: gold !important;
+  stroke-width: 4 !important;
+}
+
+.ancestor-node{
+  stroke: dodgerblue !important;
+  stroke-width: 3;
+}
+
+.descendant-node{
+  stroke: limegreen !important;
+  stroke-width: 3;
+}
+
+.dim-node{
+  opacity: 0.25;
+  transition: opacity .15s;
+}
+
+.highlight-faded .selected-node,
+.highlight-faded .ancestor-node,
+.highlight-faded .descendant-node{
+  opacity: 0.4 !important;
+}
+
+/* =============================== */
+/*           SEARCH HIGHLIGHT      */
+/* =============================== */
+
+@keyframes pulse{
+  0%{ transform: scale(1); }
+  50%{ transform: scale(1.06); }
+  100%{ transform: scale(1); }
+}
+
+.node.search-match circle{
+  stroke: #ffcc00 !important;
+  stroke-width: 5px !important;
+  filter: drop-shadow(0 0 6px #ffcc00) !important;
+  animation: pulse 1.2s infinite ease-in-out;
+}
+
+.node.search-match text{
+  fill: #ffcc00 !important;
+}
+
+/* =============================== */
+/*          SYSTEM NODE STYLE      */
+/* =============================== */
+
+.system-node .node-circle{
+  fill: none !important;
+  stroke: #666 !important;
+  stroke-width: 2px !important;
+}
+
+/* =============================== */
+/*              PRINT             */
+/* =============================== */
+
+@media print{
+  body, html{
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  body *{
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #rightViewer, #rightViewer *{
+    visibility: visible !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  #rightViewer{
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #viewerTabs{
+    display: none !important;
+  }
+
+  #viewerContent{
+    padding: 20px !important;
+    font-size: 14px !important;
+    overflow: visible !important;
+  }
+
+  #graph, svg, canvas, #minimap, #leftSidebar{
+    display: none !important;
+    height: 0 !important;
+  }
+}
+</style>
+</head>
+
+<body>
+  <div id="topNav">
+    <button id="loadJsonBtn">Load Multiverse JSON</button>
+    <button id="resetLayoutBtn">Reset Layout</button>
+
+    <div id="devToolsContainer">
+      <button id="devToolsBtn">Developer Tools ▼</button>
+      <div id="devToolsMenu">
+        <label class="devToolsRow">
+          <input type="checkbox" id="toggleSystemNodes">
+          <span>Show system nodes</span>
+        </label>
+      </div>
+    </div>
+
+    <div id="fileLabel">(no file loaded)</div>
+    <div id="conversionStatus"></div>
+  </div>
+
+  <div id="leftSidebar">
+    <input id="searchBar" type="text" placeholder="Search messages..." />
+    <div id="leftSearchResults"></div>
+    <div id="leftDragHandle" class="drag-handle"></div>
+  </div>
+
+  <div id="rightViewer">
+    <div id="viewerTabs">
+      <div class="viewerTab" data-mode="markdown">Markdown</div>
+      <div class="viewerTab active" data-mode="rendered">Rendered</div>
+      <div class="viewerTab" data-mode="html">HTML</div>
+      <div class="viewerTab" data-mode="raw">Raw</div>
+    </div>
+
+    <div id="viewerButtons">
+      <button id="copyBtn">Copy</button>
+      <button id="exportBtn">Export</button>
+      <button id="popoutBtn">Pop-Out</button>
+    </div>
+
+    <div id="viewerContent"><div style="color:#777;">Select a node to view its content.</div></div>
+    <div id="rightDragHandle" class="drag-handle"></div>
+  </div>
+
+  <svg id="graph"></svg>
+  <canvas id="minimap"></canvas>
+  <div id="tooltip"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+
+  <script>
+  /* =============================== */
+  /*        AUTO-CONVERSION LOGIC    */
+  /* =============================== */
+  
+  function isMultiverseFormat(json) {
+    // Check if JSON has the expected multiverse format
+    return json && 
+           typeof json === 'object' && 
+           json.mapping && 
+           typeof json.mapping === 'object' &&
+           Object.keys(json.mapping).length > 0;
+  }
+
+  function findConversationInJSON(json) {
+    // Case 1: Already a multiverse object
+    if (json && json.mapping) return json;
+
+    // Case 2: Array of conversations (OpenAI export)
+    if (Array.isArray(json)) {
+      for (const entry of json) {
+        if (entry && typeof entry === "object" && entry.mapping) {
+          return entry;
+        }
+      }
+    }
+
+    // Case 3: Could be wrapped in another structure
+    if (json && typeof json === 'object') {
+      // Try common OpenAI export structures
+      const possiblePaths = [
+        json.conversation,
+        json.data,
+        json.chat,
+        json.messages
+      ];
+      
+      for (const path of possiblePaths) {
+        if (path && path.mapping) return path;
+        if (Array.isArray(path)) {
+          for (const item of path) {
+            if (item && item.mapping) return item;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function sanitizeConversation(convo) {
+    if (!convo || !convo.mapping) return convo;
+
+    const map = convo.mapping;
+
+    for (const id in map) {
+      const node = map[id];
+      const msg = node.message;
+
+      let text = "(empty)";
+
+      if (msg) {
+        if (msg.content && Array.isArray(msg.content.parts)) {
+          const parts = msg.content.parts.filter(p => p && String(p).trim() !== "");
+          text = parts.length ? parts.join("\n") : "(empty)";
+        }
+        else if (msg.content && msg.content.content_type) {
+          text = "[" + msg.content.content_type + "]";
+        }
+        else if (typeof msg.content === 'string') {
+          text = msg.content;
+        }
+      } else {
+        text = "(no message object)";
+      }
+
+      // Add cleaned text for viewer
+      node._viewerText = text;
+    }
+
+    return convo;
+  }
+
+  function autoConvertJSON(json) {
+    const status = document.getElementById('conversionStatus');
+    
+    // Check if already in correct format
+    if (isMultiverseFormat(json)) {
+      status.innerHTML = "✅ File is already in viewer-compatible format";
+      status.style.color = "#10a37f";
+      status.style.display = "block";
+      return json;
+    }
+    
+    // Try to find conversation
+    status.innerHTML = "🔄 Detecting conversation structure...";
+    status.style.color = "#ff9800";
+    status.style.display = "block";
+    
+    const found = findConversationInJSON(json);
+    
+    if (!found) {
+      status.innerHTML = "❌ Could not find conversation mapping in this file";
+      status.style.color = "#f44336";
+      throw new Error("Could not find conversation mapping in this file");
+    }
+    
+    status.innerHTML = "🔄 Converting to viewer-compatible format...";
+    
+    // Sanitize the conversation
+    const converted = sanitizeConversation(found);
+    
+    status.innerHTML = "✅ File converted successfully";
+    status.style.color = "#10a37f";
+    
+    return converted;
+  }
+
+  /* =============================== */
+  /*        ORIGINAL VIEWER CODE     */
+  /* =============================== */
+
+  function updateTopNavHeight(){
+    const h = document.getElementById("topNav").offsetHeight;
+    document.documentElement.style.setProperty("--top-nav-height", h + "px");
+  }
+  window.addEventListener("load", updateTopNavHeight);
+  window.addEventListener("resize", updateTopNavHeight);
+
+  /* GLOBAL STATE */
+  let rootHierarchy = null;
+  let originalPositions = new Map();
+  let activeNode = null;
+  let allNodes = [];
+  let allLinks = [];
+  let svg, g, zoom;
+
+  const tooltip = document.getElementById("tooltip");
+  let tooltipHideTimer = null;
+  const TOOLTIP_LINGER_MS = 2000;
+
+  function clearTooltipHideTimer(){
+    if (tooltipHideTimer){
+      clearTimeout(tooltipHideTimer);
+      tooltipHideTimer = null;
+    }
+  }
+
+  function scheduleTooltipHide(ms = TOOLTIP_LINGER_MS){
+    clearTooltipHideTimer();
+    tooltipHideTimer = setTimeout(() => {
+      tooltip.style.opacity = 0;
+      tooltip.style.pointerEvents = "none";
+    }, ms);
+  }
+
+  function isBracketToken(text){
+    const t = String(text || "").trim();
+    return /^\[[^\]]+\]$/.test(t);
+  }
+
+  tooltip.addEventListener("mouseenter", () => {
+    clearTooltipHideTimer();
+    tooltip.style.opacity = 1;
+    tooltip.style.pointerEvents = "auto";
+  });
+
+  tooltip.addEventListener("mouseleave", () => {
+    scheduleTooltipHide(TOOLTIP_LINGER_MS);
+  });
+
+  let isDragging = false;
+  let highlightFadeApplied = false;
+
+  let lastLoadedJSON = null;
+  let showSystemNodes = false;
+
+  /* DEV TOOLS MENU */
+  const devBtn = document.getElementById("devToolsBtn");
+  const devMenu = document.getElementById("devToolsMenu");
+  const devContainer = document.getElementById("devToolsContainer");
+  const toggleSystemNodesCheckbox = document.getElementById("toggleSystemNodes");
+
+  function setDevMenuOpen(open){
+    devMenu.style.display = open ? "block" : "none";
+    devBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  devBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setDevMenuOpen(devMenu.style.display !== "block");
+  });
+
+  window.addEventListener("click", (e) => {
+    if (!devContainer.contains(e.target)){
+      setDevMenuOpen(false);
+    }
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape"){
+      setDevMenuOpen(false);
+    }
+  });
+
+  toggleSystemNodesCheckbox.addEventListener("change", (e) => {
+    showSystemNodes = e.target.checked;
+    if (lastLoadedJSON) buildTree(lastLoadedJSON);
+  });
+
+  /* LOAD JSON BUTTON - WITH AUTO-CONVERSION */
+  document.getElementById("loadJsonBtn").addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.onchange = (e) => {
+      const file = e.target.files && e.target.files[0];
+      document.getElementById("fileLabel").innerText = file ? file.name : "(no file loaded)";
+      if (!file) return;
+      loadJSON(file);
+    };
+    input.click();
+  });
+
+  function loadJSON(file){
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try{
+        const rawJSON = JSON.parse(String(e.target.result || ""));
+        
+        // Auto-convert if needed
+        const processedJSON = autoConvertJSON(rawJSON);
+        
+        lastLoadedJSON = processedJSON;
+        buildTree(processedJSON);
+        
+      }catch (err){
+        console.error(err);
+        const status = document.getElementById('conversionStatus');
+        status.innerHTML = "❌ Error: " + err.message;
+        status.style.color = "#f44336";
+        status.style.display = "block";
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* EXTRACT MESSAGE TEXT */
+  function extractText(msg){
+    if (!msg) return "";
+    if (msg.content && Array.isArray(msg.content.parts)) return msg.content.parts.join("\n");
+    if (msg.content && msg.content.content_type && msg.content.content_type !== "text"){
+      return "[" + msg.content.content_type + "]";
+    }
+    // Try the sanitized text from conversion
+    if (msg._viewerText) return msg._viewerText;
+    return "";
+  }
+
+  /* SYSTEM NODE DETECTION (DATA LEVEL) */
+  function isSystemData(data){
+    if (!data) return true;
+    const role = data.role || "unknown";
+    const t = String(data.text || "").trim();
+
+    if (role === "system" && t === "") return true;
+    if (t === "") return true;
+    if (t.toLowerCase().includes("model_editable_context")) return true;
+    if (/^\[[^\]]+\]$/.test(t)) return true;
+
+    return false;
+  }
+
+  /* COLLAPSE SYSTEM NODES FROM DATA TREE */
+  function collapseSystemNodesTree(node){
+    if (!node.children || node.children.length === 0) return node;
+
+    node.children = node.children
+      .map(child => collapseSystemNodesTree(child))
+      .flatMap(child => {
+        if (isSystemData(child)){
+          return (child.children && child.children.length) ? child.children : [];
+        }
+        return [child];
+      });
+
+    return node;
+  }
+
+  /* BUILD TREE */
+  function buildTree(json){
+    const map = json.mapping;
+    const rootIds = Object.keys(map).filter(id => !map[id].parent);
+    if (!rootIds.length) return;
+
+    function convert(id){
+      const node = map[id];
+      const msg = node.message;
+      return {
+        id,
+        role: msg && msg.author ? (msg.author.role || "unknown") : "unknown",
+        text: extractText(msg),
+        rawMessage: msg || null,
+        rawChunk: node || null,
+        children: (node.children || []).map(convert)
+      };
+    }
+
+    let rootData = convert(rootIds[0]);
+
+    if (!showSystemNodes){
+      rootData = collapseSystemNodesTree(rootData);
+    }
+
+    renderTree(rootData);
+  }
+
+  /* RENDER TREE */
+  function renderTree(rootData){
+    svg = d3.select("#graph");
+    svg.selectAll("*").remove();
+
+    zoom = d3.zoom()
+      .scaleExtent([0.001, 100])
+      .on("zoom", (e) => g.attr("transform", e.transform));
+
+    svg.call(zoom);
+
+    g = svg.append("g");
+
+    const layout = d3.tree().nodeSize([70, 200]);
+    rootHierarchy = d3.hierarchy(rootData);
+    layout(rootHierarchy);
+
+    allNodes = rootHierarchy.descendants();
+    allLinks = rootHierarchy.links();
+
+    originalPositions = new Map();
+    allNodes.forEach(n => {
+      originalPositions.set(n, { x: n.x, y: n.y });
+      n.data.originalX = n.x;
+      n.data.originalY = n.y;
+    });
+
+    drawLinks();
+    drawNodes();
+    fitView();
+    updateMinimap();
+  }
+
+  /* DRAW LINKS */
+  function drawLinks(){
+    g.selectAll(".link")
+      .data(allLinks)
+      .enter()
+      .append("path")
+      .attr("class", "link")
+      .attr("fill", "none")
+      .attr("stroke", "#aaa")
+      .attr("stroke-width", 1.5)
+      .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
+  }
+
+  /* DRAW NODES - WITH IMPROVED TEXT POSITIONING */
+  function drawNodes(){
+    const nodes = g.selectAll(".node")
+      .data(allNodes)
+      .enter()
+      .append("g")
+      .attr("class", d => "node" + (isSystemData(d.data) ? " system-node" : ""))
+      .attr("transform", d => "translate(" + d.x + "," + d.y + ")");
+
+    // Draw circles first
+    nodes.append("circle")
+      .attr("class", "node-circle")
+      .attr("r", d => isSystemData(d.data) ? 10 : 18)
+      .attr("fill", d => isSystemData(d.data) ? "none" : (d.data.role === "user" ? "#3B82F6" : "#10A37F"))
+      .attr("stroke", d => isSystemData(d.data) ? "#666" : "#fff")
+      .attr("stroke-width", 2)
+      .on("mouseenter", (e, d) => showTooltip(e, d))
+      .on("mouseleave", hideTooltip)
+      .on("mousedown", () => startDragHighlightFade())
+      .call(
+        d3.drag()
+          .on("drag", (e, d) => dragBranch(e, d))
+          .on("end", endDragHighlightFade)
+      )
+      .on("click", (e, d) => {
+        e.stopPropagation();
+        centerOnNode(d);
+        handleNodeClick(d);
+        openViewerPanel(d);
+      });
+
+    // Draw text for non-system nodes with content
+    const textNodes = nodes.filter(d => !isSystemData(d.data) && d.data.text && String(d.data.text).trim() !== "");
+    
+    // First pass: create text elements with initial positions
+    const textElements = textNodes.append("text")
+      .attr("class", "node-text")
+      .attr("dy", "0.35em")
+      .style("font-size", "11px")
+      .style("cursor", "pointer")
+      .style("pointer-events", "all") // ENABLE CLICK EVENTS ON TEXT
+      .text(d => {
+        const t = String(d.data.text).replace(/\n/g, " ");
+        return t.length > 35 ? t.slice(0, 35) + "..." : t;
+      })
+      .on("click", function(e, d) {
+        e.stopPropagation();
+        centerOnNode(d);
+        handleNodeClick(d);
+        openViewerPanel(d);
+      })
+      .on("mouseenter", function(e, d) {
+        showTooltip(e, d);
+      })
+      .on("mouseleave", hideTooltip);
+
+    // Calculate optimal text positions to avoid overlaps
+    calculateTextPositions();
+
+    nodes.append("text")
+      .attr("class", "match-check")
+      .attr("x", -25)
+      .attr("y", -25)
+      .style("display", "none")
+      .text("✓");
+  }
+
+  /* CALCULATE OPTIMAL TEXT POSITIONS */
+  function calculateTextPositions() {
+    // Get all text elements
+    const textElements = g.selectAll(".node-text").nodes();
+    
+    // Create bounding boxes for all text elements
+    const textBoxes = textElements.map(textEl => {
+      const bbox = textEl.getBBox();
+      const node = d3.select(textEl).datum();
+      return {
+        el: textEl,
+        node: node,
+        x: node.x + bbox.x,
+        y: node.y + bbox.y,
+        width: bbox.width,
+        height: bbox.height,
+        originalX: node.x,
+        originalY: node.y
+      };
+    });
+
+    // Sort by Y position (top to bottom)
+    textBoxes.sort((a, b) => a.originalY - b.originalY);
+
+    // Adjust positions to avoid overlaps
+    for (let i = 0; i < textBoxes.length; i++) {
+      const current = textBoxes[i];
+      let bestPosition = { x: 26, y: 4 }; // Default position (right side)
+      
+      // Try different positions
+      const positions = [
+        { x: 26, y: 4 },    // Right side
+        { x: -26, y: 4 },   // Left side (negative x to go left of node)
+        { x: 0, y: -25 },   // Above
+        { x: 0, y: 30 },    // Below
+        { x: 40, y: 4 },    // Further right
+        { x: -40, y: 4 },   // Further left
+      ];
+
+      // Find the first position that doesn't overlap
+      for (const pos of positions) {
+        const testBox = {
+          x: current.originalX + pos.x,
+          y: current.originalY + pos.y,
+          width: current.width,
+          height: current.height
+        };
+
+        let overlaps = false;
+        
+        // Check overlap with other text boxes
+        for (let j = 0; j < i; j++) {
+          const other = textBoxes[j];
+          if (boxesOverlap(testBox, other)) {
+            overlaps = true;
+            break;
+          }
+        }
+
+        // Also check if text would overlap with node positions
+        // (skip nodes that are very far away for performance)
+        const nearbyNodes = allNodes.filter(n => 
+          Math.abs(n.x - current.originalX) < 200 && 
+          Math.abs(n.y - current.originalY) < 200
+        );
+
+        for (const node of nearbyNodes) {
+          const nodeBox = {
+            x: node.x - 20, // Node radius + padding
+            y: node.y - 20,
+            width: 40,
+            height: 40
+          };
+          if (boxesOverlap(testBox, nodeBox)) {
+            overlaps = true;
+            break;
+          }
+        }
+
+        if (!overlaps) {
+          bestPosition = pos;
+          break;
+        }
+      }
+
+      // Apply the best position
+      d3.select(current.el)
+        .attr("x", bestPosition.x)
+        .attr("y", bestPosition.y)
+        .style("text-anchor", bestPosition.x < 0 ? "end" : "start");
+    }
+  }
+
+  /* CHECK IF TWO BOXES OVERLAP */
+  function boxesOverlap(box1, box2) {
+    return !(box1.x + box1.width < box2.x ||
+             box2.x + box2.width < box1.x ||
+             box1.y + box1.height < box2.y ||
+             box2.y + box2.height < box1.y);
+  }
+
+  /* UPDATE TEXT POSITIONS WHEN NODES ARE DRAGGED */
+  function updateTextPositions() {
+    // Clear existing text and redraw with new positions
+    g.selectAll(".node-text").remove();
+    
+    const textNodes = g.selectAll(".node")
+      .filter(d => !isSystemData(d.data) && d.data.text && String(d.data.text).trim() !== "");
+    
+    textNodes.append("text")
+      .attr("class", "node-text")
+      .attr("dy", "0.35em")
+      .style("font-size", "11px")
+      .style("cursor", "pointer")
+      .style("pointer-events", "all") // ENABLE CLICK EVENTS ON TEXT
+      .text(d => {
+        const t = String(d.data.text).replace(/\n/g, " ");
+        return t.length > 35 ? t.slice(0, 35) + "..." : t;
+      })
+      .on("click", function(e, d) {
+        e.stopPropagation();
+        centerOnNode(d);
+        handleNodeClick(d);
+        openViewerPanel(d);
+      })
+      .on("mouseenter", function(e, d) {
+        showTooltip(e, d);
+      })
+      .on("mouseleave", hideTooltip);
+    
+    calculateTextPositions();
+  }
+
+  /* DRAG BRANCH */
+  function dragBranch(event, d){
+    isDragging = true;
+
+    const dx = event.dx;
+    const dy = event.dy;
+
+    d.x += dx;
+    d.y += dy;
+
+    d.data.x = d.x;
+    d.data.y = d.y;
+
+    shiftDescendants(d, dx, dy);
+
+    updatePositions();
+    updateTextPositions(); // Update text positions when dragging
+    updateMinimap();
+  }
+
+  function shiftDescendants(node, dx, dy){
+    if (!node.children) return;
+    node.children.forEach(c => {
+      c.x += dx;
+      c.y += dy;
+      c.data.x = c.x;
+      c.data.y = c.y;
+      shiftDescendants(c, dx, dy);
+    });
+  }
+
+  function updatePositions(){
+    g.selectAll(".node").attr("transform", d => "translate(" + d.x + "," + d.y + ")");
+    g.selectAll(".link").attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
+  }
+
+  /* HIGHLIGHT LOGIC */
+  function handleNodeClick(d){
+    if (isDragging){
+      isDragging = false;
+      return;
+    }
+
+    activeNode = d;
+    clearHighlight();
+
+    const ancestors = d.ancestors();
+    const descendants = d.descendants();
+
+    g.selectAll(".node-circle")
+      .classed("selected-node", nd => nd === d)
+      .classed("ancestor-node", nd => ancestors.includes(nd) && nd !== d)
+      .classed("descendant-node", nd => descendants.includes(nd) && nd !== d)
+      .classed("dim-node", nd => !ancestors.includes(nd) && !descendants.includes(nd));
+
+    openViewerPanel(d);
+  }
+
+  function clearHighlight(){
+    g.selectAll(".node-circle").classed("selected-node ancestor-node descendant-node dim-node", false);
+  }
+
+  function startDragHighlightFade(){
+    if (!highlightFadeApplied){
+      g.classed("highlight-faded", true);
+      highlightFadeApplied = true;
+    }
+  }
+
+  function endDragHighlightFade(){
+    g.classed("highlight-faded", false);
+    highlightFadeApplied = false;
+  }
+
+  /* SEARCH SYSTEM */
+  const searchInput = document.getElementById("searchBar");
+  const leftResults = document.getElementById("leftSearchResults");
+
+  searchInput.addEventListener("input", () => {
+    const q = String(searchInput.value || "").trim().toLowerCase();
+
+    leftResults.innerHTML = "";
+    clearSearchMatches();
+
+    if (q.length === 0) return;
+
+    allNodes.forEach(n => {
+      const text = String(n.data.text || "").toLowerCase();
+      const match = text.includes(q);
+
+      if (match){
+        g.selectAll(".node")
+          .filter(d => d === n)
+          .select(".match-check")
+          .style("display", "block");
+
+        g.selectAll(".node")
+          .filter(d => d === n)
+          .classed("search-match", true);
+
+        addSearchResultItem(n);
+      }
+    });
+  });
+
+  function clearSearchMatches(){
+    g.selectAll(".match-check").style("display", "none");
+    g.selectAll(".node").classed("search-match", false);
+  }
+
+  function addSearchResultItem(n){
+    const div = document.createElement("div");
+    div.className = "search-result-item";
+    const preview = String(n.data.text || "");
+    div.innerHTML = "<b>✓ Node " + String(n.data.id || "") + "</b><br>" + preview.slice(0, 80) + (preview.length > 80 ? "..." : "");
+
+    div.onclick = () => {
+      centerOnNode(n);
+      handleNodeClick(n);
+      openViewerPanel(n);
+    };
+
+    leftResults.appendChild(div);
+  }
+
+  /* CENTER ON NODE */
+  function centerOnNode(n){
+    const t = d3.zoomIdentity
+      .translate(
+        window.innerWidth / 2 - n.x,
+        window.innerHeight / 4 - n.y
+      )
+      .scale(1);
+
+    svg.transition().duration(350).call(zoom.transform, t);
+  }
+
+  /* TOOLTIP */
+  function showTooltip(event, d){
+    clearTooltipHideTimer();
+
+    const text = d.data.text || "(empty)";
+    tooltip.innerText = text;
+
+    tooltip.style.left = (event.pageX + 15) + "px";
+    tooltip.style.top = (event.pageY + 15) + "px";
+    tooltip.style.pointerEvents = "auto";
+    tooltip.style.opacity = 1;
+
+    if (isSystemData(d.data) || isBracketToken(text)){
+      openViewerPanel(d, text);
+    }
+  }
+
+  function hideTooltip(){
+    scheduleTooltipHide(TOOLTIP_LINGER_MS);
+  }
+
+  /* VIEWER PANEL */
+  let currentMode = "rendered";
+  let currentRenderedContent = "";
+
+  function openViewerPanel(n, overrideText){
+    const data = n && n.data ? n.data : {};
+    let msg = (overrideText !== undefined && overrideText !== null)
+      ? String(overrideText)
+      : String(data.text || "");
+
+    if (!msg.trim()){
+      if (data.rawMessage){
+        msg = "```json\n" + JSON.stringify(data.rawMessage, null, 2) + "\n```";
+      }else{
+        msg = "(empty)";
+      }
+    }
+
+    const rawMsgObj = data.rawMessage || {};
+    const rawChunkObj = data.rawChunk || {};
+
+    const rawText =
+      "rawMessage:\n" +
+      JSON.stringify(rawMsgObj, null, 2) +
+      "\n\n------------------------------\n\n" +
+      "rawChunk:\n" +
+      JSON.stringify(rawChunkObj, null, 2);
+
+    switchMode("rendered", msg, rawText);
+
+    document.getElementById("copyBtn").style.display = "inline-block";
+    document.getElementById("exportBtn").style.display = "inline-block";
+    document.getElementById("popoutBtn").style.display = "inline-block";
+
+    document.querySelectorAll(".viewerTab").forEach(tab => {
+      tab.onclick = () => switchMode(tab.dataset.mode, msg, rawText);
+    });
+  }
+
+  function switchMode(mode, msg, rawText){
+    currentMode = mode;
+
+    const content = document.getElementById("viewerContent");
+    document.querySelectorAll(".viewerTab").forEach(tab => {
+      tab.classList.toggle("active", tab.dataset.mode === mode);
+    });
+
+    if (mode === "markdown"){
+      currentRenderedContent = msg;
+      content.innerText = msg;
+      return;
+    }
+
+    if (mode === "rendered"){
+      const html = DOMPurify.sanitize(marked.parse(msg));
+      currentRenderedContent = html;
+      content.innerHTML = html;
+      return;
+    }
+
+    if (mode === "html"){
+      const html = DOMPurify.sanitize(marked.parse(msg));
+      currentRenderedContent = html;
+      content.innerText = html;
+      return;
+    }
+
+    if (mode === "raw"){
+      const text = rawText || "";
+      currentRenderedContent = text;
+      content.innerText = text;
+      return;
+    }
+  }
+
+  /* COPY BUTTON */
+  document.getElementById("copyBtn").onclick = async () => {
+    try{
+      await navigator.clipboard.writeText(currentRenderedContent);
+      const btn = document.getElementById("copyBtn");
+      btn.innerText = "Copied!";
+      setTimeout(() => btn.innerText = "Copy", 1200);
+    }catch{
+      alert("Copy failed");
+    }
+  };
+
+  /* EXPORT BUTTON */
+  document.getElementById("exportBtn").onclick = () => {
+    let filename = "";
+    let content = "";
+    let type = "";
+
+    if (currentMode === "markdown"){
+      filename = "message.md";
+      content = currentRenderedContent;
+      type = "text/markdown";
+    }else if (currentMode === "rendered"){
+      filename = "message.html";
+      content =
+        "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>Rendered View Export</title>\n</head>\n<body>\n" +
+        currentRenderedContent +
+        "\n</body>\n</html>";
+      type = "text/html";
+    }else if (currentMode === "html"){
+      filename = "message.html";
+      content = currentRenderedContent;
+      type = "text/html";
+    }else{
+      filename = "message.raw.json";
+      content = currentRenderedContent;
+      type = "application/json";
+    }
+
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+
+    URL.revokeObjectURL(url);
+  };
+
+  /* RESET LAYOUT */
+  document.getElementById("resetLayoutBtn").onclick = () => {
+    allNodes.forEach(n => {
+      n.x = n.data.originalX;
+      n.y = n.data.originalY;
+    });
+
+    updatePositions();
+    updateTextPositions(); // Update text positions when resetting
+    fitView();
+    updateMinimap();
+    clearHighlight();
+    clearSearchMatches();
+  };
+
+  /* FIT VIEW */
+  function fitView(){
+    if (!g || !g.node()) return;
+    const bounds = g.node().getBBox();
+    const svgEl = document.getElementById("graph");
+
+    const t = d3.zoomIdentity
+      .translate(svgEl.clientWidth / 2 - (bounds.x + bounds.width / 2), 80)
+      .scale(0.85);
+
+    svg.call(zoom.transform, t);
+  }
+
+  /* MINIMAP */
+  function updateMinimap(){
+    const canvas = document.getElementById("minimap");
+    const ctx = canvas.getContext("2d");
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, canvas.clientWidth);
+    const h = Math.max(1, canvas.clientHeight);
+
+    if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)){
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+    }
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    if (!g || !g.node()) return;
+
+    const bounds = g.node().getBBox();
+    if (!bounds.width || !bounds.height) return;
+
+    const scale = Math.min(w / bounds.width, h / bounds.height);
+
+    allNodes.forEach(n => {
+      const x = (n.x - bounds.x) * scale;
+      const y = (n.y - bounds.y) * scale;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = "#10a37f";
+      ctx.fill();
+    });
+  }
+
+  /* PANEL DRAGGING SYSTEM */
+
+  // LEFT PANEL
+  (function(){
+    const sidebar = document.getElementById("leftSidebar");
+    const handle = document.getElementById("leftDragHandle");
+    const graph = document.getElementById("graph");
+
+    let isDown = false;
+
+    handle.addEventListener("mousedown", () => isDown = true);
+    window.addEventListener("mouseup", () => isDown = false);
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDown) return;
+
+      const newWidth = Math.max(160, Math.min(500, e.clientX));
+      sidebar.style.width = newWidth + "px";
+
+      graph.style.left = newWidth + "px";
+      graph.style.width = "calc(100vw - " + newWidth + "px - " + document.getElementById("rightViewer").offsetWidth + "px)";
+    });
+  })();
+
+  // RIGHT PANEL
+  (function(){
+    const viewer = document.getElementById("rightViewer");
+    const handle = document.getElementById("rightDragHandle");
+    const graph = document.getElementById("graph");
+
+    let isDown = false;
+
+    handle.addEventListener("mousedown", () => isDown = true);
+    window.addEventListener("mouseup", () => isDown = false);
+
+    window.addEventListener("mousemove", (e) => {
+      if (!isDown) return;
+
+      const screenW = window.innerWidth;
+      const newWidth = Math.max(260, Math.min(600, screenW - e.clientX));
+
+      viewer.style.width = newWidth + "px";
+      graph.style.width =
+        "calc(100vw - " + newWidth + "px - " + document.getElementById("leftSidebar").offsetWidth + "px)";
+    });
+  })();
+
+  /* POPOUT VIEWER BUTTON */
+  function escapeHtml(s){
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  document.getElementById("popoutBtn").onclick = () => {
+    const popup = window.open("", "_blank", "width=900,height=1000");
+    if (!popup) return;
+
+    let bodyContent = "";
+
+    if (currentMode === "rendered"){
+      bodyContent = currentRenderedContent;
+    }else{
+      bodyContent = '<pre style="white-space: pre-wrap; font-family: monospace; font-size: 14px;">' + escapeHtml(currentRenderedContent) + "</pre>";
+    }
+
+    popup.document.write(`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Viewer Pop-Out</title>
+</head>
+<body style="font-family: sans-serif; padding: 20px;">
+${bodyContent}
+</body>
+</html>`);
+
+    popup.document.close();
+  };
+  </script>
+</body>
+</html>

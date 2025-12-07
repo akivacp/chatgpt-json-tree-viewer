@@ -24,7 +24,7 @@
   --bg-primary: #2c3e50;
   --bg-secondary: #34495e;
   --bg-sidebar: linear-gradient(to bottom, #2c3e50, #34495e);
-  --bg-graph: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-graph: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   --text-primary: #ecf0f1;
   --text-secondary: #95a5a6;
   --border-color: #1a252f;
@@ -40,7 +40,7 @@
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --bg-sidebar: linear-gradient(to bottom, #ffffff, #f8f9fa);
-  --bg-graph: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-graph: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
   --text-primary: #2c3e50;
   --text-secondary: #6c757d;
   --border-color: #dee2e6;
@@ -248,29 +248,6 @@ button{
   border-radius: 4px;
 }
 
-/* Dark mode toggle */
-#darkModeToggle {
-  background: var(--card-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-#darkModeToggle:hover {
-  background: var(--hover-bg);
-}
-
-#darkModeToggle .toggle-icon {
-  font-size: 16px;
-}
-
 /* =============================== */
 /*        DEVELOPER TOOLS          */
 /* =============================== */
@@ -305,12 +282,13 @@ button{
   padding: 12px;
   display: none;
   z-index: 100001;
-  min-width: 200px;
+  min-width: 240px;
 }
 
 .devToolsRow{
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   font-size: 13px;
   color: var(--text-primary);
@@ -319,6 +297,18 @@ button{
 
 .devToolsRow input[type="checkbox"] {
   accent-color: #10a37f;
+}
+
+.devToolsRow input[type="range"] {
+  width: 80px;
+  accent-color: #10a37f;
+}
+
+.devToolsRow .range-value {
+  min-width: 40px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
 /* =============================== */
@@ -853,7 +843,7 @@ button{
   overflow: hidden;
 }
 
-/* Graph background pattern */
+/* Graph background pattern - dark theme */
 #graph::before {
   content: '';
   position: absolute;
@@ -862,10 +852,17 @@ button{
   right: 0;
   bottom: 0;
   background-image: 
-    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 2px, transparent 2px),
-    radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 2px, transparent 2px);
+    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 2px, transparent 2px);
   background-size: 50px 50px;
   pointer-events: none;
+}
+
+/* Light theme graph background */
+.light-theme #graph::before {
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(0,0,0,0.05) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, rgba(0,0,0,0.05) 2px, transparent 2px);
 }
 
 /* =============================== */
@@ -886,6 +883,11 @@ button{
   backdrop-filter: blur(5px);
 }
 
+.light-theme #minimap {
+  background: rgba(255,255,255,0.95);
+  border: 2px solid rgba(0,0,0,0.1);
+}
+
 /* =============================== */
 /*        DRAG HANDLES (PANELS)    */
 /* =============================== */
@@ -903,6 +905,14 @@ button{
 
 .drag-handle:hover {
   background: linear-gradient(to right, rgba(16, 163, 127, 0.5), rgba(16, 163, 127, 0.7));
+}
+
+.light-theme .drag-handle {
+  background: linear-gradient(to right, rgba(0,0,0,0.05), rgba(0,0,0,0.1));
+}
+
+.light-theme .drag-handle:hover {
+  background: linear-gradient(to right, rgba(16, 163, 127, 0.3), rgba(16, 163, 127, 0.5));
 }
 
 #leftDragHandle{
@@ -1013,6 +1023,12 @@ button{
   stroke-width: 2px;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.light-theme .node-text {
+  fill: #2c3e50;
+  text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+  stroke: rgba(255,255,255,0.5);
 }
 
 .node-text:hover{
@@ -1174,9 +1190,18 @@ button{
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
 }
 
+.light-theme .link {
+  stroke: rgba(0,0,0,0.4);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+}
+
 .link:hover {
   stroke: rgba(255,255,255,0.9);
   stroke-width: 3;
+}
+
+.light-theme .link:hover {
+  stroke: rgba(0,0,0,0.7);
 }
 
 /* =============================== */
@@ -1357,6 +1382,15 @@ button{
           <input type="checkbox" id="toggleFormatDetection" checked>
           <span>Auto-format detection</span>
         </label>
+        <label class="devToolsRow">
+          <input type="checkbox" id="toggleTooltip" checked>
+          <span>Show tooltips</span>
+        </label>
+        <label class="devToolsRow">
+          <span>Tooltip timer (ms)</span>
+          <input type="range" id="tooltipTimerRange" min="500" max="10000" step="500" value="2000">
+          <span class="range-value" id="tooltipTimerValue">2000</span>
+        </label>
       </div>
     </div>
 
@@ -1388,11 +1422,6 @@ button{
         </div>
       </div>
     </div>
-    
-    <button id="darkModeToggle">
-      <span class="toggle-icon">🌙</span>
-      <span>Dark Mode</span>
-    </button>
 
     <div id="formatBadge" style="
       font-size: 12px;
@@ -1501,8 +1530,9 @@ button{
   let conversationsList = []; // Store all conversations from conversations.json
   let currentConversationIndex = -1;
   let searchResultsAcrossAllConversations = []; // Store search results across all conversations
-  let isDarkMode = true; // Default to dark mode
   let currentTheme = 'dark'; // Default theme
+  let showTooltips = true; // Default to showing tooltips
+  let tooltipLingerMs = 2000; // Default tooltip timer
 
   function detectFormat(json) {
     // Check if it's an array of conversations (OpenAI conversations.json)
@@ -1656,7 +1686,6 @@ button{
           <span class="meta">
             ${messageCount} message${messageCount !== 1 ? 's' : ''}
             ${hasMatches ? `<span class="search-match-count">${conv.searchMatches}</span>` : ''}
-            <button class="close-conversation-btn" style="float: right; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 12px; padding: 2px 6px;" data-index="${index}">✕</button>
           </span>
         </div>
       `;
@@ -1677,7 +1706,6 @@ button{
           <span class="title">${title}</span>
           <span class="meta">
             ${messageCount} message${messageCount !== 1 ? 's' : ''}
-            <button class="close-conversation-btn" style="float: right; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 12px; padding: 2px 6px;" data-index="${index}">✕</button>
           </span>
         </div>
       `;
@@ -1687,22 +1715,9 @@ button{
     
     // Add click handlers for conversation items
     document.querySelectorAll('.conversation-item').forEach(item => {
-      item.addEventListener('click', function(e) {
-        // Don't trigger if clicking the close button
-        if (e.target.classList.contains('close-conversation-btn')) {
-          return;
-        }
+      item.addEventListener('click', function() {
         const index = parseInt(this.dataset.index);
         loadConversation(index);
-      });
-    });
-    
-    // Add click handlers for close buttons
-    document.querySelectorAll('.close-conversation-btn').forEach(btn => {
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const index = parseInt(this.dataset.index);
-        closeConversation(index);
       });
     });
   }
@@ -1746,50 +1761,31 @@ button{
     }
   }
   
-  function closeConversation(index) {
-    if (index < 0 || index >= conversationsList.length) return;
+  function closeConversation() {
+    // Clear current conversation
+    currentConversationIndex = -1;
+    lastLoadedJSON = null;
+    convertedJSON = null;
     
-    // Remove conversation from list
-    conversationsList.splice(index, 1);
+    // Clear everything
+    document.getElementById('viewerContent').innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 40px; font-style: italic;">Select a node to view its content.</div>';
+    document.getElementById('fileLabel').innerText = '(no file loaded)';
+    document.getElementById('closeConversationBtn').style.display = 'none';
+    document.getElementById('formatBadge').style.display = 'none';
     
-    // Update all conversation indices
-    conversationsList.forEach((conv, i) => {
-      conv.index = i;
-    });
+    // Clear graph
+    const svg = d3.select("#graph");
+    svg.selectAll("*").remove();
     
-    // If we closed the current conversation, load another one or clear
-    if (index === currentConversationIndex) {
-      if (conversationsList.length > 0) {
-        // Load the next conversation, or previous if at the end
-        const newIndex = Math.min(index, conversationsList.length - 1);
-        loadConversation(newIndex);
-      } else {
-        // No conversations left
-        currentConversationIndex = -1;
-        lastLoadedJSON = null;
-        convertedJSON = null;
-        
-        // Clear everything
-        document.getElementById('viewerContent').innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 40px; font-style: italic;">Select a node to view its content.</div>';
-        document.getElementById('fileLabel').innerText = '(no file loaded)';
-        document.getElementById('closeConversationBtn').style.display = 'none';
-        document.getElementById('formatBadge').style.display = 'none';
-        
-        // Clear graph
-        const svg = d3.select("#graph");
-        svg.selectAll("*").remove();
-        
-        // Clear search
-        document.getElementById('searchBar').value = '';
-        document.getElementById('leftSearchResults').innerHTML = '';
-        clearSearchMatches();
-      }
-    } else if (index < currentConversationIndex) {
-      // We removed a conversation before the current one, adjust index
-      currentConversationIndex--;
-    }
+    // Clear search
+    document.getElementById('searchBar').value = '';
+    document.getElementById('leftSearchResults').innerHTML = '';
+    clearSearchMatches();
     
-    // Update UI
+    // Hide branch index
+    document.getElementById('branchIndexContainer').style.display = 'none';
+    
+    // Update conversation list to remove active state
     updateConversationsList();
   }
 
@@ -2027,15 +2023,12 @@ button{
   function initializeThemeSystem() {
     // Check for saved theme
     const savedTheme = localStorage.getItem('multiverseTheme') || 'dark';
-    const savedDarkMode = localStorage.getItem('multiverseDarkMode') !== 'false';
     
     // Set initial state
-    isDarkMode = savedDarkMode;
     currentTheme = savedTheme;
     
     // Apply theme
     applyTheme(currentTheme);
-    updateDarkModeToggle();
     
     // Theme selector
     const themeBtn = document.getElementById('themeBtn');
@@ -2065,14 +2058,6 @@ button{
       });
     });
     
-    // Dark mode toggle
-    document.getElementById('darkModeToggle').addEventListener('click', () => {
-      isDarkMode = !isDarkMode;
-      localStorage.setItem('multiverseDarkMode', isDarkMode);
-      updateDarkModeToggle();
-      applyTheme(currentTheme); // Re-apply current theme with dark mode state
-    });
-    
     // Close dropdown when clicking outside
     window.addEventListener('click', () => {
       themeDropdown.style.display = 'none';
@@ -2097,25 +2082,40 @@ button{
     if (theme !== 'dark') {
       document.body.classList.add(theme + '-theme');
     }
-    
-    // Update dark mode toggle text
-    updateDarkModeToggle();
   }
+
+  /* =============================== */
+  /*     DEVELOPER TOOLS SETTINGS    */
+  /* =============================== */
   
-  function updateDarkModeToggle() {
-    const toggle = document.getElementById('darkModeToggle');
-    const icon = toggle.querySelector('.toggle-icon');
-    const text = toggle.querySelector('span:not(.toggle-icon)');
+  function initializeDeveloperTools() {
+    // Load saved settings
+    const savedShowTooltips = localStorage.getItem('multiverseShowTooltips') !== 'false';
+    const savedTooltipTimer = localStorage.getItem('multiverseTooltipTimer') || '2000';
     
-    if (currentTheme === 'light') {
-      // In light theme, show moon for dark mode
-      icon.textContent = '🌙';
-      text.textContent = 'Dark Mode';
-    } else {
-      // In dark themes, show sun for light mode
-      icon.textContent = '☀️';
-      text.textContent = 'Light Mode';
-    }
+    showTooltips = savedShowTooltips;
+    tooltipLingerMs = parseInt(savedTooltipTimer);
+    
+    // Set initial checkbox states
+    document.getElementById('toggleTooltip').checked = showTooltips;
+    document.getElementById('tooltipTimerRange').value = tooltipLingerMs;
+    document.getElementById('tooltipTimerValue').textContent = tooltipLingerMs;
+    
+    // Tooltip toggle
+    document.getElementById('toggleTooltip').addEventListener('change', function(e) {
+      showTooltips = e.target.checked;
+      localStorage.setItem('multiverseShowTooltips', showTooltips);
+    });
+    
+    // Tooltip timer
+    const timerRange = document.getElementById('tooltipTimerRange');
+    const timerValue = document.getElementById('tooltipTimerValue');
+    
+    timerRange.addEventListener('input', function(e) {
+      tooltipLingerMs = parseInt(e.target.value);
+      timerValue.textContent = tooltipLingerMs;
+      localStorage.setItem('multiverseTooltipTimer', tooltipLingerMs);
+    });
   }
 
   /* =============================== */
@@ -2360,7 +2360,6 @@ button{
   const tooltipContent = document.getElementById("tooltipContent");
   const tooltipCopyBtn = document.getElementById("tooltipCopyBtn");
   let tooltipHideTimer = null;
-  const TOOLTIP_LINGER_MS = 2000;
 
   function clearTooltipHideTimer(){
     if (tooltipHideTimer){
@@ -2369,7 +2368,7 @@ button{
     }
   }
 
-  function scheduleTooltipHide(ms = TOOLTIP_LINGER_MS){
+  function scheduleTooltipHide(ms = tooltipLingerMs){
     clearTooltipHideTimer();
     tooltipHideTimer = setTimeout(() => {
       tooltip.style.opacity = 0;
@@ -2383,13 +2382,15 @@ button{
   }
 
   tooltip.addEventListener("mouseenter", () => {
+    if (!showTooltips) return;
     clearTooltipHideTimer();
     tooltip.style.opacity = 1;
     tooltip.style.pointerEvents = "auto";
   });
 
   tooltip.addEventListener("mouseleave", () => {
-    scheduleTooltipHide(TOOLTIP_LINGER_MS);
+    if (!showTooltips) return;
+    scheduleTooltipHide(tooltipLingerMs);
   });
 
   // Tooltip copy button
@@ -2535,9 +2536,7 @@ button{
 
   // Close conversation button
   document.getElementById('closeConversationBtn').addEventListener('click', () => {
-    if (currentConversationIndex >= 0 && conversationsList.length > 0) {
-      closeConversation(currentConversationIndex);
-    }
+    closeConversation();
   });
 
   function loadJSON(file){
@@ -2679,7 +2678,7 @@ button{
       .append("path")
       .attr("class", "link")
       .attr("fill", "none")
-      .attr("stroke", "rgba(255,255,255,0.6)")
+      .attr("stroke", currentTheme === 'light' ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.6)")
       .attr("stroke-width", 2)
       .attr("d", d3.linkVertical().x(d => d.x).y(d => d.y));
   }
@@ -3034,6 +3033,8 @@ button{
 
   /* ENHANCED TOOLTIP WITH RENDERED CONTENT AND COPY */
   function showTooltip(event, d){
+    if (!showTooltips) return;
+    
     clearTooltipHideTimer();
 
     const text = d.data.text || "(empty)";
@@ -3078,7 +3079,8 @@ button{
   }
 
   function hideTooltip(){
-    scheduleTooltipHide(TOOLTIP_LINGER_MS);
+    if (!showTooltips) return;
+    scheduleTooltipHide(tooltipLingerMs);
   }
 
   /* SEARCH SYSTEM - UPDATED FOR CROSS-CONVERSATION */
@@ -3836,11 +3838,11 @@ button{
     const scale = Math.min(w / bounds.width, h / bounds.height);
 
     // Draw a subtle background
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.fillStyle = currentTheme === 'light' ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.1)';
     ctx.fillRect(0, 0, w, h);
 
     // Draw links
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.strokeStyle = currentTheme === 'light' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 1;
     
     allLinks.forEach(link => {
@@ -3862,7 +3864,7 @@ button{
       const radius = 3;
 
       if (isSystemData(n.data)) {
-        ctx.fillStyle = 'rgba(102, 102, 102, 0.7)';
+        ctx.fillStyle = currentTheme === 'light' ? 'rgba(102, 102, 102, 0.5)' : 'rgba(102, 102, 102, 0.7)';
         ctx.strokeStyle = '#666';
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -4046,6 +4048,9 @@ ${bodyContent}
   
   // Initialize theme system
   initializeThemeSystem();
+  
+  // Initialize developer tools
+  initializeDeveloperTools();
   
   // Initialize with node mode
   switchMode("node", "rendered");

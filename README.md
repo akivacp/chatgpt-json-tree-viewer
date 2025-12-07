@@ -1,7 +1,11 @@
 # 📁 ChatGPT and DeepSeek JSON Tree Viewer
 *A standalone HTML tool for exploring, converting, and visualizing AI chat exports as interactive branching trees.*
 
-<br>
+## 📷 Screenshots
+
+![Main UI](docs/screenshot-main.png)
+
+---
 
 ## 📌 Overview
 ChatGPT and DeepSeek JSON Tree Viewer is a **single-file HTML application** that loads AI conversation exports and renders them as an **interactive branching tree**.
@@ -69,12 +73,6 @@ Includes:
 ### 🧲 **Drag-resizable Layout**
 - Resize left sidebar
 - Resize right viewer panel
-
----
-
-## 📷 Screenshots
-
-![Main UI](docs/screenshot-main.png)
 
 ---
 

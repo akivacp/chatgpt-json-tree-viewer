@@ -1,5 +1,7 @@
-# 📁 ChatGPT and DeepSeek JSON Tree Viewer
-*A standalone HTML tool for exploring, converting, and visualizing AI chat exports as interactive branching trees.*
+
+# 🌳 ChatGPT and DeepSeek JSON Tree Viewer
+
+*A standalone, offline, multi-platform conversation explorer and branching tree visualizer.*
 
 ## 📷 Screenshots
 
@@ -7,178 +9,279 @@
 
 ---
 
-## 📌 Overview
-ChatGPT and DeepSeek JSON Tree Viewer is a **single-file HTML application** that loads AI conversation exports and renders them as an **interactive branching tree**.
-It supports **multiple data formats**, auto-detects and converts them, and allows you to inspect every message, branch, and node with clarity.
+## 🧭 Overview
 
-This viewer is ideal for anyone who wants to explore large or complex chat histories in a structured, visual way.
+**ChatGPT and DeepSeek JSON Tree Viewer** is a **single-file HTML application** that loads exported AI conversation data and converts it into an **interactive branching tree**, complete with metadata inspection, Markdown rendering, multi-format compatibility, full-text search, and a developer-grade UI.
 
-This repository contains the full-featured UI defined in **chatgpt-json-tree-viewer.html**. 
+Everything runs **100 percent locally**, right inside your browser.\
+No servers, no uploads, no telemetry.
+
+This tool supports exports from:
+
+- **ChatGPT Multiverse exports**
+- **ChatGPT conversations.json** (many conversations in one file)
+- **DeepSeek Chat** & **DeepSeek Exporter**
+- **Claude (Anthropic)**
+- **xAI Grok**
+- **Mistral AI**
+- And arbitrary JSON structures that can be normalized into OpenAI-style node maps
+
+The viewer auto-detects format, auto-converts it, and presents it visually.
+
+---
 
 ## 🚀 Features
 
-### 🔍 **Multi-format Support**
-The viewer automatically recognizes and converts:
-- **ChatGPT multiverse JSON**
-- **ChatGPT conversations.json** (multiple conversations)
-- **DeepSeek Chat Exporter JSON**
+### 🔍 **Universal Format Detection**
 
-Auto-conversion handles:
-- Node mapping
-- Roles
-- Message extraction
-- Content sanitization
-- Linear or branching mapping reconstruction
+The viewer intelligently identifies and converts many AI export formats:
 
-### 🌳 **Interactive Tree Visualization**
-- Adjustable zoom and pan
-- Drag nodes to reposition branches
-- Colored nodes per role (User, Assistant, System)
-- Tooltips with previews
-- Auto-centering on selected nodes
+- **OpenAI Multiverse**
+- **OpenAI conversations.json**
+- **DeepSeek Chat (mapping format)**
+- **DeepSeek Exporter**
+- **Claude (chunked contentChunks)**
+- **xAI Grok conversation objects**
+- **Mistral AI chat\_messages format**
 
-### 🧭 **Conversation Explorer**
-- Left sidebar displays all conversations in conversations.json
-- Search across all conversations
-- Match counters per conversation
-- Click to switch between conversations instantly
+It reconstructs:
 
-### 📑 **Right Panel Message Viewer**
-Tabbed display:
-- Rendered (Markdown → HTML)
-- Raw Markdown
-- HTML source
-- Original JSON fragment
+- Parent/child mapping
+- Assistant/user/system roles
+- Timestamps
+- Conversation titles
+- Linear or branching structure
 
-Includes:
-- Copy button
-- Export to file
-- Pop-out window
-- PDF generation
+If needed, you can disable auto-detection in **Developer Tools**.
 
-### 🧩 **Branch Explorer Sidebar**
-- Automatically indexes all messages in a selected branch
-- Mini search bar for branch-local search
-- Click an index item to jump to that message
+---
+
+### 🌳 **Interactive Graph Viewer**
+
+- Force-directed layout optimized for chat trees
+- Drag nodes to reorganize branches
+- Zoom & pan with trackpad/mouse wheel
+- Automatic centering & focus on selected nodes
+- Themed node colors (User, Assistant, System, Other)
+- Highlight ancestors, descendants, search matches, and selected node
+- Dimming non-relevant parts when a node is highlighted
+- Smooth animated pulses for selected/ancestor/descendant nodes
+
+---
+
+### 📑 **Right-Panel Message Viewer**
+
+Tabbed content modes:
+
+- **Rendered Markdown → HTML**
+- **Raw Markdown**
+- **HTML source**
+- **Original JSON fragment**
+
+Each mode includes:
+
+- **Copy**
+- **Export**
+- **Pop-Out window**
+- **PDF generation** (via jsPDF + html2canvas)
+
+Sticky UI ensures tools always stay visible.
+
+---
+
+### 📂 **Branch Reconstruction Sidebar**
+
+A unique feature of your viewer:
+
+- Shows the **entire linear branch** from the selected node back to the root
+- Each item clickable
+- Local branch search built-in
+- Auto-scroll and highlight the current position
+- Collapsible sidebar mode (tiny icon mode)
+
+---
+
+### 🔎 **Global Search Engine**
+
+Search every message across:
+
+- ChatGPT multiverse files
+- Multi-conversation conversations.json
+- Claude messages
+- Grok responses
+- DeepSeek exports
+- Mistral conversations
+
+The search UI shows:
+
+- Snippets
+- Role labels
+- Conversation match count badges
+- Click to instantly jump to that node, even across different conversations
+
+---
+
+### 🗂️ **Conversation List (for conversations.json)**
+
+When you load a **conversations.json**, the left sidebar becomes a selector UI:
+
+- Sorts conversations by date
+- Shows date, title, message count
+- Indicates which conversations contain search matches
+- Click to switch instantly
+- “Close Conversation” button to return to multi-conversation mode
+
+---
+
+### 🎨 **Built-in Themes**
+
+Users can switch seamlessly between:
+
+- **Dark** (default)
+- **Light**
+- **Blue**
+- **Green**
+- **Purple**
+
+Themes apply to:
+
+- Graph
+- Sidebar
+- Right-panel viewer
+- Tooltips
+- Minimap
+- Search UI
+- Buttons
+
+No reload required.
+
+---
+
+### 🛠️ **Developer Tools Panel**
+
+Options include:
+
+- Show/hide **system nodes**
+- Toggle **auto-format detection**
+- Toggle **tooltips**
+- Adjust tooltip linger duration (500 ms to 10 seconds)
+
+---
 
 ### 🗺️ **Minimap**
-- Live-updating navigator
-- Shows your viewport rectangle
-- Great for large trees
 
-### 🛠️ **Developer Tools Menu**
-- Toggle system nodes
-- Toggle auto-format detection
+A live-updating minimap renders the entire graph shape.\
+Your current viewport rectangle is shown in real time.
 
-### 🧲 **Drag-resizable Layout**
-- Resize left sidebar
-- Resize right viewer panel
+Great for huge multiverse branches.
+
+---
+
+### ↔️ **Resizable Panels**
+
+Drag handles allow resizing:
+
+- Left sidebar
+- Right message viewer
+
+Perfect for ultra-wide monitors or portrait screens.
 
 ---
 
 ## 📥 Installation
-No installation required.
 
-Just download the HTML file and open it in any modern browser:
+No installation required.\
+Just download and open in your browser:
 
 ```
 chatgpt-json-tree-viewer.html
 ```
 
-Everything runs **100 percent locally** in your browser. No servers. No uploads.
+Everything runs locally.
+
+> Works best on Chrome, Edge, Brave, or Firefox.
 
 ---
 
 ## 📘 Usage Guide
 
-### **1. Load a JSON file**
-Click the **"Load Conversation JSON"** button.
-You may also *drag and drop* a JSON file onto that button.
+### 1. **Load a JSON File**
 
-Supported file types:
-- ChatGPT multiverse JSON
+Click:
+
+**Load Conversation JSON**
+
+Works with:
+
+- ChatGPT export folders
+- ChatGPT multiverse exports
+- DeepSeek Chat exports
 - conversations.json
-- DeepSeek Chat Exporter JSON
+- Claude message arrays
+- Mistral / Grok chat files
 
-If the format is unknown, the app will display an error message.
+You can also **drag and drop** onto the button.
 
 ---
 
-### **2. Explore the conversation tree**
-Once loaded:
-- The central canvas shows the branching structure
-- Zoom with mouse wheel
-- Pan by dragging empty canvas
+### 2. **Explore the Graph**
+
+- Scroll to zoom
+- Drag empty space to pan
 - Drag nodes to reposition
-
-Hover a node to see a tooltip.
-Click a node to open its message in the right viewer panel.
+- Hover to see live tooltips
+- Click a node to open its message
 
 ---
 
-### **3. Search messages**
-#### Global search
-Use the **Search Messages** section in the left sidebar.
+### 3. **Search Messages**
 
-Results show:
-- Conversation where match occurred
-- Role
+#### Global Search
+
+Use the search bar in the left sidebar.
+
+Results display:
+
+- Conversation
 - Preview text
+- Role
+- Highlighted match
 
-Click a result to jump to that node, even if it’s in a different conversation.
+#### Branch Search
 
-#### Branch search
-Open the **Branch Conversation** tab and use the search box inside the Branch Index sidebar.
+Open the Branch tab and use the branch search bar.
 
 ---
 
-### **4. View and export messages**
-When a node is selected, choose how to view the content:
-- Rendered Markdown
-- Original JSON
-- Raw Markdown
-- Raw HTML
+### 4. **Inspect Message Content**
 
-Use the toolbar buttons:
+Choose a viewer tab:
+
+- Rendered
+- Markdown
+- HTML
+- Original JSON
+
+Then use:
+
 - **Copy**
-- **Export file**
-- **Pop-out window**
+- **Export**
+- **Pop-Out**
 - **PDF**
 
 ---
 
-### **5. Switch between conversations**
-If you load a **conversations.json** file:
-- The sidebar lists all conversations
-- You can switch conversations instantly
-- Search results also navigate across conversations
+### 5. **Switch Conversations**
+
+When loading `conversations.json`:
+
+- All conversations appear in the sidebar
+- Click to open any of them instantly
+- “Close Conversation” returns to overview mode
 
 ---
 
-### **6. Developer Tools**
-Use the top-right **Developer Tools** menu to:
-- Show/hide system nodes
-- Enable or disable automatic format detection
+### 6. **Use Developer Tools**
 
----
+Click **Developer Tools** to toggle advanced controls.
 
-## ⭐ What this project especially highlights
-Based on your app’s design, here are the highlight-worthy elements:
-
-### **✔ Fully offline and privacy-safe**
-Nothing leaves the browser. Ideal for inspecting sensitive AI conversations.
-
-### **✔ True multi-format auto-conversion**
-Handles three distinct JSON structures seamlessly. This is a major feature.
-
-### **✔ Branch index + branch viewer**
-Most viewers only show trees.
-This lets users view **entire branches as reconstructed conversations**.
-
-### **✔ Cross-conversation search**
-Extremely rare for tools like this.
-This viewer acts as a *global search engine* for all ChatGPT history.
-
-### **✔ Professional-level UI**
-Resizable panels, sticky toolbars, tab system, minimap, collapsible sections.
-This reads like a polished desktop app packaged in a single HTML file.

@@ -9,9 +9,7 @@ It supports **multiple data formats**, auto-detects and converts them, and allow
 
 This viewer is ideal for anyone who wants to explore large or complex chat histories in a structured, visual way.
 
-This repository contains the full-featured UI defined in **chatgpt-json-tree-viewer.html**. fileciteturn0file0
-
-<br>
+This repository contains the full-featured UI defined in **chatgpt-json-tree-viewer.html**. 
 
 ## 🚀 Features
 

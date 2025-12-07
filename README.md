@@ -1,84 +1,182 @@
-# ChatGPT and Deepseek JSON Tree Viewer
+# 📁 ChatGPT and DeepSeek JSON Tree Viewer
+*A standalone HTML tool for exploring, converting, and visualizing AI chat exports as interactive branching trees.*
 
-**A simple, client-side HTML viewer for exploring and visualizing ChatGPT conversation exports in a tree format.**
+<br>
 
-This project allows you to visualize exported JSON data from ChatGPT conversations in an interactive, tree-based format. The viewer helps you navigate and understand the hierarchical structure of conversation data easily, offering a user-friendly interface for both developers and non-technical users.
+## 📌 Overview
+ChatGPT and DeepSeek JSON Tree Viewer is a **single-file HTML application** that loads AI conversation exports and renders them as an **interactive branching tree**.
+It supports **multiple data formats**, auto-detects and converts them, and allows you to inspect every message, branch, and node with clarity.
 
-## Features
+This viewer is ideal for anyone who wants to explore large or complex chat histories in a structured, visual way.
 
-- **Interactive Tree View**: Explore JSON data as a navigable tree, zooming and panning through conversation data.
-- **Multiple Viewing Modes**: View your data in various formats including markdown, raw JSON, rendered HTML, and more.
-- **Search & Filter**: Quickly search through large conversation datasets.
-- **Export Options**: Export conversation content in markdown, HTML, or raw JSON format.
-- **Client-Side Only**: No server required! All processing happens directly in your browser.
+This repository contains the full-featured UI defined in **chatgpt-json-tree-viewer.html**. fileciteturn0file0
 
-## Installation
+<br>
 
-You can use this viewer by simply opening the `chatgpt-json-tree-viewer.html` file in your browser. There is no need to install anything.
+## 🚀 Features
 
-### Steps:
-1. Clone or download this repository to your local machine.
-2. Open `chatgpt-json-tree-viewer.html` in your web browser.
-3. Click the **"Load JSON"** button to upload a ChatGPT conversation export.
-4. Use the interactive tree to explore the conversation's data structure.
+### 🔍 **Multi-format Support**
+The viewer automatically recognizes and converts:
+- **ChatGPT multiverse JSON**
+- **ChatGPT conversations.json** (multiple conversations)
+- **DeepSeek Chat Exporter JSON**
 
-## Usage
+Auto-conversion handles:
+- Node mapping
+- Roles
+- Message extraction
+- Content sanitization
+- Linear or branching mapping reconstruction
 
-1. **Loading JSON**: Click the **"Load JSON"** button and select a JSON file from your local machine. The file should contain data in a format compatible with the viewer (e.g., ChatGPT conversation exports).
-2. **Navigating the Tree**: Use your mouse to click and drag nodes. Zoom in/out using the mouse wheel.
-3. **Viewing Content**: Click on a node to open the detailed message view in the right panel.
-4. **Exporting Data**: You can export the displayed content in different formats: raw JSON, HTML, or Markdown.
+### 🌳 **Interactive Tree Visualization**
+- Adjustable zoom and pan
+- Drag nodes to reposition branches
+- Colored nodes per role (User, Assistant, System)
+- Tooltips with previews
+- Auto-centering on selected nodes
 
-## Demo
+### 🧭 **Conversation Explorer**
+- Left sidebar displays all conversations in conversations.json
+- Search across all conversations
+- Match counters per conversation
+- Click to switch between conversations instantly
 
-To see the viewer in action, simply download the repository and open the `chatgpt-json-tree-viewer.html` file in any modern web browser.
+### 📑 **Right Panel Message Viewer**
+Tabbed display:
+- Rendered (Markdown → HTML)
+- Raw Markdown
+- HTML source
+- Original JSON fragment
 
-## License
+Includes:
+- Copy button
+- Export to file
+- Pop-out window
+- PDF generation
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+### 🧩 **Branch Explorer Sidebar**
+- Automatically indexes all messages in a selected branch
+- Mini search bar for branch-local search
+- Click an index item to jump to that message
 
-## Contributing
+### 🗺️ **Minimap**
+- Live-updating navigator
+- Shows your viewport rectangle
+- Great for large trees
 
-Contributions are welcome! If you have ideas for new features, improvements, or bug fixes, feel free to fork the repository and submit a pull request.  
+### 🛠️ **Developer Tools Menu**
+- Toggle system nodes
+- Toggle auto-format detection
 
-### How to Contribute:
-1. Fork this repository.
-2. Create a new branch (`git checkout -b feature/your-feature`).
-3. Make your changes and commit them (`git commit -am 'Add new feature'`).
-4. Push to your branch (`git push origin feature/your-feature`).
-5. Create a pull request with a description of your changes.
-
-## Acknowledgements
-
-- This project uses the following open-source libraries:
-  - **[D3.js](https://d3js.org/)**: JavaScript library for producing dynamic, interactive data visualizations.
-  - **[Marked.js](https://marked.js.org/)**: A fast markdown parser and compiler.
-  - **[DOMPurify](https://github.com/cure53/DOMPurify)**: A DOM-based XSS sanitizer for modern browsers.
-
-## Disclaimer
-
-This project is an **independent** tool and is not affiliated with or endorsed by OpenAI. It is designed to help users interact with **ChatGPT** exported conversation data.
+### 🧲 **Drag-resizable Layout**
+- Resize left sidebar
+- Resize right viewer panel
 
 ---
 
-### Need Help?
+## 📥 Installation
+No installation required.
 
-If you run into issues or have any questions, feel free to open an issue on the GitHub repository, and I'll do my best to assist you.
+Just download the HTML file and open it in any modern browser:
 
+```
+chatgpt-json-tree-viewer.html
+```
 
-## Exporting JSON Files
+Everything runs **100 percent locally** in your browser. No servers. No uploads.
 
-To use this viewer, you'll need to export your ChatGPT conversations as JSON files. There are two tools that can help you with this:
+---
 
-1. **[ChatGPT Multiverse Exporter (v8.3)](https://greasyfork.org/en/scripts/558044-chatgpt-multiverse-exporter-v8-3-draggable-linked-badge-button-keep-on-screen)**  
-   This is my personal favorite exporter. It captures **all conversation branches**, including regenerated messages, and allows you to export the conversation data as a **JSON file**.
+## 📘 Usage Guide
 
-2. **[ChatGPT Exporter on GreasyFork](https://greasyfork.org/en/scripts/456055-chatgpt-exporter)**  
-   This tool is available on **GreasyFork** and works similarly. It also captures the conversation data and lets you export it as a **JSON file** that is compatible with this viewer.
+### **1. Load a JSON file**
+Click the **"Load Conversation JSON"** button.
+You may also *drag and drop* a JSON file onto that button.
 
-While I recommend the **ChatGPT Multiverse Exporter** for better integration with this viewer, you're free to use **any tool that generates a valid JSON file**.
+Supported file types:
+- ChatGPT multiverse JSON
+- conversations.json
+- DeepSeek Chat Exporter JSON
 
-- [ChatGPT Multiverse Exporter on GreasyFork](https://greasyfork.org/en/scripts/558044-chatgpt-multiverse-exporter-v8-3-draggable-linked-badge-button-keep-on-screen)
-- [ChatGPT Exporter on GreasyFork](https://greasyfork.org/en/scripts/456055-chatgpt-exporter)
+If the format is unknown, the app will display an error message.
 
+---
 
+### **2. Explore the conversation tree**
+Once loaded:
+- The central canvas shows the branching structure
+- Zoom with mouse wheel
+- Pan by dragging empty canvas
+- Drag nodes to reposition
+
+Hover a node to see a tooltip.
+Click a node to open its message in the right viewer panel.
+
+---
+
+### **3. Search messages**
+#### Global search
+Use the **Search Messages** section in the left sidebar.
+
+Results show:
+- Conversation where match occurred
+- Role
+- Preview text
+
+Click a result to jump to that node, even if it’s in a different conversation.
+
+#### Branch search
+Open the **Branch Conversation** tab and use the search box inside the Branch Index sidebar.
+
+---
+
+### **4. View and export messages**
+When a node is selected, choose how to view the content:
+- Rendered Markdown
+- Original JSON
+- Raw Markdown
+- Raw HTML
+
+Use the toolbar buttons:
+- **Copy**
+- **Export file**
+- **Pop-out window**
+- **PDF**
+
+---
+
+### **5. Switch between conversations**
+If you load a **conversations.json** file:
+- The sidebar lists all conversations
+- You can switch conversations instantly
+- Search results also navigate across conversations
+
+---
+
+### **6. Developer Tools**
+Use the top-right **Developer Tools** menu to:
+- Show/hide system nodes
+- Enable or disable automatic format detection
+
+---
+
+## ⭐ What this project especially highlights
+Based on your app’s design, here are the highlight-worthy elements:
+
+### **✔ Fully offline and privacy-safe**
+Nothing leaves the browser. Ideal for inspecting sensitive AI conversations.
+
+### **✔ True multi-format auto-conversion**
+Handles three distinct JSON structures seamlessly. This is a major feature.
+
+### **✔ Branch index + branch viewer**
+Most viewers only show trees.
+This lets users view **entire branches as reconstructed conversations**.
+
+### **✔ Cross-conversation search**
+Extremely rare for tools like this.
+This viewer acts as a *global search engine* for all ChatGPT history.
+
+### **✔ Professional-level UI**
+Resizable panels, sticky toolbars, tab system, minimap, collapsible sections.
+This reads like a polished desktop app packaged in a single HTML file.

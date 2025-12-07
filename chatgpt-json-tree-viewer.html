@@ -19,6 +19,84 @@
   --color-descendant: #32CD32;
   --color-dim: rgba(0, 0, 0, 0.1);
   --color-selected: #FF4081; /* Pink color for selected node */
+  
+  /* Theme variables - default to dark */
+  --bg-primary: #2c3e50;
+  --bg-secondary: #34495e;
+  --bg-sidebar: linear-gradient(to bottom, #2c3e50, #34495e);
+  --bg-graph: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --text-primary: #ecf0f1;
+  --text-secondary: #95a5a6;
+  --border-color: #1a252f;
+  --hover-bg: rgba(255,255,255,0.1);
+  --card-bg: rgba(255,255,255,0.05);
+  --shadow-color: rgba(0,0,0,0.3);
+  --right-panel-bg: linear-gradient(to bottom, #2c3e50, #34495e);
+  --right-panel-text: #ecf0f1;
+}
+
+/* Light theme */
+.light-theme {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-sidebar: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  --bg-graph: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --text-primary: #2c3e50;
+  --text-secondary: #6c757d;
+  --border-color: #dee2e6;
+  --hover-bg: rgba(0,0,0,0.05);
+  --card-bg: rgba(0,0,0,0.03);
+  --shadow-color: rgba(0,0,0,0.1);
+  --right-panel-bg: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  --right-panel-text: #2c3e50;
+}
+
+/* Blue theme */
+.blue-theme {
+  --bg-primary: #1a237e;
+  --bg-secondary: #283593;
+  --bg-sidebar: linear-gradient(to bottom, #1a237e, #283593);
+  --bg-graph: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
+  --text-primary: #e8eaf6;
+  --text-secondary: #9fa8da;
+  --border-color: #3949ab;
+  --hover-bg: rgba(255,255,255,0.1);
+  --card-bg: rgba(255,255,255,0.05);
+  --shadow-color: rgba(0,0,0,0.4);
+  --right-panel-bg: linear-gradient(to bottom, #1a237e, #283593);
+  --right-panel-text: #e8eaf6;
+}
+
+/* Green theme */
+.green-theme {
+  --bg-primary: #1b5e20;
+  --bg-secondary: #2e7d32;
+  --bg-sidebar: linear-gradient(to bottom, #1b5e20, #2e7d32);
+  --bg-graph: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+  --text-primary: #e8f5e9;
+  --text-secondary: #a5d6a7;
+  --border-color: #388e3c;
+  --hover-bg: rgba(255,255,255,0.1);
+  --card-bg: rgba(255,255,255,0.05);
+  --shadow-color: rgba(0,0,0,0.4);
+  --right-panel-bg: linear-gradient(to bottom, #1b5e20, #2e7d32);
+  --right-panel-text: #e8f5e9;
+}
+
+/* Purple theme */
+.purple-theme {
+  --bg-primary: #4a148c;
+  --bg-secondary: #6a1b9a;
+  --bg-sidebar: linear-gradient(to bottom, #4a148c, #6a1b9a);
+  --bg-graph: linear-gradient(135deg, #7b1fa2 0%, #ab47bc 100%);
+  --text-primary: #f3e5f5;
+  --text-secondary: #ce93d8;
+  --border-color: #8e24aa;
+  --hover-bg: rgba(255,255,255,0.1);
+  --card-bg: rgba(255,255,255,0.05);
+  --shadow-color: rgba(0,0,0,0.4);
+  --right-panel-bg: linear-gradient(to bottom, #4a148c, #6a1b9a);
+  --right-panel-text: #f3e5f5;
 }
 
 /* =============================== */
@@ -34,6 +112,7 @@ body{
   overflow: hidden;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.3s ease;
 }
 
 button{
@@ -49,18 +128,19 @@ button{
   top: 0;
   left: 0;
   width: 100%;
-  background: linear-gradient(to right, #2c3e50, #34495e);
-  border-bottom: 1px solid #1a252f;
+  background: linear-gradient(to right, var(--bg-primary), var(--bg-secondary));
+  border-bottom: 1px solid var(--border-color);
   padding: 10px 20px;
   display: flex;
   align-items: center;
   gap: 20px;
   z-index: 100000;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 #loadJsonBtn,
-#resetLayoutBtn{
+#resetLayoutBtn,
+#closeConversationBtn{
   background: linear-gradient(to right, #10a37f, #0e8e6c);
   color: white;
   border: none;
@@ -73,26 +153,122 @@ button{
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 #loadJsonBtn:hover,
-#resetLayoutBtn:hover{
+#resetLayoutBtn:hover,
+#closeConversationBtn:hover{
   background: linear-gradient(to right, #0e8e6c, #0c7a5c);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
+#closeConversationBtn {
+  background: linear-gradient(to right, #ef4444, #dc2626);
+  display: none;
+}
+
+#closeConversationBtn:hover {
+  background: linear-gradient(to right, #dc2626, #b91c1c);
+}
+
 #fileLabel{
   font-size: 14px;
-  color: #ecf0f1;
+  color: var(--text-primary);
   user-select: none;
   font-weight: 500;
 }
 
 #conversionStatus{
   font-size: 12px;
-  color: #bdc3c7;
+  color: var(--text-secondary);
   padding: 4px 10px;
-  background: rgba(255,255,255,0.1);
+  background: var(--card-bg);
   border-radius: 6px;
   display: none;
+}
+
+/* Theme selector */
+#themeSelector {
+  margin-left: auto;
+  margin-right: 10px;
+  position: relative;
+}
+
+#themeBtn {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+#themeBtn:hover {
+  background: var(--hover-bg);
+}
+
+#themeDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px var(--shadow-color);
+  padding: 8px 0;
+  display: none;
+  z-index: 100001;
+  min-width: 150px;
+}
+
+.theme-option {
+  padding: 8px 16px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-option:hover {
+  background: var(--hover-bg);
+}
+
+.theme-option.active {
+  background: rgba(16, 163, 127, 0.2);
+  color: #10a37f;
+  font-weight: 600;
+}
+
+.theme-option .theme-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+/* Dark mode toggle */
+#darkModeToggle {
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#darkModeToggle:hover {
+  background: var(--hover-bg);
+}
+
+#darkModeToggle .toggle-icon {
+  font-size: 16px;
 }
 
 /* =============================== */
@@ -104,9 +280,9 @@ button{
 }
 
 #devToolsBtn{
-  background: rgba(255,255,255,0.1);
-  color: white;
-  border: 1px solid rgba(255,255,255,0.2);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
@@ -115,18 +291,17 @@ button{
 }
 
 #devToolsBtn:hover{
-  background: rgba(255,255,255,0.2);
-  border-color: rgba(255,255,255,0.3);
+  background: var(--hover-bg);
 }
 
 #devToolsMenu{
   position: absolute;
   top: 42px;
   left: 0;
-  background: #2c3e50;
-  border: 1px solid #34495e;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 20px var(--shadow-color);
   padding: 12px;
   display: none;
   z-index: 100001;
@@ -138,7 +313,7 @@ button{
   align-items: center;
   gap: 10px;
   font-size: 13px;
-  color: #ecf0f1;
+  color: var(--text-primary);
   margin: 8px 0;
 }
 
@@ -156,11 +331,11 @@ button{
   left: 0;
   width: 260px;
   height: calc(100vh - var(--top-nav-height));
-  background: linear-gradient(to bottom, #2c3e50, #34495e);
-  border-right: 1px solid #1a252f;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
   overflow-y: auto;
   z-index: 9999;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+  box-shadow: 2px 0 10px var(--shadow-color);
   transition: width 0.3s ease;
   overflow-x: hidden; /* Prevent horizontal overflow */
 }
@@ -173,23 +348,23 @@ button{
   padding: 15px 15px 10px 15px;
   cursor: pointer;
   user-select: none;
-  color: #ecf0f1;
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 13px;
   transition: background 0.3s ease;
-  background: rgba(255,255,255,0.05);
+  background: var(--card-bg);
   width: 100%;
   box-sizing: border-box;
   min-width: 0; /* Prevent overflow */
 }
 
 .section-header:hover {
-  background: rgba(255,255,255,0.1);
+  background: var(--hover-bg);
 }
 
 .section-header .toggle-icon {
   font-size: 12px;
-  color: #95a5a6;
+  color: var(--text-secondary);
   transition: transform 0.3s ease;
   flex-shrink: 0; /* Prevent icon from being cut off */
 }
@@ -200,7 +375,7 @@ button{
 
 .section-content {
   padding: 0 15px 15px 15px;
-  background: rgba(255,255,255,0.03);
+  background: var(--card-bg);
   overflow: hidden;
   transition: all 0.3s ease;
   width: 100%;
@@ -230,9 +405,9 @@ button{
   padding: 10px 12px;
   font-size: 14px;
   border-radius: 8px;
-  border: 1px solid #4a5f7a;
-  background: rgba(255,255,255,0.1);
-  color: #ecf0f1;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-primary);
   box-sizing: border-box;
   transition: all 0.3s ease;
   min-width: 0; /* Prevent overflow */
@@ -246,7 +421,7 @@ button{
 }
 
 #searchBar::placeholder {
-  color: #95a5a6;
+  color: var(--text-secondary);
 }
 
 #leftSearchResults{
@@ -260,13 +435,13 @@ button{
 
 .search-result-item{
   padding: 12px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   margin-bottom: 10px;
   cursor: pointer;
   font-size: 13px;
-  color: #ecf0f1;
+  color: var(--text-primary);
   transition: all 0.3s ease;
   width: 100%;
   box-sizing: border-box;
@@ -290,13 +465,13 @@ button{
 /* Conversations section */
 .conversation-item {
   padding: 12px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   margin-bottom: 10px;
   cursor: pointer;
   font-size: 12px;
-  color: #ecf0f1;
+  color: var(--text-primary);
   transition: all 0.3s ease;
   position: relative;
   width: 100%;
@@ -336,7 +511,7 @@ button{
 }
 
 .conversation-item .date {
-  color: #95a5a6;
+  color: var(--text-secondary);
   font-size: 11px;
   margin-bottom: 4px;
   display: block;
@@ -346,12 +521,12 @@ button{
   font-weight: 600;
   margin-bottom: 4px;
   display: block;
-  color: #ecf0f1;
+  color: var(--text-primary);
   word-wrap: break-word;
 }
 
 .conversation-item .meta {
-  color: #95a5a6;
+  color: var(--text-secondary);
   font-size: 11px;
   display: block;
 }
@@ -359,12 +534,12 @@ button{
 .conversations-empty {
   padding: 15px;
   text-align: center;
-  color: #95a5a6;
+  color: var(--text-secondary);
   font-size: 13px;
   font-style: italic;
-  background: rgba(255,255,255,0.05);
+  background: var(--card-bg);
   border-radius: 8px;
-  border: 1px dashed rgba(255,255,255,0.1);
+  border: 1px dashed var(--border-color);
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -373,11 +548,11 @@ button{
 .conversations-loading {
   padding: 15px;
   text-align: center;
-  color: #95a5a6;
+  color: var(--text-secondary);
   font-size: 13px;
-  background: rgba(255,255,255,0.05);
+  background: var(--card-bg);
   border-radius: 8px;
-  border: 1px dashed rgba(255,255,255,0.1);
+  border: 1px dashed var(--border-color);
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -404,35 +579,36 @@ button{
   right: 0;
   width: 420px;
   height: calc(100vh - var(--top-nav-height));
-  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-  border-left: 1px solid #dee2e6;
+  background: var(--right-panel-bg);
+  border-left: 1px solid var(--border-color);
   overflow-y: auto;
   z-index: 9999;
-  box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+  box-shadow: -2px 0 10px var(--shadow-color);
+  color: var(--right-panel-text);
 }
 
 /* Sticky header for viewer */
 #viewerHeader {
   position: sticky;
   top: 0;
-  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  background: var(--bg-secondary);
   z-index: 100;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px var(--shadow-color);
   padding-bottom: 10px;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border-color);
 }
 
 #viewerTabs{
   display: flex;
   gap: 8px;
   padding: 12px;
-  background: linear-gradient(to right, #f1f3f4, #e8eaed);
-  border-bottom: 1px solid #dee2e6;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .viewerTab{
   padding: 8px 16px;
-  background: linear-gradient(to bottom, #e9ecef, #dee2e6);
+  background: var(--card-bg);
   border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
@@ -440,9 +616,10 @@ button{
   user-select: none;
   transition: all 0.3s ease;
   border: 1px solid transparent;
+  color: var(--text-primary);
 }
 .viewerTab:hover {
-  background: linear-gradient(to bottom, #dee2e6, #ced4da);
+  background: var(--hover-bg);
   transform: translateY(-2px);
 }
 .viewerTab.active{
@@ -454,7 +631,7 @@ button{
 
 .viewerSubTab{
   padding: 6px 12px;
-  background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+  background: var(--card-bg);
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
@@ -462,10 +639,11 @@ button{
   user-select: none;
   margin: 2px;
   transition: all 0.3s ease;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 .viewerSubTab:hover {
-  background: linear-gradient(to bottom, #e9ecef, #dee2e6);
+  background: var(--hover-bg);
   transform: translateY(-1px);
 }
 .viewerSubTab.active{
@@ -482,12 +660,12 @@ button{
   flex-wrap: wrap;
   position: sticky;
   top: 65px;
-  background: white;
+  background: var(--bg-primary);
   padding: 12px;
   z-index: 99;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  border: 1px solid var(--border-color);
 }
 
 #viewerButtons button{
@@ -522,10 +700,10 @@ button{
   top: 120px;
   right: 425px;
   width: 250px;
-  background: linear-gradient(to bottom, #2c3e50, #34495e);
-  border: 1px solid #1a252f;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 25px var(--shadow-color);
   z-index: 1000;
   transition: all 0.3s ease;
   max-height: 70vh;
@@ -564,17 +742,17 @@ button{
 
 #branchIndexSearch {
   padding: 12px;
-  background: #2c3e50;
-  border-bottom: 1px solid #34495e;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 #branchIndexSearch input {
   width: 100%;
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid #4a5f7a;
-  background: rgba(255,255,255,0.1);
-  color: #ecf0f1;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-primary);
   font-size: 13px;
   box-sizing: border-box;
 }
@@ -586,7 +764,7 @@ button{
 }
 
 #branchIndexSearch input::placeholder {
-  color: #95a5a6;
+  color: var(--text-secondary);
 }
 
 #branchIndex {
@@ -598,13 +776,13 @@ button{
 .branch-index-item {
   padding: 10px;
   margin: 6px 0;
-  background: rgba(255,255,255,0.05);
+  background: var(--card-bg);
   border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
-  border-left: 4px solid #4a5f7a;
+  border-left: 4px solid var(--border-color);
   transition: all 0.3s ease;
-  color: #ecf0f1;
+  color: var(--text-primary);
 }
 
 .branch-index-item:hover {
@@ -617,7 +795,7 @@ button{
   background: rgba(76, 175, 80, 0.2);
   border-left-color: #4CAF50;
   font-weight: bold;
-  color: white;
+  color: var(--text-primary);
 }
 
 .branch-index-item b {
@@ -631,10 +809,11 @@ button{
   font-size: 14px;
   white-space: normal;
   min-height: 200px;
-  background: white;
+  background: var(--card-bg);
   border-radius: 8px;
   margin: 15px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  color: var(--text-primary);
 }
 
 /* Message highlight for jumping */
@@ -670,7 +849,7 @@ button{
   top: var(--top-nav-height);
   width: calc(100vw - 260px - 420px);
   height: calc(100vh - var(--top-nav-height));
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--bg-graph);
   overflow: hidden;
 }
 
@@ -740,19 +919,67 @@ button{
 
 #tooltip{
   position: absolute;
-  max-width: 320px;
-  background: linear-gradient(to bottom right, #2c3e50, #34495e);
-  border: 1px solid #1a252f;
+  max-width: 400px;
+  max-height: 400px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 12px;
   font-size: 13px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 25px var(--shadow-color);
   z-index: 999999;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease;
-  color: #ecf0f1;
+  color: var(--text-primary);
   backdrop-filter: blur(10px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#tooltipContent {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+#tooltipContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+#tooltipContent::-webkit-scrollbar-track {
+  background: var(--card-bg);
+  border-radius: 3px;
+}
+
+#tooltipContent::-webkit-scrollbar-thumb {
+  background: #10a37f;
+  border-radius: 3px;
+}
+
+#tooltipCopyBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--text-primary);
+  cursor: pointer;
+  z-index: 10;
+  display: none;
+}
+
+#tooltip:hover #tooltipCopyBtn {
+  display: block;
+}
+
+#tooltipCopyBtn:hover {
+  background: rgba(16, 163, 127, 0.2);
+  border-color: #10a37f;
 }
 
 /* =============================== */
@@ -987,15 +1214,15 @@ button{
 }
 
 .branch-conversation .message-content pre {
-  background: linear-gradient(to right, #2c3e50, #34495e);
+  background: linear-gradient(to right, var(--bg-primary), var(--bg-secondary));
   padding: 15px;
   border-radius: 8px;
   overflow-x: auto;
   font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
   font-size: 0.9em;
   position: relative;
-  color: #ecf0f1;
-  border: 1px solid #1a252f;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .branch-conversation .message-content code {
@@ -1003,7 +1230,7 @@ button{
   padding: 3px 6px;
   border-radius: 4px;
   font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -1011,7 +1238,7 @@ button{
   border-left: 4px solid #3498db;
   margin: 15px 0;
   padding-left: 20px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   font-style: italic;
   background: rgba(52, 152, 219, 0.05);
   padding: 10px 15px;
@@ -1029,17 +1256,17 @@ button{
   top: 10px;
   right: 10px;
   background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0.8));
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 6px 12px;
   font-size: 12px;
-  color: #2c3e50;
+  color: var(--text-primary);
   cursor: pointer;
   opacity: 0;
   transition: all 0.3s ease;
   z-index: 10;
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .code-block-wrapper:hover .code-copy-btn {
@@ -1051,7 +1278,7 @@ button{
   color: white;
   border-color: rgba(76, 175, 80, 0.3);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px var(--shadow-color);
 }
 
 .code-copy-btn.copied {
@@ -1117,6 +1344,7 @@ button{
   <div id="topNav">
     <button id="loadJsonBtn">Load Conversation JSON</button>
     <button id="resetLayoutBtn">Reset Layout</button>
+    <button id="closeConversationBtn">Close Conversation</button>
 
     <div id="devToolsContainer">
       <button id="devToolsBtn">Developer Tools ▼</button>
@@ -1134,6 +1362,38 @@ button{
 
     <div id="fileLabel">(no file loaded)</div>
     <div id="conversionStatus"></div>
+    
+    <div id="themeSelector">
+      <button id="themeBtn">Themes ▼</button>
+      <div id="themeDropdown">
+        <div class="theme-option active" data-theme="dark">
+          <div class="theme-icon" style="background: #2c3e50;"></div>
+          <span>Dark</span>
+        </div>
+        <div class="theme-option" data-theme="light">
+          <div class="theme-icon" style="background: #ffffff; border: 1px solid #ccc;"></div>
+          <span>Light</span>
+        </div>
+        <div class="theme-option" data-theme="blue">
+          <div class="theme-icon" style="background: #1a237e;"></div>
+          <span>Blue</span>
+        </div>
+        <div class="theme-option" data-theme="green">
+          <div class="theme-icon" style="background: #1b5e20;"></div>
+          <span>Green</span>
+        </div>
+        <div class="theme-option" data-theme="purple">
+          <div class="theme-icon" style="background: #4a148c;"></div>
+          <span>Purple</span>
+        </div>
+      </div>
+    </div>
+    
+    <button id="darkModeToggle">
+      <span class="toggle-icon">🌙</span>
+      <span>Dark Mode</span>
+    </button>
+
     <div id="formatBadge" style="
       font-size: 12px;
       padding: 4px 10px;
@@ -1179,7 +1439,7 @@ button{
         <div class="viewerTab" data-mode="branch">Branch Conversation</div>
       </div>
       
-      <div id="subTabsContainer" style="padding: 10px 15px; background: linear-gradient(to right, #f8f9fa, #e9ecef); border-bottom: 1px solid #dee2e6; display: flex; gap: 8px; flex-wrap: wrap;">
+      <div id="subTabsContainer" style="padding: 10px 15px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); display: flex; gap: 8px; flex-wrap: wrap;">
         <div class="viewerSubTab active" data-submode="rendered">Rendered</div>
         <div class="viewerSubTab" data-submode="markdown">Markdown</div>
         <div class="viewerSubTab" data-submode="html">HTML</div>
@@ -1194,7 +1454,7 @@ button{
       </div>
     </div>
 
-    <div id="viewerContent"><div style="color:#777; text-align: center; padding: 40px; font-style: italic;">Select a node to view its content.</div></div>
+    <div id="viewerContent"><div style="color: var(--text-secondary); text-align: center; padding: 40px; font-style: italic;">Select a node to view its content.</div></div>
     <div id="rightDragHandle" class="drag-handle"></div>
   </div>
 
@@ -1204,7 +1464,7 @@ button{
     <div id="branchIndexSearch" style="display: none;">
       <div style="position: relative;">
         <input type="text" id="branchSearchInput" placeholder="Search in branch..." style="width: 100%; padding-right: 30px; box-sizing: border-box;" />
-        <button id="clearBranchSearch" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #95a5a6; cursor: pointer; font-size: 16px; padding: 2px 5px;">×</button>
+        <button id="clearBranchSearch" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 16px; padding: 2px 5px;">×</button>
       </div>
     </div>
     <div id="branchIndex"></div>
@@ -1212,7 +1472,10 @@ button{
 
   <svg id="graph"></svg>
   <canvas id="minimap"></canvas>
-  <div id="tooltip"></div>
+  <div id="tooltip">
+    <button id="tooltipCopyBtn">Copy</button>
+    <div id="tooltipContent"></div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -1238,6 +1501,8 @@ button{
   let conversationsList = []; // Store all conversations from conversations.json
   let currentConversationIndex = -1;
   let searchResultsAcrossAllConversations = []; // Store search results across all conversations
+  let isDarkMode = true; // Default to dark mode
+  let currentTheme = 'dark'; // Default theme
 
   function detectFormat(json) {
     // Check if it's an array of conversations (OpenAI conversations.json)
@@ -1357,8 +1622,26 @@ button{
     
     let html = '';
     
+    // Separate conversations with matches and without matches
+    const conversationsWithMatches = [];
+    const conversationsWithoutMatches = [];
+    
     conversationsList.forEach((conv, index) => {
       const isActive = index === currentConversationIndex;
+      const hasMatches = conv.searchMatches > 0;
+      
+      if (hasMatches) {
+        conversationsWithMatches.push({conv, index, isActive});
+      } else {
+        conversationsWithoutMatches.push({conv, index, isActive});
+      }
+    });
+    
+    // Sort conversations with matches by match count (descending)
+    conversationsWithMatches.sort((a, b) => b.conv.searchMatches - a.conv.searchMatches);
+    
+    // Display conversations with matches first
+    conversationsWithMatches.forEach(({conv, index, isActive}) => {
       const activeClass = isActive ? 'active' : '';
       const hasMatches = conv.searchMatches > 0;
       const matchesClass = hasMatches ? 'has-search-matches' : '';
@@ -1373,6 +1656,28 @@ button{
           <span class="meta">
             ${messageCount} message${messageCount !== 1 ? 's' : ''}
             ${hasMatches ? `<span class="search-match-count">${conv.searchMatches}</span>` : ''}
+            <button class="close-conversation-btn" style="float: right; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 12px; padding: 2px 6px;" data-index="${index}">✕</button>
+          </span>
+        </div>
+      `;
+    });
+    
+    // Display conversations without matches, sorted by date (newest first)
+    conversationsWithoutMatches.sort((a, b) => b.conv.createTime - a.conv.createTime);
+    
+    conversationsWithoutMatches.forEach(({conv, index, isActive}) => {
+      const activeClass = isActive ? 'active' : '';
+      const date = conv.formattedDate;
+      const title = conv.title.length > 50 ? conv.title.substring(0, 50) + '...' : conv.title;
+      const messageCount = conv.messageCount;
+      
+      html += `
+        <div class="conversation-item ${activeClass}" data-index="${index}">
+          <span class="date">${date}</span>
+          <span class="title">${title}</span>
+          <span class="meta">
+            ${messageCount} message${messageCount !== 1 ? 's' : ''}
+            <button class="close-conversation-btn" style="float: right; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 12px; padding: 2px 6px;" data-index="${index}">✕</button>
           </span>
         </div>
       `;
@@ -1380,11 +1685,24 @@ button{
     
     listContainer.innerHTML = html;
     
-    // Add click handlers
+    // Add click handlers for conversation items
     document.querySelectorAll('.conversation-item').forEach(item => {
-      item.addEventListener('click', function() {
+      item.addEventListener('click', function(e) {
+        // Don't trigger if clicking the close button
+        if (e.target.classList.contains('close-conversation-btn')) {
+          return;
+        }
         const index = parseInt(this.dataset.index);
         loadConversation(index);
+      });
+    });
+    
+    // Add click handlers for close buttons
+    document.querySelectorAll('.close-conversation-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const index = parseInt(this.dataset.index);
+        closeConversation(index);
       });
     });
   }
@@ -1398,7 +1716,7 @@ button{
     clearSearchMatches();
     
     // Clear viewer panel
-    document.getElementById('viewerContent').innerHTML = '<div style="color:#777; text-align: center; padding: 40px; font-style: italic;">Select a node to view its content.</div>';
+    document.getElementById('viewerContent').innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 40px; font-style: italic;">Select a node to view its content.</div>';
     
     // Load the conversation
     const conv = conversationsList[index];
@@ -1418,11 +1736,61 @@ button{
     // Clear branch index
     document.getElementById('branchIndex').innerHTML = '';
     
+    // Show close button
+    document.getElementById('closeConversationBtn').style.display = 'inline-block';
+    
     // If there's a search query, apply it to the newly loaded conversation
     const searchQuery = document.getElementById('searchBar').value.trim();
     if (searchQuery) {
       performSearchInCurrentConversation(searchQuery);
     }
+  }
+  
+  function closeConversation(index) {
+    if (index < 0 || index >= conversationsList.length) return;
+    
+    // Remove conversation from list
+    conversationsList.splice(index, 1);
+    
+    // Update all conversation indices
+    conversationsList.forEach((conv, i) => {
+      conv.index = i;
+    });
+    
+    // If we closed the current conversation, load another one or clear
+    if (index === currentConversationIndex) {
+      if (conversationsList.length > 0) {
+        // Load the next conversation, or previous if at the end
+        const newIndex = Math.min(index, conversationsList.length - 1);
+        loadConversation(newIndex);
+      } else {
+        // No conversations left
+        currentConversationIndex = -1;
+        lastLoadedJSON = null;
+        convertedJSON = null;
+        
+        // Clear everything
+        document.getElementById('viewerContent').innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 40px; font-style: italic;">Select a node to view its content.</div>';
+        document.getElementById('fileLabel').innerText = '(no file loaded)';
+        document.getElementById('closeConversationBtn').style.display = 'none';
+        document.getElementById('formatBadge').style.display = 'none';
+        
+        // Clear graph
+        const svg = d3.select("#graph");
+        svg.selectAll("*").remove();
+        
+        // Clear search
+        document.getElementById('searchBar').value = '';
+        document.getElementById('leftSearchResults').innerHTML = '';
+        clearSearchMatches();
+      }
+    } else if (index < currentConversationIndex) {
+      // We removed a conversation before the current one, adjust index
+      currentConversationIndex--;
+    }
+    
+    // Update UI
+    updateConversationsList();
   }
 
   /* =============================== */
@@ -1478,7 +1846,7 @@ button{
       conv.searchMatches = conversationMatches;
     });
     
-    // Update conversation list with highlights
+    // Update conversation list with highlights and proper sorting
     updateConversationsList(query);
     
     // Update search results panel
@@ -1529,11 +1897,11 @@ button{
     const leftResults = document.getElementById('leftSearchResults');
     
     if (searchResultsAcrossAllConversations.length === 0) {
-      leftResults.innerHTML = '<div style="padding: 10px; text-align: center; color: #95a5a6; font-size: 12px;">No matches found</div>';
+      leftResults.innerHTML = '<div style="padding: 10px; text-align: center; color: var(--text-secondary); font-size: 12px;">No matches found</div>';
       return;
     }
     
-    let html = `<div style="padding: 10px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 12px; color: #95a5a6;">
+    let html = `<div style="padding: 10px; margin-bottom: 10px; background: var(--card-bg); border-radius: 8px; font-size: 12px; color: var(--text-secondary);">
       Found ${searchResultsAcrossAllConversations.length} match${searchResultsAcrossAllConversations.length !== 1 ? 'es' : ''} across ${conversationsList.filter(c => c.searchMatches > 0).length} conversation${conversationsList.filter(c => c.searchMatches > 0).length !== 1 ? 's' : ''}
     </div>`;
     
@@ -1554,10 +1922,10 @@ button{
       const group = resultsByConversation[convIndex];
       const isCurrentConversation = parseInt(convIndex) === currentConversationIndex;
       
-      html += `<div style="margin-bottom: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden;">
-        <div style="padding: 10px; background: rgba(255,255,255,0.05); font-weight: 600; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+      html += `<div style="margin-bottom: 15px; background: var(--card-bg); border-radius: 8px; overflow: hidden;">
+        <div style="padding: 10px; background: var(--hover-bg); font-weight: 600; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
           <span>${group.conversation.title}</span>
-          <span style="font-size: 11px; color: #95a5a6;">${group.results.length} match${group.results.length !== 1 ? 'es' : ''}</span>
+          <span style="font-size: 11px; color: var(--text-secondary);">${group.results.length} match${group.results.length !== 1 ? 'es' : ''}</span>
         </div>
         <div style="padding: 5px;">`;
       
@@ -1566,7 +1934,7 @@ button{
         html += `
           <div class="search-result-item" data-conversation-index="${convIndex}" data-node-id="${result.nodeId}">
             <b>${roleIcon} ${result.nodeRole.toUpperCase()}</b>
-            <div style="font-size: 11px; color: #95a5a6; margin-top: 3px;">
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 3px;">
               ${result.nodeText}
             </div>
           </div>
@@ -1650,6 +2018,104 @@ button{
         }
       });
     });
+  }
+
+  /* =============================== */
+  /*     THEME MANAGEMENT            */
+  /* =============================== */
+  
+  function initializeThemeSystem() {
+    // Check for saved theme
+    const savedTheme = localStorage.getItem('multiverseTheme') || 'dark';
+    const savedDarkMode = localStorage.getItem('multiverseDarkMode') !== 'false';
+    
+    // Set initial state
+    isDarkMode = savedDarkMode;
+    currentTheme = savedTheme;
+    
+    // Apply theme
+    applyTheme(currentTheme);
+    updateDarkModeToggle();
+    
+    // Theme selector
+    const themeBtn = document.getElementById('themeBtn');
+    const themeDropdown = document.getElementById('themeDropdown');
+    
+    themeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      themeDropdown.style.display = themeDropdown.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    // Theme options
+    document.querySelectorAll('.theme-option').forEach(option => {
+      option.addEventListener('click', function() {
+        const theme = this.dataset.theme;
+        
+        // Update active state
+        document.querySelectorAll('.theme-option').forEach(opt => {
+          opt.classList.remove('active');
+        });
+        this.classList.add('active');
+        
+        // Apply theme
+        applyTheme(theme);
+        
+        // Close dropdown
+        themeDropdown.style.display = 'none';
+      });
+    });
+    
+    // Dark mode toggle
+    document.getElementById('darkModeToggle').addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      localStorage.setItem('multiverseDarkMode', isDarkMode);
+      updateDarkModeToggle();
+      applyTheme(currentTheme); // Re-apply current theme with dark mode state
+    });
+    
+    // Close dropdown when clicking outside
+    window.addEventListener('click', () => {
+      themeDropdown.style.display = 'none';
+    });
+    
+    // Set active theme option
+    document.querySelectorAll('.theme-option').forEach(option => {
+      if (option.dataset.theme === currentTheme) {
+        option.classList.add('active');
+      }
+    });
+  }
+  
+  function applyTheme(theme) {
+    currentTheme = theme;
+    localStorage.setItem('multiverseTheme', theme);
+    
+    // Remove all theme classes
+    document.body.classList.remove('light-theme', 'blue-theme', 'green-theme', 'purple-theme');
+    
+    // Apply new theme
+    if (theme !== 'dark') {
+      document.body.classList.add(theme + '-theme');
+    }
+    
+    // Update dark mode toggle text
+    updateDarkModeToggle();
+  }
+  
+  function updateDarkModeToggle() {
+    const toggle = document.getElementById('darkModeToggle');
+    const icon = toggle.querySelector('.toggle-icon');
+    const text = toggle.querySelector('span:not(.toggle-icon)');
+    
+    if (currentTheme === 'light') {
+      // In light theme, show moon for dark mode
+      icon.textContent = '🌙';
+      text.textContent = 'Dark Mode';
+    } else {
+      // In dark themes, show sun for light mode
+      icon.textContent = '☀️';
+      text.textContent = 'Light Mode';
+    }
   }
 
   /* =============================== */
@@ -1891,6 +2357,8 @@ button{
   let svg, g, zoom;
 
   const tooltip = document.getElementById("tooltip");
+  const tooltipContent = document.getElementById("tooltipContent");
+  const tooltipCopyBtn = document.getElementById("tooltipCopyBtn");
   let tooltipHideTimer = null;
   const TOOLTIP_LINGER_MS = 2000;
 
@@ -1922,6 +2390,31 @@ button{
 
   tooltip.addEventListener("mouseleave", () => {
     scheduleTooltipHide(TOOLTIP_LINGER_MS);
+  });
+
+  // Tooltip copy button
+  tooltipCopyBtn.addEventListener('click', async function(e) {
+    e.stopPropagation();
+    const content = tooltipContent.innerHTML;
+    
+    try {
+      // Create a temporary element to get text
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = content;
+      const text = tempDiv.textContent || tempDiv.innerText || '';
+      
+      await navigator.clipboard.writeText(text);
+      tooltipCopyBtn.textContent = 'Copied!';
+      setTimeout(() => {
+        tooltipCopyBtn.textContent = 'Copy';
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy tooltip content:', err);
+      tooltipCopyBtn.textContent = 'Failed';
+      setTimeout(() => {
+        tooltipCopyBtn.textContent = 'Copy';
+      }, 2000);
+    }
   });
 
   let isDragging = false;
@@ -2037,6 +2530,13 @@ button{
     if (file && file.type === 'application/json') {
       document.getElementById("fileLabel").innerText = file.name;
       loadJSON(file);
+    }
+  });
+
+  // Close conversation button
+  document.getElementById('closeConversationBtn').addEventListener('click', () => {
+    if (currentConversationIndex >= 0 && conversationsList.length > 0) {
+      closeConversation(currentConversationIndex);
     }
   });
 
@@ -2532,6 +3032,55 @@ button{
     highlightFadeApplied = false;
   }
 
+  /* ENHANCED TOOLTIP WITH RENDERED CONTENT AND COPY */
+  function showTooltip(event, d){
+    clearTooltipHideTimer();
+
+    const text = d.data.text || "(empty)";
+    const role = d.data.role || "unknown";
+    const roleColor = role === "user" ? "#3B82F6" : role === "assistant" ? "#10A37F" : "#666";
+    
+    // Render markdown content
+    const renderedContent = DOMPurify.sanitize(marked.parse(text));
+    
+    tooltipContent.innerHTML = `
+      <div style="color: ${roleColor}; font-weight: bold; margin-bottom: 5px;">${role.toUpperCase()}</div>
+      <div style="max-height: 250px; overflow: auto; font-size: 12px; line-height: 1.4;">
+        ${renderedContent}
+      </div>
+    `;
+
+    // Position tooltip intelligently to stay within bounds
+    const tooltipWidth = 400;
+    const tooltipHeight = 400;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    let left = event.pageX + 15;
+    let top = event.pageY + 15;
+    
+    // Adjust if tooltip would go off screen
+    if (left + tooltipWidth > viewportWidth) {
+      left = event.pageX - tooltipWidth - 15;
+    }
+    if (top + tooltipHeight > viewportHeight) {
+      top = event.pageY - tooltipHeight - 15;
+    }
+    
+    tooltip.style.left = left + "px";
+    tooltip.style.top = top + "px";
+    tooltip.style.pointerEvents = "auto";
+    tooltip.style.opacity = 1;
+
+    if (isSystemData(d.data) || isBracketToken(text)){
+      openViewerPanel(d, text);
+    }
+  }
+
+  function hideTooltip(){
+    scheduleTooltipHide(TOOLTIP_LINGER_MS);
+  }
+
   /* SEARCH SYSTEM - UPDATED FOR CROSS-CONVERSATION */
   const searchInput = document.getElementById("searchBar");
   const leftResults = document.getElementById("leftSearchResults");
@@ -2581,30 +3130,6 @@ button{
       .scale(1);
 
     svg.transition().duration(350).call(zoom.transform, t);
-  }
-
-  /* TOOLTIP */
-  function showTooltip(event, d){
-    clearTooltipHideTimer();
-
-    const text = d.data.text || "(empty)";
-    const role = d.data.role || "unknown";
-    const roleColor = role === "user" ? "#3B82F6" : role === "assistant" ? "#10A37F" : "#666";
-    
-    tooltip.innerHTML = `<div style="color: ${roleColor}; font-weight: bold; margin-bottom: 5px;">${role.toUpperCase()}</div>${text}`;
-
-    tooltip.style.left = (event.pageX + 15) + "px";
-    tooltip.style.top = (event.pageY + 15) + "px";
-    tooltip.style.pointerEvents = "auto";
-    tooltip.style.opacity = 1;
-
-    if (isSystemData(d.data) || isBracketToken(text)){
-      openViewerPanel(d, text);
-    }
-  }
-
-  function hideTooltip(){
-    scheduleTooltipHide(TOOLTIP_LINGER_MS);
   }
 
   /* =============================== */
@@ -2674,12 +3199,12 @@ button{
           <div class="message-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <div class="message-author" style="font-weight: 600; color: ${isUser ? '#1976d2' : isAssistant ? '#388e3c' : '#666'};">
               ${isUser ? '👤 User' : (isAssistant ? '🤖 Assistant' : (isSystem ? '⚙️ System' : '❓ Unknown'))}
-              ${data.id ? `<span style="font-size: 0.8em; color: #666; margin-left: 10px; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px;">#${data.id}</span>` : ''}
+              ${data.id ? `<span style="font-size: 0.8em; color: var(--text-secondary); margin-left: 10px; background: var(--card-bg); padding: 2px 6px; border-radius: 4px;">#${data.id}</span>` : ''}
             </div>
-            ${timestamp ? `<div class="message-time" style="font-size: 0.8em; color: #666; background: rgba(0,0,0,0.05); padding: 3px 8px; border-radius: 4px;">${timestamp}</div>` : ''}
+            ${timestamp ? `<div class="message-time" style="font-size: 0.8em; color: var(--text-secondary); background: var(--card-bg); padding: 3px 8px; border-radius: 4px;">${timestamp}</div>` : ''}
           </div>
           
-          <div class="message-content" style="line-height: 1.6; color: #2c3e50;">
+          <div class="message-content" style="line-height: 1.6; color: var(--text-primary);">
             ${addCopyButtonsToCodeBlocks(DOMPurify.sanitize(marked.parse(msg)))}
           </div>
           
@@ -2692,9 +3217,9 @@ button{
     });
     
     html += `
-      <div class="conversation-summary" style="margin-top: 30px; padding: 20px; background: linear-gradient(to right, #f8f9fa, #e9ecef); border-radius: 12px; font-size: 0.9em; border: 1px solid #dee2e6;">
-        <strong style="color: #2c3e50; display: block; margin-bottom: 10px;">Conversation Summary:</strong>
-        <ul style="margin: 10px 0; padding-left: 20px; color: #495057;">
+      <div class="conversation-summary" style="margin-top: 30px; padding: 20px; background: var(--card-bg); border-radius: 12px; font-size: 0.9em; border: 1px solid var(--border-color);">
+        <strong style="color: var(--text-primary); display: block; margin-bottom: 10px;">Conversation Summary:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px; color: var(--text-secondary);">
           <li>Total messages in branch: <strong>${ancestors.length}</strong></li>
           <li>User messages: <strong style="color: #1976d2;">${ancestors.filter(n => n.data.role === 'user').length}</strong></li>
           <li>Assistant messages: <strong style="color: #388e3c;">${ancestors.filter(n => n.data.role === 'assistant').length}</strong></li>
@@ -2748,7 +3273,7 @@ button{
         <div style="font-weight: ${isCurrent ? 'bold' : '600'}; font-size: 12px; margin-bottom: 4px;">
           ${index + 1}. ${roleIcon} ${data.id || ''}
         </div>
-        <div style="font-size: 11px; color: #95a5a6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <div style="font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
           ${msg.substring(0, 50)}${msg.length > 50 ? '...' : ''}
         </div>
       `;
@@ -2774,9 +3299,9 @@ button{
       const countDiv = document.createElement('div');
       countDiv.style.padding = '8px';
       countDiv.style.fontSize = '11px';
-      countDiv.style.color = '#95a5a6';
+      countDiv.style.color = 'var(--text-secondary)';
       countDiv.style.textAlign = 'center';
-      countDiv.style.borderTop = '1px solid #34495e';
+      countDiv.style.borderTop = '1px solid var(--border-color)';
       countDiv.innerHTML = `Showing ${filteredCount} of ${ancestors.length} messages`;
       branchIndex.appendChild(countDiv);
     }
@@ -3072,7 +3597,7 @@ button{
       }
     } else if (mode === "branch") {
       if (!currentBranchNode) {
-        content.innerHTML = "<div style='color:#777; text-align: center; padding: 40px; font-style: italic;'>Select a node first to view branch conversation.</div>";
+        content.innerHTML = "<div style='color: var(--text-secondary); text-align: center; padding: 40px; font-style: italic;'>Select a node first to view branch conversation.</div>";
         return;
       }
       
@@ -3518,6 +4043,9 @@ ${bodyContent}
 
   // Initialize collapsible sections
   initializeCollapsibleSections();
+  
+  // Initialize theme system
+  initializeThemeSystem();
   
   // Initialize with node mode
   switchMode("node", "rendered");

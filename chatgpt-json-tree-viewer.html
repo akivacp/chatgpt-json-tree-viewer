@@ -3570,6 +3570,136 @@ function initializeHelpSystem() {
       `
     },
     {
+      id: 'developer-settings',
+      title: '⚙️ Developer Settings',
+      content: `
+        <h3>Developer Tools Settings</h3>
+        
+        <h4>Show system nodes</h4>
+        <div style="background: var(--card-bg); padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border-color);">
+          <p><strong>Purpose:</strong> Controls visibility of system/empty nodes in the conversation tree.</p>
+          
+          <h5>What are system nodes?</h5>
+          <ul>
+            <li>Empty messages or placeholder nodes</li>
+            <li>Technical system prompts that aren't user-visible</li>
+            <li>Nodes with bracket-only content like "[code]" or "[image]"</li>
+            <li>Messages with model_editable_context or similar metadata</li>
+          </ul>
+          
+          <h5>Default behavior:</h5>
+          <ul>
+            <li><strong>OFF</strong>: System nodes are automatically collapsed/removed</li>
+            <li><strong>ON</strong>: All system nodes appear as dashed circles in the graph</li>
+          </ul>
+          
+          <h5>When to turn ON:</h5>
+          <ul>
+            <li>Debugging conversation structure</li>
+            <li>Viewing hidden system prompts</li>
+            <li>Understanding platform-specific metadata</li>
+            <li>Analyzing complete conversation flow</li>
+          </ul>
+        </div>
+        
+        <h4>Auto-format detection</h4>
+        <div style="background: var(--card-bg); padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border-color);">
+          <p><strong>Purpose:</strong> Automatically detects and converts various AI platform formats.</p>
+          
+          <h5>Supported formats:</h5>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0;">
+            <span class="format-badge format-openai">OpenAI ChatGPT</span>
+            <span class="format-badge format-deepseek">DeepSeek Exporter</span>
+            <span class="format-badge format-deepseek">DeepSeek Chat</span>
+            <span class="format-badge format-claude">Claude/Anthropic</span>
+            <span class="format-badge format-grok">Grok/xAI</span>
+            <span class="format-badge format-mistral">Mistral AI</span>
+          </div>
+          
+          <h5>Detection process:</h5>
+          <ol>
+            <li>Analyzes JSON structure when file is loaded</li>
+            <li>Identifies platform by metadata and field patterns</li>
+            <li>Converts to unified Multiverse format</li>
+            <li>Displays format badge in top bar</li>
+          </ol>
+          
+          <h5>When to turn OFF:</h5>
+          <ul>
+            <li>Working with custom/converted files already in Multiverse format</li>
+            <li>False detection with unusual JSON structures</li>
+            <li>Debugging conversion issues</li>
+          </ul>
+          
+          <div style="background: rgba(16, 163, 127, 0.1); padding: 10px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #10a37f;">
+            <strong>💡 Note:</strong> Original data is always preserved in "Original" view mode, regardless of conversion.
+          </div>
+        </div>
+        
+        <h4>Show tooltips</h4>
+        <div style="background: var(--card-bg); padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border-color);">
+          <p><strong>Purpose:</strong> Controls hover tooltips that show message previews.</p>
+          
+          <h5>Tooltip features:</h5>
+          <ul>
+            <li>Shows rendered markdown preview of messages</li>
+            <li>Includes role information (User/Assistant/System)</li>
+            <li>Has copy button for quick copying</li>
+            <li>Appears when hovering over nodes in the graph</li>
+          </ul>
+          
+          <h5>When to turn OFF:</h5>
+          <ul>
+            <li>On touch devices where hover doesn't work well</li>
+            <li>If tooltips are distracting during navigation</li>
+            <li>Performance issues with very large conversations</li>
+          </ul>
+        </div>
+        
+        <h4>Tooltip timer</h4>
+        <div style="background: var(--card-bg); padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid var(--border-color);">
+          <p><strong>Purpose:</strong> Controls how long tooltips stay visible after mouse leaves.</p>
+          
+          <h5>How it works:</h5>
+          <ul>
+            <li><strong>Trigger:</strong> Hover over a node shows tooltip</li>
+            <li><strong>Stay:</strong> Tooltip stays while mouse is over node OR tooltip</li>
+            <li><strong>Fade:</strong> After mouse leaves, timer starts counting down</li>
+            <li><strong>Hide:</strong> Tooltip fades out after timer expires</li>
+          </ul>
+          
+          <h5>Recommended settings:</h5>
+          <ul>
+            <li><strong>500-1000ms</strong>: Quick reading, fast navigation</li>
+            <li><strong>2000-3000ms</strong>: Standard reading speed</li>
+            <li><strong>5000-10000ms</strong>: Slow reading, careful analysis</li>
+          </ul>
+          
+          <h5>Special behaviors:</h5>
+          <ul>
+            <li>Hovering over the tooltip itself pauses the timer</li>
+            <li>Moving to another node immediately switches tooltips</li>
+            <li>Clicking a node removes its tooltip</li>
+          </ul>
+          
+          <div style="background: rgba(255, 193, 7, 0.1); padding: 10px; border-radius: 6px; margin-top: 10px; border-left: 4px solid #ffc107;">
+            <strong>⚡ Pro Tip:</strong> Set to 500-1000ms for faster navigation, 3000ms+ if you want to read entire messages in tooltips.
+          </div>
+        </div>
+        
+        <h4>Settings Persistence</h4>
+        <div style="background: rgba(33, 150, 243, 0.1); padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #2196F3;">
+          <p><strong>All developer settings are saved in your browser's local storage.</strong></p>
+          <ul>
+            <li>Settings persist between browser sessions</li>
+            <li>Each setting is saved independently</li>
+            <li>Clearing browser cache will reset to defaults</li>
+            <li>Settings are browser-specific (not synced across browsers)</li>
+          </ul>
+        </div>
+      `
+    },
+    {
       id: 'keyboard-shortcuts',
       title: '⌨️ Keyboard Shortcuts',
       content: `

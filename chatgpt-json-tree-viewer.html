@@ -2,11 +2,90 @@
 
 
 <!DOCTYPE html>
+<!--
+  ==========================================================================
+  MAINTAINER NOTES — READ BEFORE EDITING (humans AND AI/LLM agents)
+  ==========================================================================
+  This is a single-file app: all HTML, CSS and JS live in this one document.
+
+  If an LLM / automated agent changes anything user-visible in this file, it
+  MUST do all of the following in the SAME edit session:
+
+  1. BUMP THE VERSION everywhere it appears (keep them all identical):
+       - <title> in <head>
+       - .logo-version span in the top bar
+       - the help modal heading  (<h2>ChatGPT JSON Tree Viewer vX.Y.Z — Help</h2>)
+       - the help "Overview" topic heading
+       - document.title assignment near updateTopbarTitle()
+       - the console.log(...) line at the bottom of the script
+       - the new changelog entry heading (see #2)
+     Bump the MINOR number for features, the PATCH number for bug fixes
+     (e.g. v7.8.0 -> v7.9.0 for a feature, v7.9.1 for a fix).
+
+  2. UPDATE THE CHANGELOG array (`const changelog = [...]`, search for
+     "CHANGELOG" further down). Add a NEW entry as the FIRST element with:
+       { version: 'vX.Y.Z', date: '<today, YYYY-MM-DD>', latest: true, items: [...] }
+     and set `latest: false` on the previously-first entry. Each item is
+     { type: 'new' | 'change' | 'fix', text: '<p>HTML description</p>' }.
+
+  3. DOCUMENT the change in the in-app Help topics (`const helpTopics = [...]`)
+     if it adds or changes user-facing behavior, settings or shortcuts.
+
+  4. GIVE EVERY NEW BUTTON, CONTROL AND FEATURE A `title="..."` TOOLTIP
+     describing what it does in plain language. This app relies on native
+     tooltips throughout the UI, so a feature is NOT complete until every new
+     interactive element it introduces has one — including menu items, tabs,
+     buttons, selects, sliders, number inputs, checkboxes, toggles, theme
+     dots, graph controls, popout controls, and any element generated
+     dynamically in JavaScript (set `.title = '...'` on those). The rule:
+     every new button or feature must ship with a tooltip in the same edit.
+     (Verify with a search for <button/<input/<select lines lacking `title=`
+     before you finish.)
+
+  5. TELL THE USER, in your final reply, that this file contains maintainer
+     instructions (this block) and ask them to follow through with the update
+     steps above. Explicitly mention: the version bump, the changelog entry,
+     the Help-topic documentation, and the "tooltip on every new button or
+     feature" rule — then confirm each one is done (or call out anything you
+     deliberately left out and why). Never finish an edit silently without
+     raising these instructions with the user.
+
+  6. ASK THE USER HOW YOU SHOULD BEHAVE NEXT TIME. As part of that same
+     check-in, ask which of these they want for future edits to this file:
+       (a) KEEP ASKING — run the checklist every time, but pause and confirm
+           with the user before/after each edit (safest; the default).
+       (b) PROCEED AUTOMATICALLY — apply the whole checklist silently on every
+           edit and just report what was done in one short summary at the end.
+       (c) DIFFERENT INSTRUCTIONS — the user supplies their own rules, which
+           take priority over anything in this block.
+     Until the user answers, default to (a). Once they answer, obey it for the
+     rest of the session and record it in the USER PREFERENCE field below so
+     future edits (in a new session) can read it.
+
+  7. EDIT ONLY THIS FILE. Do not create, modify, rename, delete or "sync" any
+     other file, even when it looks like a copy or variant of this app (for
+     example MOBILE_*.html, *- Copy.html, olderVersions/*, or exports). Do not
+     copy this MAINTAINER NOTES block into other files either — the user works
+     on this single file on purpose. If a change seems to belong in another
+     file, ask first instead of editing it.
+
+  --------------------------------------------------------------------------
+  USER PREFERENCE (per rule 6 — filled in by the user; default is (a) if blank)
+    - Ask each time / proceed automatically / custom:
+      (a) KEEP ASKING  <== ACTIVE CHOICE, set 2026-10-19. Run the checklist on
+          every edit, but pause and confirm with the user each time. Do not
+          switch to (b) or (c) unless the user asks for it.
+  --------------------------------------------------------------------------
+
+  Keep the file self-contained: no build step, no external assets other than
+  the CDN <script> tags at the top of <head>.
+  ==========================================================================
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ChatGPT JSON Tree Viewer v7.8.0</title>
+<title>ChatGPT JSON Tree Viewer v7.9.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
@@ -105,6 +184,46 @@
   --text-secondary: #9070b8;
   --accent-teal: #cc88ff;
   --accent-teal-dim: #aa66dd;
+}
+
+/* System — follows the OS light/dark preference. Dark is the fallback (below). */
+@media (prefers-color-scheme: light) {
+  [data-theme="system"] {
+    --bg-primary: #f0f2f8;
+    --bg-secondary: #e8eaf2;
+    --bg-tertiary: #dde0ee;
+    --bg-panel: #f5f6fc;
+    --bg-hover: #e0e3f0;
+    --bg-active: #d4d8ed;
+    --border-color: #c8cce0;
+    --border-light: #b8bcda;
+    --text-primary: #1a1d2e;
+    --text-secondary: #4a5080;
+    --text-muted: #8090b0;
+    --scrollbar-color: #00a882;
+  }
+}
+[data-theme="xp"] {
+  --bg-primary: #ece9d8;
+  --bg-secondary: #d4d0c8;
+  --bg-tertiary: #c9c5ba;
+  --bg-panel: #f1eee3;
+  --bg-hover: #e2ded0;
+  --bg-active: #cbd8ee;
+  --border-color: #919b9c;
+  --border-light: #7f9db9;
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #5f6b74;
+  --accent-teal: #0a53d0;
+  --accent-teal-dim: #0842a8;
+  --scrollbar-color: #0a53d0;
+  --node-user: linear-gradient(135deg, #4a9bff, #0058e6);
+  --node-user-border: #0058e6;
+  --node-assistant: linear-gradient(135deg, #7ed77e, #2f7d2f);
+  --node-assistant-border: #2f7d2f;
+  --node-other: linear-gradient(135deg, #d8b0ff, #7a3fbf);
+  --node-other-border: #7a3fbf;
 }
 
 [data-theme="custom"] {
@@ -319,6 +438,8 @@ body {
 .theme-dot.t-blue { background: #0a1525; border-color: #224060; }
 .theme-dot.t-green { background: #0a1a0c; border-color: #224830; }
 .theme-dot.t-purple { background: #130c1a; border-color: #382255; }
+.theme-dot.t-system { background: linear-gradient(135deg, #e8eaf2 0%, #e8eaf2 50%, #1a1e2a 50%, #1a1e2a 100%); border-color: #8a90b8; }
+.theme-dot.t-xp { background: linear-gradient(180deg, #4a9bff 0%, #0058e6 52%, #7ed77e 52%, #2f7d2f 100%); border-color: #7f9db9; }
 .theme-dot.t-custom { background: conic-gradient(red,yellow,lime,cyan,blue,magenta,red); }
 .theme-dot.t-custom.active { border-color: var(--text-primary); }
 #custom-theme-panel {
@@ -938,6 +1059,39 @@ body {
 .cl-item.fix .cl-badge { background: rgba(251,191,36,0.15); color: var(--accent-yellow); }
 .cl-item.change .cl-badge { background: rgba(96,165,250,0.15); color: var(--accent-blue); }
 
+/* Changelog copy controls — a master bar for the whole log plus one group per release */
+.cl-intro { padding: 20px 24px 4px; }
+.cl-intro p { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
+.cl-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 24px 12px; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); position: sticky; top: -20px; z-index: 3; box-shadow: 0 6px 12px -8px rgba(0,0,0,0.5); }
+.cl-toolbar-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+.cl-toolbar-hint { font-size: 11px; color: var(--text-muted); flex: 1; min-width: 160px; }
+.cl-copy-group { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.cl-copy-group .cl-copy-caption { font-size: 10px; color: var(--text-muted); margin-right: 2px; }
+.cl-copy-btn {
+  background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-secondary);
+  font-family: var(--font-ui); font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+  padding: 3px 8px; border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.cl-copy-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-light); }
+.cl-copy-btn.copied { background: var(--accent-green); color: #000; border-color: var(--accent-green); }
+.cl-header .cl-copy-group { margin-left: auto; align-self: center; }
+.cl-copy-group.in-header .cl-copy-btn { font-size: 9px; padding: 2px 6px; opacity: 0.55; }
+.cl-version:hover .cl-copy-group.in-header .cl-copy-btn { opacity: 1; }
+.cl-view-wrap { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.cl-view-select {
+  padding: 3px 6px; background: var(--bg-tertiary); border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm); color: var(--text-secondary);
+  font-family: var(--font-ui); font-size: 11px; cursor: pointer;
+}
+.cl-view-select:focus { outline: none; border-color: var(--accent-teal); color: var(--text-primary); }
+.cl-raw {
+  margin: 0; padding: 20px 24px 24px; overflow-x: auto;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
+  color: var(--text-secondary); white-space: pre-wrap; word-break: break-word;
+  background: var(--bg-primary);
+}
+
 /* Settings modal */
 .settings-body { padding: 20px; overflow-y: auto; flex: 1; min-height: 0; }
 .setting-group { margin-bottom: 20px; }
@@ -1211,7 +1365,7 @@ body {
 }
 </style>
 </head>
-<body data-theme="dark">
+<body data-theme="system">
 <div id="app">
   <!-- TOPBAR -->
   <div id="topbar">
@@ -1226,14 +1380,14 @@ body {
         <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/>
       </svg>
       ChatGPT JSON Tree Viewer
-      <span class="logo-version">v7.8.0</span>
+      <span class="logo-version">v7.9.0</span>
     </div>
-    <button class="topbar-btn primary" onclick="document.getElementById('file-input').click()">
+    <button class="topbar-btn primary" onclick="document.getElementById('file-input').click()" title="Load conversation files — JSON, Markdown/Text, or an opencode .db (you can also drag files onto the graph)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Load File
     </button>
-    <input type="file" id="file-input" accept=".json,.md,.markdown,.txt,.db,.sqlite,.sqlite3" multiple>
-    <span id="format-badge"></span>
+    <input type="file" id="file-input" accept=".json,.md,.markdown,.txt,.db,.sqlite,.sqlite3" multiple title="Choose conversation files to import (.json, .md, .markdown, .txt, .db, .sqlite, .sqlite3)">
+    <span id="format-badge" title="Format detected in the loaded file"></span>
     <button class="topbar-btn" id="btn-close-conv" title="Close current conversation" style="display:none;color:var(--accent-red);border-color:rgba(239,68,68,0.4);">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       Close
@@ -1255,15 +1409,15 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="reset-dropdown" id="reset-dropdown">
-        <button class="reset-opt" id="reset-opt-all">
+        <button class="reset-opt" id="reset-opt-all" title="Reset node positions and refit the graph">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.49"/></svg>
           Reset All <span>nodes + view</span>
         </button>
-        <button class="reset-opt" id="reset-opt-nodes">
+        <button class="reset-opt" id="reset-opt-nodes" title="Restore every node to its original position">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
           Reset Nodes <span>restore positions</span>
         </button>
-        <button class="reset-opt" id="reset-opt-view">
+        <button class="reset-opt" id="reset-opt-view" title="Refit the graph to fill the viewport">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
           Reset View <span>refit viewport</span>
         </button>
@@ -1291,54 +1445,57 @@ body {
       Help
     </button>
     <span id="topbar-conv-title" title="Conversation title — click to select and copy"></span>
-    <a href="https://github.com/akivacp/chatgpt-json-tree-viewer" target="_blank" rel="noopener" style="font-size:11px;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:5px;opacity:0.6;transition:opacity 0.2s;white-space:nowrap;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
+    <a href="https://github.com/akivacp/chatgpt-json-tree-viewer" target="_blank" rel="noopener" title="Open the project on GitHub" style="font-size:11px;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:5px;opacity:0.6;transition:opacity 0.2s;white-space:nowrap;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
       chatgpt-json-tree-viewer
     </a>
     <div id="theme-picker">
-      <div class="theme-dot t-dark" data-theme="dark" title="Dark"></div>
-      <div class="theme-dot t-light" data-theme="light" title="Light"></div>
-      <div class="theme-dot t-blue" data-theme="blue" title="Blue"></div>
-      <div class="theme-dot t-green" data-theme="green" title="Green"></div>
-      <div class="theme-dot t-purple" data-theme="purple" title="Purple"></div>
-      <div class="theme-dot t-custom" data-theme="custom" title="Custom theme" id="btn-custom-theme"></div>
+      <div class="theme-dot t-system" data-theme="system" title="System theme — follows your OS light/dark setting (default)"></div>
+      <div class="theme-dot t-light" data-theme="light" title="Light theme — soft light gray with dark text"></div>
+      <div class="theme-dot t-dark" data-theme="dark" title="Dark theme — deep dark backgrounds with teal accents"></div>
+      <div class="theme-dot t-blue" data-theme="blue" title="Blue theme — deep navy with blue accents"></div>
+      <div class="theme-dot t-green" data-theme="green" title="Green theme — forest green with bright green accents"></div>
+      <div class="theme-dot t-purple" data-theme="purple" title="Purple theme — deep purple with lavender accents"></div>
+      <div class="theme-dot t-xp" data-theme="xp" title="Windows XP theme — Luna blue taskbar, silver windows, green Start button"></div>
+      <div class="theme-dot t-custom" data-theme="custom" title="Custom theme — open the color picker panel" id="btn-custom-theme"></div>
       <div id="custom-theme-panel">
         <div class="ctp-section">
           <h4>Quick Presets</h4>
           <div class="ctp-presets">
-            <button class="ctp-preset" data-preset="dark">Dark</button>
-            <button class="ctp-preset" data-preset="light">Light</button>
-            <button class="ctp-preset" data-preset="blue">Blue</button>
-            <button class="ctp-preset" data-preset="green">Green</button>
-            <button class="ctp-preset" data-preset="purple">Purple</button>
+            <button class="ctp-preset" data-preset="dark" title="Start from the Dark theme colors">Dark</button>
+            <button class="ctp-preset" data-preset="light" title="Start from the Light theme colors">Light</button>
+            <button class="ctp-preset" data-preset="blue" title="Start from the Blue theme colors">Blue</button>
+            <button class="ctp-preset" data-preset="green" title="Start from the Green theme colors">Green</button>
+            <button class="ctp-preset" data-preset="purple" title="Start from the Purple theme colors">Purple</button>
+            <button class="ctp-preset" data-preset="xp" title="Start from the Windows XP (Luna) theme colors">Windows XP</button>
           </div>
         </div>
         <div class="ctp-divider"></div>
         <div class="ctp-section">
           <h4>Backgrounds</h4>
-          <div class="ctp-row"><label>Primary background</label><input type="color" data-var="--custom-bg-primary"></div>
-          <div class="ctp-row"><label>Secondary background</label><input type="color" data-var="--custom-bg-secondary"></div>
-          <div class="ctp-row"><label>Panel background</label><input type="color" data-var="--custom-bg-panel"></div>
+          <div class="ctp-row"><label>Primary background</label><input type="color" data-var="--custom-bg-primary" title="Custom theme: main app background color"></div>
+          <div class="ctp-row"><label>Secondary background</label><input type="color" data-var="--custom-bg-secondary" title="Custom theme: toolbar and header background color"></div>
+          <div class="ctp-row"><label>Panel background</label><input type="color" data-var="--custom-bg-panel" title="Custom theme: side panel background color"></div>
         </div>
         <div class="ctp-section">
           <h4>Text</h4>
-          <div class="ctp-row"><label>Primary text</label><input type="color" data-var="--custom-text-primary"></div>
-          <div class="ctp-row"><label>Secondary text</label><input type="color" data-var="--custom-text-secondary"></div>
+          <div class="ctp-row"><label>Primary text</label><input type="color" data-var="--custom-text-primary" title="Custom theme: main text color"></div>
+          <div class="ctp-row"><label>Secondary text</label><input type="color" data-var="--custom-text-secondary" title="Custom theme: secondary and muted text color"></div>
         </div>
         <div class="ctp-section">
           <h4>Accent &amp; Borders</h4>
-          <div class="ctp-row"><label>Accent color</label><input type="color" data-var="--custom-accent"></div>
-          <div class="ctp-row"><label>Border color</label><input type="color" data-var="--custom-border"></div>
+          <div class="ctp-row"><label>Accent color</label><input type="color" data-var="--custom-accent" title="Custom theme: accent color for highlights, badges and active states"></div>
+          <div class="ctp-row"><label>Border color</label><input type="color" data-var="--custom-border" title="Custom theme: border color"></div>
         </div>
         <div class="ctp-section">
           <h4>Node Colors</h4>
-          <div class="ctp-row"><label>User node</label><input type="color" data-var="--custom-node-user-border"></div>
-          <div class="ctp-row"><label>Assistant node</label><input type="color" data-var="--custom-node-assistant-border"></div>
-          <div class="ctp-row"><label>System node</label><input type="color" data-var="--custom-node-system-border"></div>
-          <div class="ctp-row"><label>Other node</label><input type="color" data-var="--custom-node-other-border"></div>
+          <div class="ctp-row"><label>User node</label><input type="color" data-var="--custom-node-user-border" title="Custom theme: User node color"></div>
+          <div class="ctp-row"><label>Assistant node</label><input type="color" data-var="--custom-node-assistant-border" title="Custom theme: Assistant node color"></div>
+          <div class="ctp-row"><label>System node</label><input type="color" data-var="--custom-node-system-border" title="Custom theme: System node color"></div>
+          <div class="ctp-row"><label>Other node</label><input type="color" data-var="--custom-node-other-border" title="Custom theme: Other node color"></div>
         </div>
         <div class="ctp-divider"></div>
-        <button class="ctp-reset" id="ctp-reset-btn">↺ Reset to current theme defaults</button>
+        <button class="ctp-reset" id="ctp-reset-btn" title="Reset every custom color back to the current theme's defaults">↺ Reset to current theme defaults</button>
       </div>
     </div>
     <!-- MOBILE HAMBURGER (hidden on desktop) -->
@@ -1351,32 +1508,32 @@ body {
   <div id="mob-menu" aria-hidden="true">
     <div id="mob-menu-inner">
       <!-- All topbar actions, laid out as a grid for easy tapping -->
-      <button class="mob-menu-btn" onclick="document.getElementById('file-input').click();closeMobMenu()">
+      <button class="mob-menu-btn" onclick="document.getElementById('file-input').click();closeMobMenu()" title="Load conversation files (JSON, Markdown/Text, or an opencode .db)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Load File
       </button>
-      <button class="mob-menu-btn" id="mob-export-all">
+      <button class="mob-menu-btn" id="mob-export-all" title="Export every conversation as an OpenAI-format JSON file">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export All
       </button>
-      <button class="mob-menu-btn" id="mob-unload-all">
+      <button class="mob-menu-btn" id="mob-unload-all" title="Unload every conversation and start fresh">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
         Unload All
       </button>
-      <button class="mob-menu-btn" id="mob-reset">
+      <button class="mob-menu-btn" id="mob-reset" title="Realign all nodes and refit the graph">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.49"/></svg>
         Reset Layout
       </button>
       <div class="mob-menu-group-label">Tools</div>
-      <button class="mob-menu-btn" id="mob-settings">
+      <button class="mob-menu-btn" id="mob-settings" title="Open settings — tooltips, search debounce, large-file warning and export chunking">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         Settings
       </button>
-      <button class="mob-menu-btn" id="mob-convert-db">
+      <button class="mob-menu-btn" id="mob-convert-db" title="Convert an opencode .db database into a conversations.json file">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M15 11h3a2 2 0 012 2v6"/></svg>
         Convert db
       </button>
-      <button class="mob-menu-btn" id="mob-help">
+      <button class="mob-menu-btn" id="mob-help" title="Open the help guide and version history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Help
       </button>
@@ -1384,12 +1541,14 @@ body {
       <div class="mob-menu-theme-row">
         <span class="mob-menu-theme-label">Theme:</span>
         <div class="mob-theme-dots">
-          <div class="theme-dot t-dark" data-theme="dark" title="Dark"></div>
-          <div class="theme-dot t-light" data-theme="light" title="Light"></div>
-          <div class="theme-dot t-blue" data-theme="blue" title="Blue"></div>
-          <div class="theme-dot t-green" data-theme="green" title="Green"></div>
-          <div class="theme-dot t-purple" data-theme="purple" title="Purple"></div>
-          <div class="theme-dot t-custom" data-theme="custom" title="Custom" id="mob-btn-custom-theme"></div>
+          <div class="theme-dot t-system" data-theme="system" title="System theme — follows your OS light/dark setting (default)"></div>
+          <div class="theme-dot t-light" data-theme="light" title="Light theme — soft light gray with dark text"></div>
+          <div class="theme-dot t-dark" data-theme="dark" title="Dark theme — deep dark backgrounds with teal accents"></div>
+          <div class="theme-dot t-blue" data-theme="blue" title="Blue theme — deep navy with blue accents"></div>
+          <div class="theme-dot t-green" data-theme="green" title="Green theme — forest green with bright green accents"></div>
+          <div class="theme-dot t-purple" data-theme="purple" title="Purple theme — deep purple with lavender accents"></div>
+          <div class="theme-dot t-xp" data-theme="xp" title="Windows XP theme — Luna blue taskbar, silver windows, green Start button"></div>
+          <div class="theme-dot t-custom" data-theme="custom" title="Custom theme — open the color picker panel" id="mob-btn-custom-theme"></div>
         </div>
       </div>
     </div>
@@ -1403,32 +1562,32 @@ body {
       <div id="sidebar-search-wrap">
         <div class="search-wrap-inner">
           <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="sidebar-search" placeholder="Search messages...">
+          <input type="text" id="sidebar-search" placeholder="Search messages..." title="Search message text — results appear in the Messages list below">
         </div>
         <div class="search-opts">
           <span style="font-size:11px;color:var(--text-muted)">Scope:</span>
-          <button class="search-scope-btn active" data-scope="current">Current</button>
-          <button class="search-scope-btn" data-scope="all">All</button>
+          <button class="search-scope-btn active" data-scope="current" title="Search only the conversation currently open in the graph">Current</button>
+          <button class="search-scope-btn" data-scope="all" title="Search every loaded conversation">All</button>
         </div>
         <div class="sort-row" title="Sort the main conversations list">
           <span class="sort-label">Chats:</span>
-          <select class="sort-select" id="conv-sort-field">
+          <select class="sort-select" id="conv-sort-field" title="Sort the conversations list by name, message count, created date or latest message date">
             <option value="name">Name</option>
             <option value="nodes">Number of nodes</option>
             <option value="created">Date created</option>
             <option value="latest" selected>Latest node date</option>
           </select>
-          <button class="sort-dir-btn" id="conv-sort-dir" data-dir="desc" title="Descending">↓</button>
+          <button class="sort-dir-btn" id="conv-sort-dir" data-dir="desc" title="Sort direction: descending — click to switch to ascending">↓</button>
         </div>
         <div class="sort-row" title="Sort the message search results">
           <span class="sort-label">Results:</span>
-          <select class="sort-select" id="result-sort-field">
+          <select class="sort-select" id="result-sort-field" title="Sort the message search results by name, message count, created date or latest message date">
             <option value="name">Name</option>
             <option value="nodes">Number of nodes</option>
             <option value="created">Date created</option>
             <option value="latest" selected>Latest node date</option>
           </select>
-          <button class="sort-dir-btn" id="result-sort-dir" data-dir="desc" title="Descending">↓</button>
+          <button class="sort-dir-btn" id="result-sort-dir" data-dir="desc" title="Sort direction: descending — click to switch to ascending">↓</button>
         </div>
       </div>
       <div class="conversations-header">
@@ -1449,11 +1608,11 @@ body {
 
     <!-- GRAPH AREA -->
     <div id="graph-area">
-      <div id="drop-overlay">Drop JSON file here</div>
+      <div id="drop-overlay" title="Release the mouse button to load the file(s)">Drop JSON file here</div>
       <div id="empty-state">
         <h2>No conversation loaded</h2>
         <p>Load a JSON export from OpenAI, Claude, DeepSeek, Grok, or Mistral to visualize the conversation tree.</p>
-        <div class="drop-zone-indicator">
+        <div class="drop-zone-indicator" title="Click to browse for files, or drag them onto this area">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 8px;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Drop files here or click Load File
         </div>
@@ -1506,7 +1665,7 @@ body {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
       </div>
-      <div id="minimap">
+      <div id="minimap" title="Minimap — click to jump the viewport there, Ctrl/⌘+drag to move the map">
         <canvas id="minimap-canvas"></canvas>
         <div id="minimap-viewport"></div>
         <div id="minimap-label">Map</div>
@@ -1520,8 +1679,8 @@ body {
     <!-- RIGHT PANEL -->
     <div id="panel-right">
       <div id="panel-tabs">
-        <button class="panel-tab active" data-panel="node">Selected Node</button>
-        <button class="panel-tab" data-panel="branch">Branch</button>
+        <button class="panel-tab active" data-panel="node" title="Show the content of the node selected in the graph">Selected Node</button>
+        <button class="panel-tab" data-panel="branch" title="Show the whole branch conversation leading to the selected node">Branch</button>
       </div>
       <div id="panel-content">
         <!-- Node panel -->
@@ -1542,25 +1701,25 @@ body {
               </div>
             </div>
             <div class="content-toolbar">
-              <button class="view-mode-btn active" data-mode="rendered">Rendered</button>
-              <button class="view-mode-btn" data-mode="markdown">Markdown</button>
-              <button class="view-mode-btn" data-mode="html">HTML</button>
-              <button class="view-mode-btn" data-mode="json">JSON</button>
+              <button class="view-mode-btn active" data-mode="rendered" title="View the message as formatted rich text">Rendered</button>
+              <button class="view-mode-btn" data-mode="markdown" title="View the raw Markdown source of the message">Markdown</button>
+              <button class="view-mode-btn" data-mode="html" title="View the rendered HTML source of the message">HTML</button>
+              <button class="view-mode-btn" data-mode="json" title="View the raw JSON of the selected node">JSON</button>
               <div class="toolbar-sep"></div>
-              <button class="action-btn" id="btn-copy" title="Copy content">
+              <button class="action-btn" id="btn-copy" title="Copy this message in the active view mode (Rendered / Markdown / HTML / JSON)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               </button>
-              <button class="action-btn" id="btn-export" title="Export as file">
+              <button class="action-btn" id="btn-export" title="Download this message as a file (.md / .html / .json depending on the view mode)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               </button>
-              <button class="action-btn" id="btn-popout" title="Pop out window">
+              <button class="action-btn" id="btn-popout" title="Open this message in a pop-out window (with in-place view switching and per-message copy)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </button>
-              <button class="action-btn" id="btn-pdf" title="Save as PDF">
+              <button class="action-btn" id="btn-pdf" title="Save this message as a paginated PDF">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               </button>
-              <button class="action-btn" id="btn-toggle-meta" title="Toggle metadata" style="font-size:10px;font-family:var(--font-mono)">M</button>
-              <button class="action-btn active" id="btn-toggle-highlight" title="Toggle search highlight" style="font-size:10px;font-family:var(--font-mono)" title="Highlight search terms">H</button>
+              <button class="action-btn" id="btn-toggle-meta" title="Show or hide the node metadata bar (model, timestamps, token counts)" style="font-size:10px;font-family:var(--font-mono)">M</button>
+              <button class="action-btn active" id="btn-toggle-highlight" title="Highlight search terms inside the rendered message" style="font-size:10px;font-family:var(--font-mono)">H</button>
             </div>
             <div class="content-scroll md-content" id="content-rendered"></div>
             <div class="content-scroll code-view" id="content-markdown" style="display:none"></div>
@@ -1580,22 +1739,22 @@ body {
           </div>
           <div id="branch-view" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
             <div class="content-toolbar">
-              <button class="view-mode-btn active" data-branch-mode="rendered">Rendered</button>
-              <button class="view-mode-btn" data-branch-mode="markdown">Markdown</button>
-              <button class="view-mode-btn" data-branch-mode="html">HTML</button>
-              <button class="view-mode-btn" data-branch-mode="json">JSON</button>
+              <button class="view-mode-btn active" data-branch-mode="rendered" title="View the branch as formatted rich text">Rendered</button>
+              <button class="view-mode-btn" data-branch-mode="markdown" title="View the branch as raw Markdown">Markdown</button>
+              <button class="view-mode-btn" data-branch-mode="html" title="View the branch as rendered HTML source">HTML</button>
+              <button class="view-mode-btn" data-branch-mode="json" title="View the branch as raw JSON">JSON</button>
               <div class="toolbar-sep"></div>
               <span style="font-size:11px;color:var(--text-muted);padding:0 4px" id="branch-stats"></span>
-              <button class="action-btn" id="btn-copy-branch" title="Copy branch">
+              <button class="action-btn" id="btn-copy-branch" title="Copy every visible branch message as plain text with [ROLE] headers">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               </button>
-              <button class="action-btn" id="btn-export-branch" title="Export branch">
+              <button class="action-btn" id="btn-export-branch" title="Download the visible branch as .html / .md / .json depending on the view mode">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               </button>
-              <button class="action-btn" id="btn-popout-branch" title="Pop out branch">
+              <button class="action-btn" id="btn-popout-branch" title="Open this branch in a new browser tab (view switching and copy stay available inside)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </button>
-              <button class="action-btn" id="btn-pdf-branch" title="Save branch as PDF">
+              <button class="action-btn" id="btn-pdf-branch" title="Save the visible branch as a paginated PDF">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               </button>
               <button class="action-btn" id="btn-toggle-branch-index" title="Toggle branch index">
@@ -1608,25 +1767,25 @@ body {
             <div id="branch-filter-bar">
               <div class="branch-filter-roles-row">
                 <span class="branch-filter-label">Show:</span>
-                <button class="branch-role-btn active" data-role="user">User</button>
-                <button class="branch-role-btn active" data-role="assistant">Assistant</button>
-                <button class="branch-role-btn active" data-role="system">System</button>
-                <button class="branch-role-btn active" data-role="other">Other</button>
-                <button class="branch-role-btn active" data-role="all" id="branch-role-all" style="margin-left:4px;border-style:dashed">All</button>
+                <button class="branch-role-btn active" data-role="user" title="Show or hide User messages in this branch">User</button>
+                <button class="branch-role-btn active" data-role="assistant" title="Show or hide Assistant messages in this branch">Assistant</button>
+                <button class="branch-role-btn active" data-role="system" title="Show or hide System messages in this branch">System</button>
+                <button class="branch-role-btn active" data-role="other" title="Show or hide messages with unknown roles in this branch">Other</button>
+                <button class="branch-role-btn active" data-role="all" id="branch-role-all" style="margin-left:4px;border-style:dashed" title="Enable every role at once">All</button>
               </div>
               <div class="branch-filter-search-row">
                 <div class="branch-filter-search-wrap">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                  <input type="text" id="branch-search-input" placeholder="Search in branch…">
+                  <input type="text" id="branch-search-input" placeholder="Search in branch…" title="Highlight search terms inside the branch and count matches">
                 </div>
                 <span id="branch-search-count"></span>
               </div>
               <div class="branch-filter-roles-row">
                 <span class="branch-filter-label">Only in:</span>
-                <button class="branch-scope-btn active" data-scope="user">User</button>
-                <button class="branch-scope-btn active" data-scope="assistant">Assistant</button>
-                <button class="branch-scope-btn active" data-scope="system">System</button>
-                <button class="branch-scope-btn active" data-scope="other">Other</button>
+                <button class="branch-scope-btn active" data-scope="user" title="Include User messages in the branch search">User</button>
+                <button class="branch-scope-btn active" data-scope="assistant" title="Include Assistant messages in the branch search">Assistant</button>
+                <button class="branch-scope-btn active" data-scope="system" title="Include System messages in the branch search">System</button>
+                <button class="branch-scope-btn active" data-scope="other" title="Include messages with unknown roles in the branch search">Other</button>
               </div>
             </div>
             <div class="content-scroll" id="branch-content" style="font-size:13px;"></div>
@@ -1635,13 +1794,13 @@ body {
       </div>
       <!-- Branch index -->
       <div id="branch-index-panel">
-        <div class="branch-index-header" id="branch-index-toggle">
+        <div class="branch-index-header" id="branch-index-toggle" title="Collapse or expand the branch index — a clickable outline of every message in the branch">
           <span>Branch Index</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
         </div>
         <div id="branch-index-body" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
           <div class="branch-search">
-            <input type="text" id="branch-index-search" placeholder="Filter messages...">
+            <input type="text" id="branch-index-search" placeholder="Filter messages..." title="Filter the branch index list by message text">
           </div>
           <div id="branch-list" style="overflow-y:auto;"></div>
         </div>
@@ -1696,15 +1855,15 @@ body {
   <div class="modal-box" style="max-width:400px;">
     <div class="modal-header">
       <h2>Load File</h2>
-      <button class="modal-close" onclick="closeModal('modal-load-mode')">✕</button>
+      <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-load-mode')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;padding:20px;gap:12px;">
       <p id="load-mode-desc" style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:4px;"></p>
-      <button class="topbar-btn" id="load-mode-add" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn" id="load-mode-add" title="Import these files alongside the conversations already loaded" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Add to current project
       </button>
-      <button class="topbar-btn" id="load-mode-replace" style="width:100%;justify-content:center;padding:10px;color:var(--accent-red);border-color:rgba(239,68,68,0.4);">
+      <button class="topbar-btn" id="load-mode-replace" title="Discard everything currently loaded, then import these files" style="width:100%;justify-content:center;padding:10px;color:var(--accent-red);border-color:rgba(239,68,68,0.4);">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
         Unload all &amp; start fresh
       </button>
@@ -1718,20 +1877,20 @@ body {
   <div class="modal-box" style="max-width:420px;">
     <div class="modal-header">
       <h2>⚠️ Large File Detected</h2>
-      <button class="modal-close" onclick="closeModal('modal-large-file')">✕</button>
+      <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-large-file')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;padding:20px;gap:12px;">
       <p id="large-file-desc" style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:4px;"></p>
-      <button class="topbar-btn primary" id="large-file-try" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn primary" id="large-file-try" title="Import the file now, even though it may be slow or run out of memory" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.49"/></svg>
         Try Import Anyway
       </button>
-      <button class="topbar-btn" id="large-file-split" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn" id="large-file-split" title="Split the file into smaller parts before importing" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
         Split into Chunks First
       </button>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;">
-        <input type="checkbox" id="large-file-never" style="accent-color:var(--accent-teal);width:14px;height:14px;">
+        <input type="checkbox" id="large-file-never" title="Skip the large-file warning from now on" style="accent-color:var(--accent-teal);width:14px;height:14px;">
         <span style="font-size:12px;color:var(--text-muted);">Don't warn again for large files</span>
       </label>
     </div>
@@ -1743,19 +1902,19 @@ body {
   <div class="modal-box" style="max-width:380px;">
     <div class="modal-header">
       <h2>🖼 Export Graph</h2>
-      <button class="modal-close" onclick="closeModal('modal-graph-export')">✕</button>
+      <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-graph-export')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;padding:20px;gap:10px;">
       <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin:0 0 4px;">Export the current graph view as an image file.</p>
-      <button class="topbar-btn primary" id="graph-export-png" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn primary" id="graph-export-png" title="Download a lossless PNG of what is currently visible in the viewport" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         PNG — current view (lossless)
       </button>
-      <button class="topbar-btn" id="graph-export-jpg" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn" id="graph-export-jpg" title="Download a compressed JPG of what is currently visible in the viewport" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         JPG — current view (compressed)
       </button>
-      <button class="topbar-btn" id="graph-export-svg" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn" id="graph-export-svg" title="Download a vector SVG of the entire graph, including off-screen nodes" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="14 2 14 8 20 8"/><path d="M20 8L14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
         SVG — full graph (vector, all nodes)
       </button>
@@ -1770,23 +1929,23 @@ body {
   <div class="modal-box" style="max-width:440px;">
     <div class="modal-header">
       <h2>⚠️ Large Export</h2>
-      <button class="modal-close" onclick="closeModal('modal-export-warn')">✕</button>
+      <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-export-warn')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;padding:20px;gap:12px;">
       <p id="export-warn-desc" style="font-size:13px;color:var(--text-secondary);line-height:1.6;"></p>
       <div style="display:flex;align-items:center;gap:10px;">
         <label style="font-size:13px;color:var(--text-secondary);white-space:nowrap;">Conversations per chunk:</label>
-        <input type="number" id="export-chunk-input" min="100" max="10000" step="100"
+        <input type="number" id="export-chunk-input" title="How many conversations to write per exported file" min="100" max="10000" step="100"
           style="flex:1;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:6px 10px;color:var(--text-primary);font-size:13px;font-family:var(--font-ui);">
       </div>
       <div id="export-chunk-warn" style="display:none;font-size:12px;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-sm);padding:8px 12px;line-height:1.5;">
         ⚠️ That's a large chunk size — the tab may run out of memory and crash. <strong>Any unsaved work will be lost.</strong> Consider a lower number.
       </div>
-      <button class="topbar-btn primary" id="export-warn-chunked" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn primary" id="export-warn-chunked" title="Split the export into several smaller files to avoid running out of memory" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Export as Chunks
       </button>
-      <button class="topbar-btn" id="export-warn-single" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn" id="export-warn-single" title="Export everything as one file anyway (may crash on very large projects)" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Try Single File Anyway
       </button>
@@ -1800,23 +1959,23 @@ body {
   <div class="modal-box" style="max-width:420px;">
     <div class="modal-header">
       <h2>✂️ Split &amp; Import</h2>
-      <button class="modal-close" onclick="closeModal('modal-split-file')">✕</button>
+      <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-split-file')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;padding:20px;gap:12px;">
       <p id="split-file-desc" style="font-size:13px;color:var(--text-secondary);line-height:1.6;"></p>
       <div style="display:flex;align-items:center;gap:10px;">
         <label style="font-size:13px;color:var(--text-secondary);white-space:nowrap;">Chunk size:</label>
-        <select id="split-chunk-size" style="flex:1;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:6px 10px;color:var(--text-primary);font-size:13px;font-family:var(--font-ui);">
+        <select id="split-chunk-size" title="Approximate maximum size of each output chunk file" style="flex:1;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:6px 10px;color:var(--text-primary);font-size:13px;font-family:var(--font-ui);">
           <option value="52428800">50 MB</option>
           <option value="104857600" selected>100 MB</option>
           <option value="209715200">200 MB</option>
         </select>
       </div>
-      <button class="topbar-btn primary" id="split-file-run" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn primary" id="split-file-run" title="Split the file into chunks in memory and load them as conversations" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.49"/></svg>
         Split &amp; Import Automatically
       </button>
-      <button class="topbar-btn" id="split-file-download" style="width:100%;justify-content:center;padding:10px;">
+      <button class="topbar-btn" id="split-file-download" title="Download the chunk files instead of importing them now" style="width:100%;justify-content:center;padding:10px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Download Chunk Files Instead
       </button>
@@ -1830,7 +1989,7 @@ body {
   <div class="modal-box" style="max-width:480px">
     <div class="modal-header">
       <h2>Settings</h2>
-      <button class="modal-close" onclick="closeModal('modal-settings')">✕</button>
+      <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-settings')">✕</button>
     </div>
     <div class="modal-body" style="overflow-y:auto">
       <div class="settings-body" id="settings-body"></div>
@@ -1843,14 +2002,14 @@ body {
   <div class="modal-box" style="max-width:700px">
     <div class="modal-header">
       <h2>Convert opencode .db &rarr; conversations.json</h2>
-      <button class="modal-close" onclick="closeModal('modal-convert-db')">&#10005;</button>
+      <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-convert-db')">&#10005;</button>
     </div>
     <div class="modal-body" style="overflow-y:auto;display:block;padding:18px 20px">
       <div class="cvt-card">
         <div class="cvt-label">Select the opencode database</div>
         <div class="cvt-row">
-        <input type="text" id="cvt-db-path" spellcheck="false" placeholder="C:\Users\you\.local\share\opencode\opencode.db" readonly>
-        <button class="topbar-btn" id="cvt-browse">Browse&hellip;</button>
+        <input type="text" id="cvt-db-path" spellcheck="false" placeholder="C:\Users\you\.local\share\opencode\opencode.db" readonly title="Path of the opencode database file being converted">
+        <button class="topbar-btn" id="cvt-browse" title="Pick the opencode .db file to convert">Browse&hellip;</button>
       </div>
       <div class="cvt-note" id="cvt-db-name"></div>
       <div class="cvt-note muted cvt-guide">
@@ -1865,12 +2024,12 @@ body {
       </div>
       </div>
       <div class="cvt-card">
-        <label class="cvt-check"><input type="checkbox" id="cvt-include-tools" checked> Include tool calls (commands + output) in assistant text</label>
+        <label class="cvt-check"><input type="checkbox" id="cvt-include-tools" checked title="Append [tool:...] commands and their output to assistant messages"> Include tool calls (commands + output) in assistant text</label>
       </div>
       <div class="cvt-card">
         <div class="cvt-row" style="margin-bottom:12px">
-          <button class="topbar-btn primary" id="cvt-convert">Convert to conversations.json</button>
-          <button class="topbar-btn" id="cvt-download" style="display:none">Download .json&hellip;</button>
+          <button class="topbar-btn primary" id="cvt-convert" title="Read the database and build conversations.json in memory">Convert to conversations.json</button>
+          <button class="topbar-btn" id="cvt-download" title="Save the converted conversations.json to disk" style="display:none">Download .json&hellip;</button>
         </div>
         <div class="cvt-status" id="cvt-status"></div>
         <div class="cvt-stats" id="cvt-stats" style="display:none">
@@ -1920,17 +2079,17 @@ body {
 <div class="modal-backdrop" id="modal-help">
   <div class="modal-box" style="max-width:900px;width:94vw;height:82vh;">
     <div class="modal-header">
-      <h2>ChatGPT JSON Tree Viewer v7.8.0 — Help</h2>
-      <button class="modal-close" onclick="closeModal('modal-help')">✕</button>
+      <h2>ChatGPT JSON Tree Viewer v7.9.0 — Help</h2>
+      <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-help')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;overflow:hidden;">
       <div id="help-search-bar" style="padding:8px 12px;border-bottom:1px solid var(--border-color);flex-shrink:0;display:flex;align-items:center;gap:8px;">
         <div style="position:relative;flex:1;">
           <svg style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input id="help-search-input" type="text" placeholder="Search help topics and content…" style="width:100%;padding:6px 10px 6px 28px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-ui);font-size:13px;">
+          <input id="help-search-input" type="text" placeholder="Search help topics and content…" title="Search all help topics and highlight matches" style="width:100%;padding:6px 10px 6px 28px;background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);font-family:var(--font-ui);font-size:13px;">
         </div>
         <span id="help-search-count" style="font-size:11px;color:var(--text-muted);white-space:nowrap;min-width:60px;text-align:right;"></span>
-        <button id="help-search-clear" style="display:none;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;">✕</button>
+        <button id="help-search-clear" title="Clear the help search" style="display:none;background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;line-height:1;padding:0 4px;">✕</button>
       </div>
       <div style="display:flex;flex:1;overflow:hidden;">
         <div class="help-sidebar" id="help-nav"></div>
@@ -1995,8 +2154,8 @@ const state = {
 };
 
 // Load persisted theme/settings
-const savedTheme = localStorage.getItem('mv-theme') ||
-  (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+// Default theme is "system" (follows the OS light/dark setting) unless the user picked one.
+const savedTheme = localStorage.getItem('mv-theme') || 'system';
 document.body.setAttribute('data-theme', savedTheme);
 if (savedTheme === 'custom') {
   document.getElementById('btn-custom-theme')?.classList.add('active');
@@ -3500,6 +3659,7 @@ function renderBranchContent() {
     const copyBtn = document.createElement('button');
     copyBtn.className = 'branch-msg-copy-btn';
     copyBtn.textContent = 'Copy';
+    copyBtn.title = mode === 'html' ? 'Copy this message as HTML' : 'Copy this message as plain text';
     copyBtn.addEventListener('click', () => {
       const copyText = mode === 'html' ? DOMPurify.sanitize(marked.parse(text || '')) : (text || '');
       navigator.clipboard.writeText(copyText).then(() => {
@@ -3602,6 +3762,7 @@ function addCodeCopyButtons(container) {
     const btn = document.createElement('button');
     btn.className = 'code-copy-btn';
     btn.textContent = 'Copy';
+    btn.title = 'Copy this code block to the clipboard';
     btn.addEventListener('click', () => {
       const code = pre.querySelector('code')?.textContent || pre.textContent;
       navigator.clipboard.writeText(code).then(() => {
@@ -3662,6 +3823,7 @@ function updateBranchIndex() {
     const item = document.createElement('div');
     item.className = `branch-msg-item${node.id === nodeId ? ' selected' : ''}`;
     item.dataset.nodeId = node.id;
+    item.title = `${role} message${levelLabel ? ' · level ' + levelLabel : ''}\nClick to select it in the graph and highlight it in the branch`;
     const roleColor = role === 'user' ? 'var(--accent-blue)' : role === 'assistant' ? 'var(--accent-green)' : 'var(--text-muted)';
     item.innerHTML = `
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
@@ -4348,6 +4510,7 @@ function renderConvList() {
         ${matchCount ? `<span class="conv-match-badge">${matchCount}</span>` : ''}
       </div>
     `;
+    item.title = `${conv.title || 'Untitled'} — ${nodeCount} message${nodeCount !== 1 ? 's' : ''}${dateStr ? ' · ' + dateStr : ''}\nClick to open · right-click for options`;
     item.addEventListener('click', () => loadConversation(conv.id));
     item.addEventListener('contextmenu', e => showContextMenu(e, conv.id));
     list.appendChild(item);
@@ -4621,7 +4784,7 @@ function updateTopbarTitle(title) {
   if (title) {
     document.title = title + ' — ChatGPT JSON Tree Viewer';
   } else {
-    document.title = 'ChatGPT JSON Tree Viewer v7.8.0';
+    document.title = 'ChatGPT JSON Tree Viewer v7.9.0';
   }
 }
 
@@ -4931,24 +5094,24 @@ function buildSettings() {
       <h3>Node Visibility</h3>
       <div class="setting-row">
         <div><div class="setting-label">Show System Nodes</div><div class="setting-desc">Gray dashed nodes with system prompts</div></div>
-        <div class="toggle${state.settings.showSystem ? ' on' : ''}" data-setting="showSystem"></div>
+        <div class="toggle${state.settings.showSystem ? ' on' : ''}" data-setting="showSystem" title="Show or hide system-prompt nodes in the graph"></div>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Show Other Nodes</div><div class="setting-desc">Purple nodes for unknown roles</div></div>
-        <div class="toggle${state.settings.showOther ? ' on' : ''}" data-setting="showOther"></div>
+        <div class="toggle${state.settings.showOther ? ' on' : ''}" data-setting="showOther" title="Show or hide nodes whose role is not user, assistant or system"></div>
       </div>
     </div>
     <div class="setting-group">
       <h3>Tooltips</h3>
       <div class="setting-row">
         <div><div class="setting-label">Show Tooltips</div><div class="setting-desc">Preview message content on hover</div></div>
-        <div class="toggle${state.settings.tooltips ? ' on' : ''}" data-setting="tooltips"></div>
+        <div class="toggle${state.settings.tooltips ? ' on' : ''}" data-setting="tooltips" title="Show or hide the message preview that appears when hovering a graph node"></div>
       </div>
       <div class="setting-row">
         <div><div class="setting-label">Tooltip Delay</div><div class="setting-desc">Time before tooltip appears</div></div>
         <div class="setting-combo">
-          <input type="range" min="500" max="10000" step="100" value="${state.settings.tooltipDelay}" data-range="tooltipDelay">
-          <input type="number" class="combo-num" min="500" max="10000" step="100" value="${state.settings.tooltipDelay}" data-num="tooltipDelay">
+          <input type="range" min="500" max="10000" step="100" value="${state.settings.tooltipDelay}" data-range="tooltipDelay" title="How long to hover a node before its tooltip appears">
+          <input type="number" class="combo-num" min="500" max="10000" step="100" value="${state.settings.tooltipDelay}" data-num="tooltipDelay" title="Tooltip delay in milliseconds (500–10000)">
           <span class="range-val" id="range-val-tooltipDelay">${state.settings.tooltipDelay}ms</span>
         </div>
       </div>
@@ -4957,13 +5120,13 @@ function buildSettings() {
       <h3>Search</h3>
       <div class="setting-row">
         <div><div class="setting-label">Search debounce</div><div class="setting-desc">Delay search until you stop typing</div></div>
-        <div class="toggle${state.settings.searchDebounceEnabled ? ' on' : ''}" data-setting="searchDebounceEnabled"></div>
+        <div class="toggle${state.settings.searchDebounceEnabled ? ' on' : ''}" data-setting="searchDebounceEnabled" title="Wait until you stop typing before running the search"></div>
       </div>
       <div class="setting-row" id="setting-row-searchDebounce" style="${!state.settings.searchDebounceEnabled ? 'opacity:0.4;pointer-events:none;' : ''}">
         <div><div class="setting-label">Debounce delay (ms)</div><div class="setting-desc">Wait time before search runs</div></div>
         <div class="setting-combo">
-          <input type="range" min="50" max="800" step="10" value="${state.settings.searchDebounceMs}" data-range="searchDebounceMs">
-          <input type="number" class="combo-num" min="50" max="800" step="10" value="${state.settings.searchDebounceMs}" data-num="searchDebounceMs">
+          <input type="range" min="50" max="800" step="10" value="${state.settings.searchDebounceMs}" data-range="searchDebounceMs" title="How long to wait after you stop typing before searching">
+          <input type="number" class="combo-num" min="50" max="800" step="10" value="${state.settings.searchDebounceMs}" data-num="searchDebounceMs" title="Search debounce delay in milliseconds (50–800)">
           <span class="range-val" id="range-val-searchDebounceMs">${state.settings.searchDebounceMs}ms</span>
         </div>
       </div>
@@ -4972,12 +5135,12 @@ function buildSettings() {
       <h3>Large File Warning</h3>
       <div class="setting-row">
         <div><div class="setting-label">Show large file warning</div><div class="setting-desc">Warn before importing files above the threshold</div></div>
-        <div class="toggle${state.settings.largeFileWarn > 0 ? ' on' : ''}" data-setting="largeFileWarnEnabled"></div>
+        <div class="toggle${state.settings.largeFileWarn > 0 ? ' on' : ''}" data-setting="largeFileWarnEnabled" title="Show or hide the warning that appears before importing a very large file"></div>
       </div>
       <div class="setting-row" id="setting-row-largeFileWarn" style="${state.settings.largeFileWarn === 0 ? 'opacity:0.4;pointer-events:none;' : ''}">
         <div><div class="setting-label">Warn threshold</div><div class="setting-desc">Warn when file exceeds this size</div></div>
         <div class="setting-range">
-          <input type="range" min="50" max="1000" step="50" value="${state.settings.largeFileWarn || 300}" data-range="largeFileWarn">
+          <input type="range" min="50" max="1000" step="50" value="${state.settings.largeFileWarn || 300}" data-range="largeFileWarn" title="Warn before importing files larger than this size (MB)">
           <span class="range-val" id="range-val-largeFileWarn">${state.settings.largeFileWarn > 0 ? state.settings.largeFileWarn + ' MB' : '300 MB'}</span>
         </div>
       </div>
@@ -4988,7 +5151,7 @@ function buildSettings() {
         <div><div class="setting-label">Chunk size for large exports</div><div class="setting-desc">Conversations per file when splitting exports. Set to 0 to always export as a single file (risky for large projects).</div></div>
         <div style="display:flex;flex-direction:column;gap:4px;min-width:120px;">
           <input type="number" id="settings-export-chunk" min="0" max="10000" step="100"
-            value="${state.settings.exportChunkSize}"
+            value="${state.settings.exportChunkSize}" title="Conversations per exported file — set to 0 to always export a single file"
             style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:5px 8px;color:var(--text-primary);font-size:12px;font-family:var(--font-ui);text-align:right;width:90px;">
           <span style="font-size:11px;color:var(--text-muted);text-align:right;">${state.settings.exportChunkSize === 0 ? 'Single file always' : state.settings.exportChunkSize + ' per chunk'}</span>
         </div>
@@ -5083,7 +5246,7 @@ function buildSettings() {
 // Help content
 const helpTopics = [
   { id: 'overview', label: '🗂 Overview', content: `
-    <h2>ChatGPT JSON Tree Viewer v7.8.0</h2>
+    <h2>ChatGPT JSON Tree Viewer v7.9.0</h2>
     <p>A client-side conversation tree visualizer for AI chat exports. Load JSON files from any major AI platform and explore the branching structure of your conversations as an interactive node graph. <strong>All processing happens entirely in your browser</strong> — no data is ever sent to a server.</p>
     <h3>Supported Formats</h3>
     <table>
@@ -5373,7 +5536,7 @@ const helpTopics = [
           <li><strong>JSON</strong> → <code>.json</code> array of <code>{id, role, content, create_time, model}</code> objects</li>
         </ul>
       </li>
-      <li><strong>Pop-out</strong> — opens in a new tab with role-colored shading, depth/timestamp headers, and per-message Copy buttons. A settings bar at the top controls the popout theme (Main app / Light / Dark / System), the per-message copy mode (full dropdown, or a single one-click Rendered / HTML / MD / Plain text copy button), timestamp visibility, and checkboxes for bulk-copying the selected messages</li>
+      <li><strong>Pop-out</strong> — opens in a new tab with role-colored shading, timestamp headers, and a per-message Copy button that always matches the active view. A settings bar at the top controls the popout theme (Main app / Light / Dark / System), the view mode (Rendered / Markdown / HTML / JSON — switchable in place, no need to re-open the popout), the rendered-mode copy style (full dropdown, or a single one-click Rendered / HTML / MD / JSON / Plain text button), timestamp visibility, and checkboxes for bulk-copying the selected messages</li>
       <li><strong>GPT↓</strong> — downloads the current conversation as a single-item OpenAI <code>conversations.json</code> array</li>
     </ul>
     <h3>Project Export (Top Bar)</h3>
@@ -5455,11 +5618,13 @@ const helpTopics = [
     <h3>Built-in Themes</h3>
     <table>
       <tr><th>Dot</th><th>Name</th><th>Description</th></tr>
-      <tr><td>Dark gray</td><td><strong>Dark</strong></td><td>Default. Deep dark backgrounds with teal accents</td></tr>
+      <tr><td>Half light / half dark</td><td><strong>System</strong></td><td><strong>Default.</strong> Follows your operating system's light/dark preference and updates live when the OS theme changes</td></tr>
       <tr><td>Light gray</td><td><strong>Light</strong></td><td>Soft light gray backgrounds with dark text</td></tr>
+      <tr><td>Dark gray</td><td><strong>Dark</strong></td><td>Deep dark backgrounds with teal accents</td></tr>
       <tr><td>Dark navy</td><td><strong>Blue</strong></td><td>Deep navy blue with blue accent</td></tr>
       <tr><td>Dark green</td><td><strong>Green</strong></td><td>Forest green with bright green accents</td></tr>
       <tr><td>Dark purple</td><td><strong>Purple</strong></td><td>Deep purple with lavender accents</td></tr>
+      <tr><td>Blue / green</td><td><strong>Windows XP</strong></td><td>Luna-inspired preset: silver window chrome, blue accents and green highlights</td></tr>
     </table>
     <h3>Custom Theme</h3>
     <p>The <strong>rainbow ✦ dot</strong> at the end of the row opens the custom theme panel, where you can set every color individually with a color picker:</p>
@@ -5471,9 +5636,9 @@ const helpTopics = [
     </ul>
     <p>All changes are <strong>live</strong> — the entire UI updates as you drag the color picker.</p>
     <h3>Quick Presets</h3>
-    <p>Inside the custom panel, the five preset buttons (Dark, Light, Blue, Green, Purple) apply that theme's colors as a starting point. Adjust from there to create your own look.</p>
+    <p>Inside the custom panel, the six preset buttons (Dark, Light, Blue, Green, Purple, Windows XP) apply that theme's colors as a starting point. Adjust from there to create your own look.</p>
     <h3>Reset</h3>
-    <p>The <strong>↺ Reset to current theme defaults</strong> button at the bottom of the panel restores all custom colors to the Dark theme defaults.</p>
+    <p>The <strong>↺ Reset to current theme defaults</strong> button at the bottom of the panel restores all custom colors to the defaults of the theme that was active before you opened the panel (System resolves to the Light or Dark palette, whichever matches your OS).</p>
     <div class="tip"><strong>Tip:</strong> Custom colors are saved automatically and restored on every visit — even across sessions.</div>
   `},
   { id: 'panels', label: '🖥 Panel Layout', content: `
@@ -5617,6 +5782,145 @@ const helpTopics = [
   { id: 'changelog', label: '🆕 What\'s New', content: '__changelog__' },
 ];
 
+// ============================================================
+// CHANGELOG COPY / VIEW HELPERS
+// ============================================================
+// "scope" is either 'master' (the whole log) or a version string ('v7.9.0').
+// Every scope can be copied as Rendered (rich, formatting preserved),
+// Markdown (editable source) or HTML (raw markup) — and the whole log can also
+// be *viewed* as Markdown or HTML via the View selector in the toolbar.
+function clScopedVersions(scope) {
+  return scope === 'master' ? changelog : changelog.filter(v => v.version === scope);
+}
+
+// Tiny HTML -> Markdown converter for changelog item text. Keeps bold,
+// italics, inline code, links and line breaks; everything else becomes text.
+function clHtmlToMarkdown(html) {
+  const root = document.createElement('div');
+  root.innerHTML = html || '';
+  const walk = node => {
+    let out = '';
+    Array.prototype.forEach.call(node.childNodes, n => {
+      if (n.nodeType === 3) { out += n.nodeValue; return; }
+      if (n.nodeType !== 1) return;
+      const tag = n.tagName.toLowerCase();
+      const inner = walk(n);
+      if (tag === 'strong' || tag === 'b') out += '**' + inner.trim() + '**';
+      else if (tag === 'em' || tag === 'i') out += '*' + inner.trim() + '*';
+      else if (tag === 'code') out += '`' + inner.trim() + '`';
+      else if (tag === 'br') out += '\n';
+      else if (tag === 'a') out += inner + (n.getAttribute('href') ? ' (' + n.getAttribute('href') + ')' : '');
+      else if (tag === 'li') out += '- ' + inner.trim();
+      else out += inner;
+    });
+    return out;
+  };
+  return walk(root).replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Same, but flattened to plain text (used as the text/plain half of a rich copy
+// and as the fallback when the clipboard API can't write HTML).
+function clHtmlToText(html) {
+  const d = document.createElement('div');
+  d.innerHTML = html || '';
+  return (d.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function clTitle(v) {
+  return `${v.version} — ${v.date}${v.latest ? ' (latest)' : ''}`;
+}
+
+function clMarkdown(scope) {
+  const blocks = clScopedVersions(scope).map(v =>
+    `## ${clTitle(v)}\n\n${v.items.map(i => `- **${i.type}** — ${clHtmlToMarkdown(i.text)}`).join('\n')}`
+  );
+  const head = scope === 'master' ? '# ChatGPT JSON Tree Viewer — Changelog\n\n' : '';
+  return head + blocks.join('\n\n') + '\n';
+}
+
+function clPlainText(scope) {
+  const blocks = clScopedVersions(scope).map(v =>
+    `${clTitle(v)}\n${v.items.map(i => `  • [${i.type}] ${clHtmlToText(i.text)}`).join('\n')}`
+  );
+  const head = scope === 'master' ? 'ChatGPT JSON Tree Viewer — Changelog\n\n' : '';
+  return head + blocks.join('\n\n') + '\n';
+}
+
+// Raw HTML source, read from the rendered changelog so it always matches
+// exactly what's on screen (the copy buttons themselves are stripped out).
+function clHtmlSource(scope) {
+  const host = document.getElementById('cl-rendered');
+  if (!host) return '';
+  let node = scope === 'master' ? host.cloneNode(true) : host.querySelector(`.cl-version[data-cl-version="${scope}"]`);
+  if (!node) return '';
+  if (scope !== 'master') node = node.cloneNode(true);
+  node.querySelectorAll('.cl-copy-group').forEach(g => g.remove());
+  const inner = node.innerHTML.trim();
+  return scope === 'master'
+    ? `<div class="changelog">\n${inner}\n</div>`
+    : `<div class="cl-version">\n${inner}\n</div>`;
+}
+
+function clCopy(scope, kind, btn) {
+  const showCopied = () => {
+    if (!btn) return;
+    const label = btn.getAttribute('data-cl-label') || btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = label; btn.classList.remove('copied'); }, 1200);
+  };
+  const rich = (html, plain) => {
+    if (window.ClipboardItem && navigator.clipboard.write) {
+      navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([plain], { type: 'text/plain' })
+      })]).then(showCopied).catch(() => navigator.clipboard.writeText(plain).then(showCopied));
+    } else {
+      navigator.clipboard.writeText(plain).then(showCopied);
+    }
+  };
+  if (kind === 'markdown') navigator.clipboard.writeText(clMarkdown(scope)).then(showCopied);
+  else if (kind === 'html') navigator.clipboard.writeText(clHtmlSource(scope)).then(showCopied);
+  else rich(clHtmlSource(scope), clPlainText(scope));
+}
+
+function setChangelogView(kind) {
+  const rendered = document.getElementById('cl-rendered');
+  const raw = document.getElementById('cl-raw');
+  const hint = document.getElementById('cl-toolbar-hint');
+  if (!rendered || !raw) return;
+  if (kind === 'rendered') {
+    raw.textContent = '';
+    raw.style.display = 'none';
+    rendered.style.display = '';
+  } else {
+    raw.textContent = kind === 'markdown' ? clMarkdown('master') : clHtmlSource('master');
+    rendered.style.display = 'none';
+    raw.style.display = '';
+  }
+  if (hint) {
+    hint.textContent = kind === 'rendered'
+      ? 'Copy the whole log here, or use the buttons on any single release below. Rendered keeps formatting, Markdown gives editable source, HTML gives markup.'
+      : `Showing the whole log as raw ${kind === 'markdown' ? 'Markdown' : 'HTML'} source. The Copy buttons above still work — switch View back to Rendered for the per-release copy buttons.`;
+  }
+}
+
+function wireChangelogCopy() {
+  const section = document.getElementById('help-changelog');
+  if (!section || section._clWired) return;
+  section._clWired = true;
+  section.addEventListener('click', e => {
+    const btn = e.target.closest ? e.target.closest('.cl-copy-btn') : null;
+    if (!btn) return;
+    clCopy(btn.dataset.clScope, btn.dataset.clKind, btn);
+  });
+  const sel = document.getElementById('cl-view-sel');
+  if (sel) {
+    sel.addEventListener('change', () => setChangelogView(sel.value));
+    setChangelogView(sel.value || 'rendered');
+  }
+}
+
 function buildHelp() {
   const sidebar = document.getElementById('help-nav');
   const content = document.getElementById('help-content');
@@ -5627,22 +5931,56 @@ function buildHelp() {
   sidebar.innerHTML = helpTopics.map((t, i) => `<button class="help-topic-btn${i === 0 ? ' active' : ''}" data-topic="${t.id}">${t.label}</button>`).join('');
 
   // Content sections + search results container
-  const changelogHtml = changelog.map(v => `
-    <div class="cl-version">
+  // Changelog gets a master copy bar (whole log) plus a copy group per release.
+  // Every copy control offers Rendered (rich, keeps formatting), Markdown and
+  // HTML, and the whole log can also be *viewed* as Markdown or HTML source.
+  const clCopyGroup = (scope, caption) => `<span class="cl-copy-group${scope === 'master' ? '' : ' in-header'}">${
+    caption ? `<span class="cl-copy-caption">${caption}</span>` : ''
+  }${
+    [['rendered', 'Rendered', 'Copy as formatted rich text — paste it into Word, Docs or an email and it keeps its formatting'],
+     ['markdown', 'Markdown', 'Copy as Markdown source — headings, bullets and bold markers included'],
+     ['html', 'HTML', 'Copy as raw HTML source code']]
+      .map(([kind, label, tip]) => `<button class="cl-copy-btn" data-cl-scope="${scope}" data-cl-kind="${kind}" data-cl-label="${label}" title="${tip}">${label}</button>`)
+      .join('')
+  }</span>`;
+
+  const changelogHtml = `<div class="cl-intro">
+      <h2>Changelog</h2>
+      <p>Every release is listed newest first, with a <strong>LATEST</strong> marker on the current version. Use <strong>View</strong> to read the whole log as formatted text or as raw Markdown / HTML source, and the <strong>Copy</strong> buttons to grab either the <strong>whole log</strong> or <strong>one single release</strong> — in each case as Rendered (rich, formatting preserved), Markdown or HTML.</p>
+    </div>
+    <div class="cl-toolbar">
+      <span class="cl-toolbar-label">View</span>
+      <span class="cl-view-wrap"><select class="cl-view-select" id="cl-view-sel" title="Show the changelog as formatted text, or as raw Markdown / HTML source">
+        <option value="rendered">Rendered</option>
+        <option value="markdown">Markdown</option>
+        <option value="html">HTML</option>
+      </select></span>
+      <span class="cl-toolbar-label">Copy</span>
+      ${clCopyGroup('master', 'whole log:')}
+      <span class="cl-toolbar-hint" id="cl-toolbar-hint">Copy the whole log here, or use the buttons on any single release below. Rendered keeps formatting, Markdown gives editable source, HTML gives markup.</span>
+    </div>
+    <div id="cl-rendered">` +
+    changelog.map(v => `
+    <div class="cl-version" data-cl-version="${v.version}">
       <div class="cl-header">
         <span class="cl-tag${v.latest ? ' latest' : ''}">${v.version}</span>
         <span class="cl-date">${v.date}</span>
         ${v.latest ? '<span style="font-size:10px;color:var(--accent-teal);font-weight:600">LATEST</span>' : ''}
+        ${clCopyGroup(v.version)}
       </div>
       <ul class="cl-items">${v.items.map(i => `<li class="cl-item ${i.type}"><span class="cl-badge">${i.type}</span><span>${i.text}</span></li>`).join('')}</ul>
     </div>
-  `).join('');
+  `).join('') + `</div>
+    <pre class="cl-raw" id="cl-raw" style="display:none" title="Raw changelog source — switch View to Rendered to go back to the formatted version"></pre>`;
 
   content.innerHTML = `<div id="help-search-results" class="help-search-results"></div>` +
     helpTopics.map((t, i) => {
       const body = t.content === '__changelog__' ? changelogHtml : t.content;
       return `<div class="help-section${i === 0 ? ' active' : ''}" id="help-${t.id}">${body}</div>`;
     }).join('');
+
+  // Changelog copy: master (whole log) and per-release, each in Rendered / Markdown / HTML
+  wireChangelogCopy();
 
   // Sidebar navigation
   sidebar.querySelectorAll('.help-topic-btn').forEach(btn => {
@@ -5899,7 +6237,17 @@ const THEME_PRESETS = {
   blue:   { '--custom-bg-primary':'#060d1a','--custom-bg-secondary':'#0a1525','--custom-bg-panel':'#08111f','--custom-text-primary':'#d0e8ff','--custom-text-secondary':'#7090b8','--custom-accent':'#00aaff','--custom-accent-dim':'#0088cc','--custom-border':'#1a3050','--custom-node-user-border':'#60a5fa','--custom-node-assistant-border':'#4ade80','--custom-node-system-border':'#6b7280','--custom-node-other-border':'#c084fc' },
   green:  { '--custom-bg-primary':'#061008','--custom-bg-secondary':'#0a1a0c','--custom-bg-panel':'#081208','--custom-text-primary':'#d0ffd8','--custom-text-secondary':'#70b880','--custom-accent':'#00ff88','--custom-accent-dim':'#00cc66','--custom-border':'#1a3820','--custom-node-user-border':'#60a5fa','--custom-node-assistant-border':'#4ade80','--custom-node-system-border':'#6b7280','--custom-node-other-border':'#c084fc' },
   purple: { '--custom-bg-primary':'#0d080f','--custom-bg-secondary':'#130c1a','--custom-bg-panel':'#100a14','--custom-text-primary':'#ead0ff','--custom-text-secondary':'#9070b8','--custom-accent':'#cc88ff','--custom-accent-dim':'#aa66dd','--custom-border':'#2a1840','--custom-node-user-border':'#60a5fa','--custom-node-assistant-border':'#4ade80','--custom-node-system-border':'#6b7280','--custom-node-other-border':'#c084fc' },
+  xp:     { '--custom-bg-primary':'#ece9d8','--custom-bg-secondary':'#d4d0c8','--custom-bg-panel':'#f1eee3','--custom-text-primary':'#000000','--custom-text-secondary':'#333333','--custom-accent':'#0a53d0','--custom-accent-dim':'#0842a8','--custom-border':'#919b9c','--custom-node-user-border':'#0058e6','--custom-node-assistant-border':'#2f7d2f','--custom-node-system-border':'#5f6b74','--custom-node-other-border':'#7a3fbf' },
 };
+
+// Resolve a theme name to the custom-color preset it should start from.
+// "system" has no fixed palette: it follows the OS light/dark preference.
+function presetForTheme(name) {
+  let key = name;
+  if (!key || key === 'custom') key = localStorage.getItem('mv-theme-before-custom') || 'system';
+  if (key === 'system') key = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return THEME_PRESETS[key] || THEME_PRESETS.dark;
+}
 
 function applyCustomVars(vars) {
   Object.entries(vars).forEach(([k, v]) => {
@@ -5980,10 +6328,10 @@ document.getElementById('btn-custom-theme').addEventListener('click', e => {
     // Load saved custom, or default to whatever theme was active before
     if (!loadCustomTheme()) {
       const activeName = localStorage.getItem('mv-theme-before-custom') ||
-        ['dark','light','blue','green','purple'].find(t =>
+        ['system','dark','light','blue','green','purple','xp'].find(t =>
           document.querySelector(`.theme-dot[data-theme="${t}"]`)?.classList.contains('active')
-        ) || 'dark';
-      const base = THEME_PRESETS[activeName] || THEME_PRESETS.dark;
+        ) || 'system';
+      const base = presetForTheme(activeName);
       applyCustomVars(base); syncCustomInputs(base); saveCustomTheme(base);
     }
   }
@@ -6024,8 +6372,8 @@ document.querySelectorAll('.ctp-preset').forEach(btn => {
 
 // Reset button
 document.getElementById('ctp-reset-btn').addEventListener('click', () => {
-  const baseName = localStorage.getItem('mv-theme-before-custom') || 'dark';
-  const preset = THEME_PRESETS[baseName] || THEME_PRESETS.dark;
+  const baseName = localStorage.getItem('mv-theme-before-custom') || 'system';
+  const preset = presetForTheme(baseName);
   applyCustomVars(preset);
   syncCustomInputs(preset);
   saveCustomTheme(preset);
@@ -6062,7 +6410,7 @@ document.querySelectorAll('.search-scope-btn').forEach(btn => {
 function updateSortDirButton(btn, dir) {
   btn.dataset.dir = dir;
   btn.textContent = dir === 'asc' ? '↑' : '↓';
-  btn.title = dir === 'asc' ? 'Ascending' : 'Descending';
+  btn.title = dir === 'asc' ? 'Sort direction: ascending — click to switch to descending' : 'Sort direction: descending — click to switch to ascending';
 }
 
 document.getElementById('conv-sort-field').addEventListener('change', e => {
@@ -6142,11 +6490,17 @@ function getParentPalette() {
   return p;
 }
 
-// opt: { title, meta, mode, multi, messages:[{role, ts, md, body}], fullMd }
+function popoutBodyFor(m, mode) {
+  if (mode === 'rendered') return `<div class="msg-body">${m.html || ''}</div>`;
+  const raw = mode === 'markdown' ? (m.md || '') : mode === 'html' ? (m.html || '') : (m.json || '');
+  return `<pre class="msg-body">${escapeHtml(raw)}</pre>`;
+}
+
+// opt: { title, meta, mode, multi, asTab, messages:[{role, ts, md, html, json}], fullMd, fullHtml, fullJson }
 function openPopoutPage(opt) {
-  const { title, meta, mode, multi, messages, fullMd } = opt;
+  const { title, meta, mode, multi, asTab, messages, fullMd, fullHtml, fullJson } = opt;
   const pal = getParentPalette();
-  const w = window.open('', '_blank', 'width=860,height=700');
+  const w = asTab ? window.open('', '_blank') : window.open('', '_blank', 'width=860,height=700');
   if (!w) return;
 
   const htmlParts = messages.map((m, i) => {
@@ -6156,15 +6510,21 @@ function openPopoutPage(opt) {
     return `<div class="msg-wrap" data-i="${i}" style="background:${s.bg};border-left-color:${s.border}">
       <div class="msg-head">
         ${chk}
-        <span class="msg-role" style="color:${s.label}">${m.role}</span>
+        <span class="msg-role" style="color:${s.label}">${escapeHtml(m.role)}</span>
         ${ts}
         <span class="msg-copy"></span>
       </div>
-      ${m.body}
+      <div class="msg-slot">${popoutBodyFor(m, mode)}</div>
     </div>`;
   }).join('');
 
-  const payload = JSON.stringify({ msgs: messages.map(m => ({ role: m.role, md: m.md || '', ts: m.ts || '' })), fullMd: fullMd || messages.map(m => '[' + m.role.toUpperCase() + ']\n' + (m.md || '')).join('\n\n---\n\n') }).replace(/</g, '\\u003c');
+  const payload = JSON.stringify({
+    mode,
+    msgs: messages.map(m => ({ role: m.role, ts: m.ts || '', md: m.md || '', html: m.html || '', json: m.json || '' })),
+    fullMd: fullMd || messages.map(m => '[' + m.role.toUpperCase() + ']\n' + (m.md || '')).join('\n\n---\n\n'),
+    fullHtml: fullHtml || messages.map(m => '<!-- [' + m.role.toUpperCase() + '] -->\n' + (m.html || '')).join('\n\n'),
+    fullJson: fullJson || messages.map(m => m.json || '').join('\n\n---\n\n'),
+  }).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
   const themeScheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
   w.document.write(`<!DOCTYPE html><html data-theme="main" style="--m-bg:${pal['--bg-primary'] || '#f5f6fc'};--m-panel:${pal['--bg-secondary'] || '#eef0f8'};--m-panel2:${pal['--bg-tertiary'] || '#e8eaf2'};--m-border:${pal['--border-color'] || '#c8cce0'};--m-text:${pal['--text-primary'] || '#1a1d2e'};--m-text2:${pal['--text-secondary'] || '#2a2d3e'};--m-muted:${pal['--text-muted'] || '#6b7280'};--m-accent:${pal['--accent-teal'] || '#00c49a'};--m-scheme:${themeScheme}"><head>
@@ -6235,28 +6595,25 @@ function openPopoutPage(opt) {
 </style></head>
 <body>
   <h1>${escapeHtml(title)}</h1>
-  <div class="meta">${escapeHtml(meta)}</div>
+  <div class="meta"><span id="meta-view">view: ${escapeHtml(mode)}</span>${meta ? ' · ' + escapeHtml(meta) : ''}</div>
   <div class="settings-bar">
-    <label>Theme <select id="theme-sel"><option value="main">Main (app)</option><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></label>
-    ${mode === 'rendered' ? `<label>Copy <select id="copy-sel"><option value="dropdown">Dropdown (all options)</option><option value="seen">Rendered only</option><option value="html">HTML only</option><option value="md">MD only</option><option value="text">Plain text only</option></select></label>` : ''}
-    <label><input type="checkbox" id="ts-tgl" checked> Timestamps</label>
-    ${mode === 'rendered' && multi ? `<label><input type="checkbox" id="chk-tgl"> Select messages</label>` : ''}
+    <label title="Popout color scheme — Main follows the app's current theme">Theme <select id="theme-sel"><option value="main">Main (app)</option><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></label>
+    <label title="Switch between Rendered, Markdown, HTML and JSON right here — no need to re-open the popout">View <select id="view-sel"><option value="rendered">Rendered</option><option value="markdown">Markdown</option><option value="html">HTML</option><option value="json">JSON</option></select></label>
+    <label id="copy-sel-wrap" title="Choose how the per-message Copy buttons behave (applies in Rendered view)">Copy <select id="copy-sel"><option value="dropdown">Dropdown (all options)</option><option value="seen">Rendered only</option><option value="html">HTML only</option><option value="md">MD only</option><option value="json">JSON only</option><option value="text">Plain text only</option></select></label>
+    <label title="Show or hide each message's timestamp"><input type="checkbox" id="ts-tgl" checked> Timestamps</label>
+    ${multi ? `<label title="Show a checkbox on every message so you can copy several at once"><input type="checkbox" id="chk-tgl"> Select messages</label>` : ''}
   </div>
-  ${mode === 'rendered' && multi ? `
+  ${multi ? `
   <hr class="divider">
   <div class="bulk-bar" id="bulk-bar" hidden>
-    <button class="copy-btn" id="bulk-copy">Copy selected (0)</button>
-    <button class="copy-btn" id="bulk-all">Select all</button>
-    <button class="copy-btn" id="bulk-none">Clear</button>
+    <button class="copy-btn" id="bulk-copy" title="Copy every checked message in the current view mode">Copy selected (0)</button>
+    <button class="copy-btn" id="bulk-all" title="Check every message">Select all</button>
+    <button class="copy-btn" id="bulk-none" title="Uncheck every message">Clear</button>
   </div>` : ''}
   <hr class="divider">
-  ${mode === 'rendered' ? `
   <div class="copy-bar">
-    <button class="copy-btn" id="copy-seen">Copy as seen</button>
-    <button class="copy-btn" id="copy-html">Copy as HTML code</button>
-    <button class="copy-btn" id="copy-md">Copy as MD</button>
-    <button class="copy-btn" id="copy-text">Copy as plain text</button>
-  </div>` : ''}
+    <button class="copy-btn" id="copy-all" title="Copy the whole popout in the current view mode">Copy all (Rendered)</button>
+  </div>
   <div id="content">${htmlParts}</div>
   <script>var DATA=${payload};<\/script>
   <script>
@@ -6264,6 +6621,9 @@ function openPopoutPage(opt) {
       var THEME_KEY='pjv-pop-theme',COPY_KEY='pjv-pop-copy',TS_KEY='pjv-pop-ts',CHK_KEY='pjv-pop-chk';
       function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
       function load(k,d){try{var v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}}
+      var viewMode=DATA.mode||'rendered';
+      var MODE_LABELS={rendered:'Rendered',markdown:'Markdown',html:'HTML',json:'JSON'};
+      function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
       var themeSel=document.getElementById('theme-sel');
       function setTheme(t){document.documentElement.setAttribute('data-theme',t);save(THEME_KEY,t)}
       themeSel.value=load(THEME_KEY,'main');setTheme(themeSel.value);
@@ -6272,49 +6632,102 @@ function openPopoutPage(opt) {
       tsTgl.checked=load(TS_KEY,'1')==='1';
       document.body.classList.toggle('hide-ts',!tsTgl.checked);
       tsTgl.onchange=function(){document.body.classList.toggle('hide-ts',!this.checked);save(TS_KEY,this.checked?'1':'0')};
+      var viewSel=document.getElementById('view-sel');
       var copySel=document.getElementById('copy-sel');
+      var copySelWrap=document.getElementById('copy-sel-wrap');
       var chkTgl=document.getElementById('chk-tgl');
       var bulkBar=document.getElementById('bulk-bar');
+      function msgBody(m){
+        if(viewMode==='rendered')return '<div class="msg-body">'+(m.html||'')+'</div>';
+        var raw=viewMode==='markdown'?(m.md||''):viewMode==='html'?(m.html||''):(m.json||'');
+        return '<pre class="msg-body">'+esc(raw)+'</pre>';
+      }
+      function currentCopyKind(){
+        if(viewMode==='rendered')return (copySel&&copySel.value!=='dropdown')?copySel.value:'seen';
+        return viewMode==='markdown'?'md':viewMode;
+      }
+      function copyDone(btn){
+        if(!btn||btn.tagName==='SELECT')return;
+        var old=btn.getAttribute('data-label')||btn.textContent;
+        btn.setAttribute('data-label',old);
+        btn.textContent='Copied!';btn.classList.add('copied');
+        setTimeout(function(){btn.textContent=old;btn.classList.remove('copied')},1200);
+      }
       function copyMsg(i,kind,btn){
+        var m=DATA.msgs[i]||{};
         var wrap=document.querySelectorAll('.msg-wrap')[i];
-        var body=wrap.querySelector('.msg-body');
-        var html=body.innerHTML,txt=body.textContent;
-        function done(){if(btn){var old=btn.textContent;btn.textContent='Copied!';btn.classList.add('copied');setTimeout(function(){btn.textContent=old;btn.classList.remove('copied')},1200)}}
-        if(kind==='seen'){navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([txt],{type:'text/plain'})})]).then(done)}
-        else if(kind==='html'){navigator.clipboard.writeText(html).then(done)}
-        else if(kind==='md'){navigator.clipboard.writeText(DATA.msgs[i].md||txt).then(done)}
+        var body=wrap?wrap.querySelector('.msg-body'):null;
+        var txt=body?body.textContent:(m.md||'');
+        function done(){copyDone(btn)}
+        function rich(html,plain){
+          if(window.ClipboardItem&&navigator.clipboard.write){
+            navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([plain],{type:'text/plain'})})]).then(done).catch(function(){navigator.clipboard.writeText(plain).then(done)});
+          }else{navigator.clipboard.writeText(plain).then(done)}
+        }
+        if(kind==='seen'||kind==='rendered'){rich(m.html||'',txt)}
+        else if(kind==='html'){navigator.clipboard.writeText(m.html||'').then(done)}
+        else if(kind==='md'){navigator.clipboard.writeText(m.md||txt).then(done)}
+        else if(kind==='json'){navigator.clipboard.writeText(m.json||'').then(done)}
         else{navigator.clipboard.writeText(txt).then(done)}
       }
       function renderCopyControls(){
-        if(!copySel)return;
-        var wraps=document.querySelectorAll('.msg-wrap');
-        var mode=copySel.value;
-        wraps.forEach(function(wrap,i){
-          var slot=wrap.querySelector('.msg-copy');slot.innerHTML='';
+        document.querySelectorAll('.msg-wrap').forEach(function(wrap,i){
+          var slot=wrap.querySelector('.msg-copy');if(!slot)return;slot.innerHTML='';
+          if(viewMode!=='rendered'){
+            var cb=document.createElement('button');
+            cb.className='copy-btn';
+            cb.textContent='Copy';
+            cb.title='Copy this message as '+MODE_LABELS[viewMode];
+            cb.onclick=function(){copyMsg(i,viewMode==='markdown'?'md':viewMode,cb)};
+            slot.appendChild(cb);
+            return;
+          }
+          if(!copySel)return;
+          var mode=copySel.value;
           if(mode==='dropdown'){
             var sel=document.createElement('select');
-            sel.innerHTML='<option value="">Copy\u2026</option><option value="seen">As seen</option><option value="html">HTML</option><option value="md">MD</option><option value="text">Plain text</option>';
+            sel.innerHTML='<option value="">Copy\u2026</option><option value="seen">As seen</option><option value="html">HTML</option><option value="md">MD</option><option value="json">JSON</option><option value="text">Plain text</option>';
+            sel.title='Copy this message — choose the format';
             sel.onchange=function(){var v=sel.value;if(!v)return;sel.value='';copyMsg(i,v,sel)};
             slot.appendChild(sel);
           }else{
             var b=document.createElement('button');
             b.className='copy-btn';
-            b.textContent=mode==='seen'?'Copy':(mode==='html'?'Copy HTML':mode==='md'?'Copy MD':'Copy text');
+            b.textContent=mode==='seen'?'Copy':(mode==='html'?'Copy HTML':mode==='md'?'Copy MD':mode==='json'?'Copy JSON':'Copy text');
+            b.title='Copy this message in the format selected in the Copy menu';
             b.onclick=function(){copyMsg(i,mode,b)};
             slot.appendChild(b);
           }
         });
       }
+      function applyView(){
+        document.querySelectorAll('.msg-wrap').forEach(function(wrap,i){
+          var slot=wrap.querySelector('.msg-slot');
+          if(slot)slot.innerHTML=msgBody(DATA.msgs[i]||{});
+        });
+        if(copySelWrap)copySelWrap.style.display=viewMode==='rendered'?'':'none';
+        var mv=document.getElementById('meta-view');if(mv)mv.textContent='view: '+viewMode;
+        var ca=document.getElementById('copy-all');
+        if(ca){ca.textContent='Copy all ('+MODE_LABELS[viewMode]+')';ca.title='Copy the whole popout as '+MODE_LABELS[viewMode]}
+        renderCopyControls();
+        updateBulk();
+      }
+      viewSel.value=viewMode;
+      viewSel.onchange=function(){viewMode=this.value;applyView()};
       copySel.value=load(COPY_KEY,'dropdown');
       copySel.onchange=function(){save(COPY_KEY,this.value);renderCopyControls()};
+      function updateBulk(){
+        if(!bulkBar)return;
+        var bc=document.getElementById('bulk-copy');
+        if(bc)bc.textContent='Copy selected ('+document.querySelectorAll('.msg-check:checked').length+')';
+      }
+      function applyChkState(){
+        var show=chkTgl.checked;
+        document.body.classList.toggle('show-checks',show);
+        if(bulkBar)bulkBar.hidden=!show;
+        if(show)updateBulk();
+      }
       if(chkTgl&&bulkBar){
-        function updateBulk(){document.getElementById('bulk-copy').textContent='Copy selected ('+document.querySelectorAll('.msg-check:checked').length+')'}
-        function applyChkState(){
-          var show=chkTgl.checked;
-          document.body.classList.toggle('show-checks',show);
-          bulkBar.hidden=!show;
-          if(show)updateBulk();
-        }
         chkTgl.checked=load(CHK_KEY,'0')==='1';
         applyChkState();
         chkTgl.onchange=function(){save(CHK_KEY,this.checked?'1':'0');applyChkState()};
@@ -6325,42 +6738,54 @@ function openPopoutPage(opt) {
           var idxs=[];
           document.querySelectorAll('.msg-check:checked').forEach(function(c){idxs.push(parseInt(c.getAttribute('data-i')))});
           if(!idxs.length)return;
-          var mode=copySel.value==='dropdown'?'seen':copySel.value;
-          var htmlParts=[],textParts=[],mdParts=[];
+          var kind=currentCopyKind();
+          var htmlParts=[],textParts=[],mdParts=[],jsonParts=[];
           idxs.forEach(function(i){
+            var m=DATA.msgs[i]||{};
             var wrap=document.querySelectorAll('.msg-wrap')[i];
-            var body=wrap.querySelector('.msg-body');
-            htmlParts.push('<div style="margin:0 0 14px;border-left:3px solid #aaa;padding-left:10px">'+body.innerHTML+'</div>');
-            textParts.push(body.textContent);
-            mdParts.push('['+(DATA.msgs[i].role||'message').toUpperCase()+']\\n'+(DATA.msgs[i].md||body.textContent));
+            var body=wrap?wrap.querySelector('.msg-body'):null;
+            htmlParts.push('<div style="margin:0 0 14px;border-left:3px solid #aaa;padding-left:10px">'+(m.html||'')+'</div>');
+            textParts.push(body?body.textContent:(m.md||''));
+            mdParts.push('['+((m.role||'message').toUpperCase())+']\\n'+(m.md||''));
+            jsonParts.push(m.json||'');
           });
           var sep='\\n\\n---\\n\\n';
           var btn=document.getElementById('bulk-copy');
-          function done(){var old=btn.textContent;btn.textContent='Copied!';btn.classList.add('copied');setTimeout(function(){btn.textContent=old;btn.classList.remove('copied')},1200)}
-          if(mode==='seen'){
-            var html='<div style="font-family:system-ui,sans-serif;line-height:1.7">'+htmlParts.join('')+'</div>';
-            navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([textParts.join(sep)],{type:'text/plain'})})]).then(done);
-          }else if(mode==='html'){navigator.clipboard.writeText(htmlParts.join('\\n')).then(done)}
-          else if(mode==='md'){navigator.clipboard.writeText(mdParts.join(sep)).then(done)}
+          function done(){copyDone(btn)}
+          function rich(html,plain){
+            if(window.ClipboardItem&&navigator.clipboard.write){
+              navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([plain],{type:'text/plain'})})]).then(done).catch(function(){navigator.clipboard.writeText(plain).then(done)});
+            }else{navigator.clipboard.writeText(plain).then(done)}
+          }
+          if(kind==='seen'){
+            rich('<div style="font-family:system-ui,sans-serif;line-height:1.7">'+htmlParts.join('')+'</div>',textParts.join(sep));
+          }else if(kind==='html'){navigator.clipboard.writeText(htmlParts.join('\\n')).then(done)}
+          else if(kind==='md'){navigator.clipboard.writeText(mdParts.join(sep)).then(done)}
+          else if(kind==='json'){navigator.clipboard.writeText(jsonParts.join(sep)).then(done)}
           else{navigator.clipboard.writeText(textParts.join(sep)).then(done)}
         };
       }
-      function copyTop(kind){
-        var content=document.getElementById('content');
-        var html=content.innerHTML,txt=content.textContent;
-        var map={seen:['copy-seen','Copy as seen'],html:['copy-html','Copy as HTML code'],md:['copy-md','Copy as MD'],text:['copy-text','Copy as plain text']};
-        var b=document.getElementById(map[kind][0]),label=map[kind][1];
-        function done(){b.textContent='Copied!';b.classList.add('copied');setTimeout(function(){b.textContent=label;b.classList.remove('copied')},1200)}
-        if(kind==='seen'){navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([txt],{type:'text/plain'})})]).then(done)}
-        else if(kind==='html'){navigator.clipboard.writeText(html).then(done)}
-        else if(kind==='md'){navigator.clipboard.writeText(DATA.fullMd||txt).then(done)}
-        else{navigator.clipboard.writeText(txt).then(done)}
+      function topCopyKind(){
+        return viewMode==='rendered'?'seen':(viewMode==='markdown'?'md':viewMode);
       }
-      document.getElementById('copy-seen').onclick=function(){copyTop('seen')};
-      document.getElementById('copy-html').onclick=function(){copyTop('html')};
-      document.getElementById('copy-md').onclick=function(){copyTop('md')};
-      document.getElementById('copy-text').onclick=function(){copyTop('text')};
-      renderCopyControls();
+      function copyTop(){
+        var kind=topCopyKind();
+        var btn=document.getElementById('copy-all');
+        function done(){copyDone(btn)}
+        if(kind==='seen'){
+          var html=DATA.msgs.map(function(m){return '<div style="margin:0 0 14px;border-left:3px solid #aaa;padding-left:10px">'+(m.html||'')+'</div>'}).join('');
+          var tmp=document.createElement('div');tmp.innerHTML=html;
+          var plain=tmp.textContent;
+          if(window.ClipboardItem&&navigator.clipboard.write){
+            navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([plain],{type:'text/plain'})})]).then(done).catch(function(){navigator.clipboard.writeText(plain).then(done)});
+          }else{navigator.clipboard.writeText(plain).then(done)}
+        }else if(kind==='html'){navigator.clipboard.writeText(DATA.fullHtml||'').then(done)}
+        else if(kind==='md'){navigator.clipboard.writeText(DATA.fullMd||'').then(done)}
+        else if(kind==='json'){navigator.clipboard.writeText(DATA.fullJson||'').then(done)}
+        else{navigator.clipboard.writeText(document.getElementById('content').textContent).then(done)}
+      }
+      document.getElementById('copy-all').onclick=copyTop;
+      applyView();
     })();
   <\/script>
 </body></html>`);
@@ -6376,24 +6801,19 @@ document.getElementById('btn-popout').addEventListener('click', () => {
   const title = node ? (getNodeRole(node) + ' message') : 'Message';
   const ts = node?.message?.create_time ? formatNodeDate(node.message.create_time) : '';
 
+  const role = node ? getNodeRole(node) : 'other';
   const renderedHtml = DOMPurify.sanitize(marked.parse(text || ''));
-  let body = '';
-  if (mode === 'rendered') {
-    body = renderedHtml;
-  } else if (mode === 'markdown') {
-    body = `<pre class="msg-body">${escapeHtml(text || '')}</pre>`;
-  } else if (mode === 'html') {
-    body = `<pre class="msg-body">${escapeHtml(renderedHtml)}</pre>`;
-  } else if (mode === 'json') {
-    body = `<pre class="msg-body">${escapeHtml(JSON.stringify(node, null, 2))}</pre>`;
-  }
+  const json = node ? JSON.stringify(node, null, 2) : '';
 
   openPopoutPage({
     title,
-    meta: `view: ${mode}${ts ? ' · ' + ts : ''}`,
+    meta: ts || '',
     mode,
     multi: false,
-    messages: [{ role: title.split(' ')[0], ts, md: text || '', body }],
+    messages: [{ role, ts, md: text || '', html: renderedHtml, json }],
+    fullMd: text || '',
+    fullHtml: renderedHtml,
+    fullJson: json,
   });
 });
 
@@ -6813,28 +7233,29 @@ document.getElementById('btn-popout-branch').addEventListener('click', () => {
     const role = getNodeRole(n);
     const text = getNodeText(n);
     const ts = n.message?.create_time ? formatNodeDate(n.message.create_time) : '';
-    let body = '';
-    if (mode === 'rendered') {
-      body = `<div class="msg-body">${DOMPurify.sanitize(marked.parse(text || ''))}</div>`;
-    } else if (mode === 'markdown') {
-      body = `<pre class="msg-body">${escapeHtml(text || '')}</pre>`;
-    } else if (mode === 'html') {
-      body = `<pre class="msg-body">${escapeHtml(DOMPurify.sanitize(marked.parse(text || '')))}</pre>`;
-    } else if (mode === 'json') {
-      body = `<pre class="msg-body">${escapeHtml(JSON.stringify(n, null, 2))}</pre>`;
-    }
-    return { role, ts, md: text || '', body };
+    return {
+      role,
+      ts,
+      md: text || '',
+      html: DOMPurify.sanitize(marked.parse(text || '')),
+      json: JSON.stringify(n, null, 2),
+    };
   });
 
   const fullMd = visibleNodes.map(n => `[${getNodeRole(n).toUpperCase()}]\n${getNodeText(n)}`).join('\n\n---\n\n');
+  const fullHtml = messages.map(m => `<!-- [${m.role.toUpperCase()}] -->\n${m.html}`).join('\n\n');
+  const fullJson = JSON.stringify(visibleNodes, null, 2);
 
   openPopoutPage({
     title: conv?.title || 'Branch Conversation',
-    meta: `${visibleNodes.length} message${visibleNodes.length !== 1 ? 's' : ''} · view: ${mode}${q ? ` · filtered: "${q}"` : ''}`,
+    meta: `${visibleNodes.length} message${visibleNodes.length !== 1 ? 's' : ''}${q ? ` · filtered: "${q}"` : ''}`,
     mode,
     multi: true,
+    asTab: true,
     messages,
     fullMd,
+    fullHtml,
+    fullJson,
   });
 });
 
@@ -7577,9 +7998,34 @@ renderGraph(null);
 // ============================================================
 // CHANGELOG
 // ============================================================
+// MAINTAINER NOTE (also for AI/LLM agents): when you change anything
+// user-visible, bump the version numbers listed in the top-of-file comment and
+// prepend a new { version, date, latest: true, items: [...] } entry here, then
+// set latest: false on the entry that was previously first. Use
+// type: 'new' | 'change' | 'fix' for each item.
+// Also: every new button or feature needs a title="..." tooltip; ask the user
+// whether to keep asking, proceed automatically, or use their own instructions;
+// and edit ONLY this file (never similar-looking copies). See the full
+// MAINTAINER NOTES block at the top of this file.
 const changelog = [
   {
-    version: 'v7.8.0', date: '2026-09-04', latest: true,
+    version: 'v7.9.0', date: '2026-10-19', latest: true,
+    items: [
+      { type: 'new', text: '<strong>Branch pop-out opens in a new tab</strong> - clicking Pop out in the Branch panel now opens a normal browser tab beside the current one instead of a separate sized window.' },
+      { type: 'new', text: '<strong>Switch views inside the popout</strong> - both popouts have a <strong>View</strong> selector (Rendered / Markdown / HTML / JSON) that re-renders the page in place, so you no longer have to re-open the popout to change format.' },
+      { type: 'new', text: '<strong>Copy matches the view</strong> - every message box in a popout now has its own Copy control, and it always copies in the active view: Rendered copies formatted content, Markdown copies the raw markdown, HTML copies the HTML source, JSON copies the node JSON.' },
+      { type: 'change', text: '<strong>Simpler popout copy bar</strong> - the four fixed buttons were replaced by one <code>Copy all (Rendered|Markdown|HTML|JSON)</code> button that follows the selected view. The per-message format dropdown (As seen / HTML / MD / JSON / Plain text) still exists in Rendered view.' },
+      { type: 'change', text: '<strong>Bulk copy works in every view</strong> - "Select messages" and "Copy selected (N)" in the branch popout are no longer limited to Rendered view.' },
+      { type: 'new', text: '<strong>Tooltips on every control</strong> - buttons, selects, inputs, tabs, role filters, theme dots, minimap, conversation list items and popout controls now all show a tooltip explaining what they do.' },
+      { type: 'new', text: '<strong>Windows XP theme preset</strong> - a new Luna-inspired theme (silver window chrome, blue accents, green highlights) is available from the theme dots and as a Quick Preset inside the custom theme panel.' },
+      { type: 'change', text: '<strong>System is the default theme</strong> - the app now follows your operating system\'s light/dark preference out of the box and switches live when the OS theme changes. Pick any dot (including the new half-light/half-dark <strong>System</strong> dot) to override it.' },
+      { type: 'new', text: '<strong>Copy the changelog</strong> - the What\'s New page has a <strong>master copy bar</strong> for the entire log plus its own <strong>Rendered / Markdown / HTML</strong> buttons on every single release. Rendered copies rich formatted text (via <code>ClipboardItem</code>), Markdown copies editable source and HTML copies the raw markup.' },
+      { type: 'new', text: '<strong>View the changelog as Markdown or HTML</strong> - a <strong>View</strong> selector at the top of What\'s New switches the whole log between the normal rendered layout and raw Markdown / HTML source, in place and without closing the help dialog.' },
+      { type: 'change', text: '<strong>Maintainer notes for AI agents</strong> - a comment block at the top of the file (and above the changelog) now instructs automated editors to bump the version, update the changelog, document changes in Help, and give <strong>every new button or feature a tooltip in the same edit</strong>. Editors must also <strong>ask the user whether to keep confirming each edit, proceed automatically, or follow their own instructions</strong> (with a USER PREFERENCE field to record the answer), and must <strong>edit only this file</strong> - never the similar-looking copies. The block requires editors to raise all of this with the user and confirm each step was followed.' },
+    ]
+  },
+  {
+    version: 'v7.8.0', date: '2026-09-04', latest: false,
     items: [
       { type: 'new', text: '<strong>opencode database import</strong> - the Load File picker and drag-and-drop now accept <code>.db</code> / <code>.sqlite</code> / <code>.sqlite3</code> files and read opencode sessions straight from <code>opencode.db</code> (parsed in-browser via sql.js). Each session becomes a conversation; close opencode before importing so recent sessions are checkpointed into the file.' },
       { type: 'new', text: '<strong>Tool calls shown</strong> - when importing an opencode database, assistant messages include the <code>[tool:bash]</code> commands and their output as code blocks, alongside the assistant text.' },
@@ -7855,7 +8301,7 @@ const changelog = [
 ];
 
 
-console.log('ChatGPT JSON Tree Viewer v7.8.0 loaded. Drop a JSON file to get started.');
+console.log('ChatGPT JSON Tree Viewer v7.9.0 loaded. Drop a JSON file to get started.');
 
 // ============================================================
 // MOBILE HAMBURGER MENU

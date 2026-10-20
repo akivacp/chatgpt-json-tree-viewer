@@ -4,177 +4,110 @@ This is **vibe coded software**.
 
 # 🌳 ChatGPT JSON Tree Viewer
 
-**Ever wanted to actually *see* your AI conversations — not just scroll through them?**
+**Your AI conversation is a tree. Every viewer shows you a list. This one shows you the tree.**
 
-This tool takes your exported chat history from ChatGPT, Claude, DeepSeek, and other AI apps and turns it into an interactive map you can explore, search, and read.
+Load an export from ChatGPT, Claude, Grok, DeepSeek, Qwen, Mistral, GLM or opencode — or just a Markdown transcript — and get a map you can actually explore: every branch, every regenerated answer, every "wait, which version did I keep?" moment.
 
+Main UI
 ![Main UI](docs/screenshot-main.png)
 
 ---
 
-## What does it do?
+## The problem you already know
 
-When you chat with an AI, you often go back and try different responses, rewrite your questions, or branch off in different directions. Most chat apps show this as one long scroll — but it's actually a *tree*. Some messages have multiple replies. Some threads go deep. Some branch off and go different places.
+You ask a question. The answer is *almost* right. You hit **Regenerate**. Then again. And again.
 
-This viewer shows you that tree as a visual map. You can:
+The model keeps one of those answers. The other four disappear — along with that side question you asked three messages ago, and the entire conversation that quietly grew out of it.
 
-- **See the full shape** of a conversation at a glance
-- **Click any message** to read it in the panel on the right
-- **Follow a branch** from start to finish — see the full back-and-forth that led to any response
-- **Search** across everything you've ever said or asked — across thousands of chats at once
-- **Export** what you find as a readable document, PDF, or file
+Your export still has all of it. It's just… JSON. A wall of `mapping`, `parent`, `children` and UUIDs that no human should read on purpose.
 
-Everything runs in your browser. Nothing is uploaded anywhere. Your conversations stay on your device.
+This viewer reads it so you don't have to.
 
----
+## What you get
 
-## Who is this for?
+**A real tree, not a timeline.** Every message is a node, every regeneration is a sibling branch, and you can pan, zoom and click your way through the whole thing. There's a minimap for when the tree gets ambitious. Colours tell you who's talking — blue for you, green for the model, grey dashed for the system messages hiding in the plumbing.
 
-**You don't need to know anything about code to use this.** If you've ever exported your ChatGPT history and wondered what to do with the JSON file — this is it.
+**A branch panel that keeps its bearings.** Pick any node and see the exact path that leads to it — role chips, message previews, and little arrows to hop between siblings so you can compare what the model said the first time versus the fifth.
 
-- 📚 **Researchers and students** — find that conversation where you worked through a problem, see how your thinking branched
-- ✍️ **Writers** — revisit brainstorming sessions, compare different directions you explored
-- 💼 **Professionals** — review past AI-assisted work, document conversations for records
-- 🧑‍💻 **Developers** — inspect conversation structure, export for analysis, or browse your history with a better interface
-- 🗃️ **Anyone with a lot of chats** — finally make sense of years of conversations
+**Search that finds the thing you half-remember.** Full-text across every loaded conversation, grouped by conversation, with matches highlighted. No more scrolling through 400 messages hunting for "the bit about the database".
 
----
+**Copy anything, in whatever shape you need.** Rendered (formatting intact), Markdown, HTML or raw JSON — per message, per selection, or the entire conversation. The changelog has the same treatment, because of course it does.
 
-## Why this exists
+**Pop any message — or the whole branch — into its own tab.** A real tab beside the app, not a cramped little window, with the same branded header, a view switcher and copy buttons that follow whatever view you're in.
 
-AI conversations are becoming a form of external memory — brainstorming, research, journaling, coding, problem-solving.
+**Get it out of the browser.** Print-ready PDF, the visible branch as HTML / Markdown / JSON (it follows your view), and the graph itself as PNG, JPG or SVG.
 
-But most interfaces flatten those conversations into endless scrolling.
+**Themes, including the one you didn't ask for.** System (follows your OS light/dark setting, live), light, dark, blue, green, purple — and **Windows XP**, Luna chrome and all. There's a colour picker too, if you're feeling artistic.
 
-This tool was built to make those conversations navigable again.
+**It fits in your pocket.** Single-column layout, bottom navigation, pinch-zoom and two-finger pan on phones.
 
----
+**Big files don't scare it.** A 300 MB export gets split in a background worker and imported chunk by chunk, without freezing the tab.
 
-## Getting started
+**A help section that actually helps.** 18 searchable topics, plus the full changelog with copy buttons and a raw Markdown view — and a tooltip on essentially every control, so nothing is a mystery button.
 
-### Step 1 — Export your chats
+## Your conversations stay yours
 
-**ChatGPT:** Settings → Data Controls → Export Data. You'll get an email with a ZIP file. Inside is a file called `conversations.json`.
+Everything runs in your browser. The file you drop in is parsed, rendered and stored locally — there is no server, no account, no upload, no analytics and no telemetry.
 
-**Claude:** Settings → Export Data. You'll get a `claude_conversations.json` file.
+The third-party libraries are pinned with SRI integrity hashes and the page ships a Content Security Policy, so a tampered CDN file gets refused rather than executed. Message bodies are sanitised before rendering, and imported titles, model names and node IDs are escaped everywhere they appear. Imported files are treated as what they are: untrusted input.
 
-**DeepSeek, Grok, Mistral:** Each has an export option in settings. Download the JSON file.
+The short version: your chats never leave your machine, and the app is built to keep it that way.
 
-### Step 2 — Open the viewer
+## Opening it
 
-Download `chatgpt-json-tree-viewer.html` from this page and open it in your browser (Chrome, Edge, or Firefox work best). No installation. No account. Just open the file.
+1. Download `chatgpt-json-tree-viewer.html`
+2. Double-click it — that *is* the install
+3. Drop your export onto the graph, or hit **Load File**
 
-### Step 3 — Load your chats
+No build step, no `npm install`, no "please create an account to continue". One file, one browser tab.
 
-Click **Load File** and select your JSON file, or drag it onto the page. Your conversations appear in the sidebar and the tree map appears in the middle.
+Haven't exported yet? ChatGPT hides it under **Settings → Data Controls → Export Data** (you get an email with a ZIP; the file inside is `conversations.json`). Claude: **Settings → Export Data**. Everyone else: poke around settings for "export".
 
----
+It needs an internet connection the first time (the pinned libraries and fonts come from a CDN, then your browser caches them). After that, everything works offline except importing an opencode `.db`, which fetches the SQLite engine on demand.
 
-## How to use it
+## What it reads
 
-### Reading a conversation
+| Where your chats live | What to drop in |
+| --- | --- |
+| ChatGPT / OpenAI export | `conversations.json` |
+| Claude (new and classic exports) | `.json` |
+| DeepSeek (exporter, chat export, conversation) | `.json` |
+| Grok / xAI backend export | `.json` |
+| Mistral | `.json` |
+| GLM / Zhipu | `.json` |
+| Qwen Chat | `.json` |
+| opencode | `opencode.db` (`.db`, `.sqlite`, `.sqlite3`) |
+| Anything else | `.md`, `.markdown`, `.txt` — parsed as a transcript |
 
-Click any dot on the map to select it. The right panel shows you that message. Switch between two tabs:
+Multiple files at once? Sure. Each becomes its own entry in the sidebar. Format detection is automatic, and branching survives the trip wherever the source format recorded it.
 
-- **Selected Node** — just that one message, with its timestamp and which AI model was used
-- **Branch** — the full conversation thread from beginning to end
+## Small things that add up
 
-### Understanding the map
+- A minimap, breadcrumbs and role filters, so a 200-message tree stays navigable
+- Drag either side panel to whatever width you like — the graph takes the rest
+- Search results grouped by conversation, collapsible with one click
+- Notifications instead of silent failures when a file won't parse
+- Everything is a single HTML file — copy it to a USB stick and it still works
 
-Each dot is a message. Lines show which messages led to which. Colors show who sent it:
+## About that "vibe coded" label
 
-- 🔵 **Blue** — you
-- 🟢 **Green** — the AI
-- ⭕ **Gray dashed** — system messages (usually hidden behind the scenes)
-- 🟣 **Purple** — other types
+It's one HTML file containing all the CSS and JavaScript, assembled by a human and a rotating cast of language models, then bullied into shape by an unreasonable number of edge cases and a headless browser.
 
-When a conversation branches — like when you regenerated a response or tried a different question — the map splits into multiple paths, showing you all the directions it went.
+There is no test suite. The test suite is a person clicking things and saying "huh, that shouldn't do that." Which is also how most of the features got added.
 
-### Searching
-
-Type anything in the search bar on the left to find messages across your conversations. Matching messages glow on the map and appear as clickable cards. You can search the current conversation or everything loaded at once.
-
-### Working with many conversations
-
-Load as many files as you want — they all appear together in the sidebar. If you load the same conversation twice, duplicates are skipped automatically. If you load an updated version with more messages, it quietly updates the old one.
-
-If your export file is very large (hundreds of megabytes), the app warns you and offers to split it into smaller pieces and import them automatically — no manual work needed.
-
----
-
-## Themes and customization
-
-Click the colored dots in the top-right corner to switch between Dark, Light, Blue, Green, and Purple themes.
-
-The **rainbow dot ✦** opens a color editor where you can customize every color — backgrounds, text, accents, and individual node colors. Changes apply live and are saved automatically.
-
----
-
-## Exporting and saving
-
-Whatever you're reading, you can save it:
-
-- **Copy** — copies the text to your clipboard
-- **Export** — downloads as a file (styled HTML, Markdown, or JSON)
-- **PDF** — opens a clean print window. Use your browser's "Save as PDF" to save it. Looks like a proper document with correct fonts and page margins.
-- **Pop-out** — opens the current view in a new browser tab
-
-To save your whole project, use **Export All** in the top bar. This downloads all your loaded conversations as a single file you can reload later. For very large projects it splits into numbered chunk files automatically.
-
----
-
-## Supported formats
-
-Works with exports from:
-
-| Platform | How to export |
-|---|---|
-| **ChatGPT / OpenAI** | Settings → Data Controls → Export |
-| **Claude (Anthropic)** | Settings → Export Data |
-| **DeepSeek** | Settings → Data → Export Data → Download |
-| **Grok / xAI** | Settings → Export Account Data → Export |
-| **Mistral AI** | Profile → Export your personal data → Le Chat → Export|
-| **z.AI (GLM / Zhipu AI)** | Settings → Dialogue →  Export Chats |
-| **Qwen Studio** | Settings → Chats → Export Chats |
-
-
-The format is detected automatically — you don't need to tell the app which platform it came from.
-
----
-
-## Frequently asked questions
-
-**Is my data safe?**
-Yes. Everything runs inside your browser. No data is ever sent anywhere. When you close the tab, nothing is stored (except your theme and settings, which stay on your device).
-
-**Can I use it offline?**
-Yes, once you've downloaded the HTML file. You need an internet connection the first time to load some libraries, but after that it works offline.
-
-**Do I need to install anything?**
-No. It's a single HTML file — open it like any other file on your computer.
-
-**What if my file is too big to open?**
-The app will warn you and offer to handle it automatically. It can split huge files and import the pieces one by one.
-
-**Can I load multiple files at once?**
-Yes. Load as many as you want. The app handles duplicates intelligently.
-
-**Can I get back a conversation I accidentally deleted from the viewer?**
-Yes — deleted conversations go to a recovery pool. Right-click any conversation in the sidebar and choose **Start Over** to restore everything.
-
----
+It works, it's honest about it, and the whole thing is small enough to read if you don't trust either of us.
 
 ## Libraries used
 
 | Library | Purpose |
-|---|---|
+| --- | --- |
 | [D3.js](https://d3js.org) v7.9.0 | Interactive tree map |
-| [marked.js](https://marked.js.org) v9.1.6 | Markdown rendering |
-| [DOMPurify](https://github.com/cure53/DOMPurify) v3.0.6 | Safe content display |
-| [html2canvas](https://html2canvas.hertzen.com) v1.4.1 | Graph image export |
-| [jsPDF](https://github.com/parallax/jsPDF) v2.5.1 | PDF support |
+| [marked](https://marked.js.org) v9.1.6 | Markdown → HTML rendering |
+| [DOMPurify](https://github.com/cure53/DOMPurify) v3.0.6 | Sanitising rendered message HTML |
+| [html2canvas](https://html2canvas.hertzen.com) v1.4.1 | PNG / JPG export of the graph |
+| [sql.js](https://sql.js.org) v1.10.3 | In-browser SQLite, for reading opencode databases |
 
-Fonts: DM Sans, Literata, JetBrains Mono (SIL Open Font License, via Google Fonts).
+Fonts: [DM Sans](https://fonts.google.com/specimen/DM+Sans), [Literata](https://fonts.google.com/specimen/Literata) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono), served via Google Fonts.
 
 ---
 

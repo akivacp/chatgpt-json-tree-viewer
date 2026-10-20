@@ -552,6 +552,63 @@ body {
   font-size: 10px; padding: 1px 5px; border-radius: 99px;
 }
 
+/* Files panel — per-file residency and memory control */
+#files-panel {
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0; display: flex; flex-direction: column;
+  max-height: 32vh; min-height: 0;
+}
+.files-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px 4px; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-muted); flex-shrink: 0;
+}
+.files-header-actions { display: flex; gap: 4px; }
+.files-mini-btn {
+  background: var(--bg-tertiary); border: 1px solid var(--border-color);
+  color: var(--text-secondary); font-size: 10px; font-weight: 600;
+  padding: 1px 6px; border-radius: 99px; cursor: pointer;
+  text-transform: none; letter-spacing: 0; font-family: inherit;
+}
+.files-mini-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+#files-list { overflow-y: auto; padding: 0 6px 6px; min-height: 0; }
+.file-row {
+  display: grid; grid-template-columns: 14px 1fr; gap: 6px;
+  align-items: start; padding: 5px 6px; margin-bottom: 1px;
+  border-radius: var(--radius-sm); cursor: pointer;
+  border: 1px solid transparent;
+}
+.file-row:hover { background: var(--bg-hover); }
+.file-row.loading { opacity: 0.7; }
+.file-row.purged .file-name { color: var(--text-muted); }
+.file-row input[type="checkbox"] {
+  margin: 2px 0 0; accent-color: var(--accent-teal); cursor: pointer;
+}
+.file-name {
+  font-size: 12px; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.file-meta {
+  font-size: 10.5px; color: var(--text-muted); margin-top: 1px;
+  display: flex; gap: 5px; flex-wrap: wrap; align-items: center;
+}
+.file-chip {
+  font-size: 9.5px; padding: 0 4px; border-radius: 99px;
+  background: var(--bg-tertiary); color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.file-chip.resident { color: var(--accent-teal); }
+.file-chip.loading  { color: var(--accent-teal); }
+.file-chip.purged   { color: var(--accent-yellow); }
+.file-chip.error    { color: var(--accent-red); }
+.file-spinner {
+  width: 9px; height: 9px; border: 2px solid var(--border-light);
+  border-top-color: var(--accent-teal); border-radius: 50%;
+  animation: filespin 0.7s linear infinite; display: inline-block;
+}
+@keyframes filespin { to { transform: rotate(360deg); } }
+
 #conv-list { flex: 1; overflow-y: auto; padding: 4px 6px 8px; }
 .conv-item {
   padding: 8px 10px; border-radius: var(--radius-md);
@@ -1415,7 +1472,7 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Load File
     </button>
-    <input type="file" id="file-input" accept=".json,.md,.markdown,.txt,.db,.sqlite,.sqlite3" multiple title="Choose conversation files to import (.json, .md, .markdown, .txt, .db, .sqlite, .sqlite3)">
+    <input type="file" id="file-input" accept=".json,.md,.markdown,.txt,.db,.sqlite,.sqlite3,.zip" multiple title="Choose conversation files to import (.json, .md, .markdown, .txt, .db, .sqlite, .sqlite3, .zip)">
     <span id="format-badge" title="Format detected in the loaded file"></span>
     <button class="topbar-btn" id="btn-close-conv" title="Close current conversation" style="display:none;color:var(--accent-red);border-color:rgba(239,68,68,0.4);">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1619,6 +1676,16 @@ body {
           <button class="sort-dir-btn" id="result-sort-dir" data-dir="desc" title="Sort direction: descending — click to switch to ascending">↓</button>
         </div>
       </div>
+      <div id="files-panel" style="display:none;">
+        <div class="files-header">
+          <span>Files <span class="conv-count" id="files-count">0</span></span>
+          <span class="files-header-actions">
+            <button class="files-mini-btn" id="files-all" title="Load every listed file into memory and show all of its conversations">All</button>
+            <button class="files-mini-btn" id="files-none" title="Unload every file from memory. Files stay listed, so you can tick one to reload it">None</button>
+          </span>
+        </div>
+        <div id="files-list"></div>
+      </div>
       <div class="conversations-header">
         <span>Conversations</span>
         <span class="conv-count" id="conv-count">0</span>
@@ -1637,7 +1704,7 @@ body {
 
     <!-- GRAPH AREA -->
     <div id="graph-area">
-      <div id="drop-overlay" title="Release the mouse button to load the file(s)">Drop JSON file here</div>
+      <div id="drop-overlay" title="Release the mouse button to load the file(s)">Drop JSON, Markdown or ZIP here</div>
       <div id="empty-state">
         <h2>No conversation loaded</h2>
         <p>Load a JSON export from OpenAI, Claude, DeepSeek, Grok, or Mistral to visualize the conversation tree.</p>
@@ -2152,7 +2219,8 @@ body {
 // GLOBAL STATE
 // ============================================================
 const state = {
-  conversations: [],       // array of { id, title, data (unified format), _originalData }
+  conversations: [],       // array of { id, title, data (unified format), _fileKey }
+  files: [],               // per-file registry: { key, name, size, group, handle, zip, status, selected, count }
   hiddenConversations: [], // stashed by "Show Only" — can be restored
   deletedConversations: [], // stashed by "Delete Conv" — recovered by Start Over
   activeConvId: null,
@@ -4108,30 +4176,447 @@ function runSearch(query) {
 }
 
 // ============================================================
+// FILE REGISTRY — per-file residency, memory release and reload
+// ============================================================
+const ZIP_MAX_ENTRY_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB cap per archive entry
+
+// "conversations-000" / "conversations-001" / "x_part1of5_100convs" / "export (1)"
+// all collapse to one group, so numbered exports are checked together.
+function fileGroupKey(name) {
+  let base = String(name || '').replace(/\.(json|md|markdown|txt|db|sqlite|sqlite3|zip)$/i, '');
+  base = base.replace(/_part\d+of\d+/i, '');
+  base = base.replace(/_\d+convs/i, '');
+  base = base.replace(/_\d{4}-\d{2}-\d{2}$/i, '');
+  base = base.replace(/[-_ ]\d{3,}$/i, '');
+  base = base.replace(/\s*\(\d+\)$/i, '');
+  return base.trim().toLowerCase();
+}
+
+function fileKeyOf(file) {
+  if (file && file._zip) return 'zip|' + file._zip.archiveName + '|' + file._zip.path;
+  return 'file|' + (file?.name || '') + '|' + (file?.size || 0);
+}
+
+function fmtBytes(n) {
+  n = Number(n) || 0;
+  if (n >= 1073741824) return (n / 1073741824).toFixed(1) + ' GB';
+  if (n >= 1048576) return (n >= 104857600 ? Math.round(n / 1048576) : (n / 1048576).toFixed(1)) + ' MB';
+  if (n >= 1024) return Math.round(n / 1024) + ' KB';
+  return n + ' B';
+}
+
+function registerFile(file) {
+  const key = fileKeyOf(file);
+  let rec = state.files.find(r => r.key === key);
+  if (!rec) {
+    rec = {
+      key,
+      name: file.name,
+      size: file.size,
+      group: fileGroupKey(file.name),
+      handle: file._zip ? null : file,
+      zip: file._zip || null,
+      status: 'queued',
+      selected: false,
+      count: 0,
+      _new: true,
+    };
+    state.files.push(rec);
+  } else {
+    if (!file._zip) rec.handle = file;
+    if (file._zip) rec.zip = file._zip;
+    rec.size = file.size;
+  }
+  return rec;
+}
+
+function setFileStatus(file, status) {
+  const rec = state.files.find(r => r.key === fileKeyOf(file));
+  if (!rec) return;
+  rec.status = status;
+  renderFilePanel();
+}
+
+function fileConvCount(key) {
+  let n = 0;
+  for (const arr of [state.conversations, state.hiddenConversations, state.deletedConversations]) {
+    for (const c of arr) if (c._fileKey === key) n++;
+  }
+  return n;
+}
+
+function renderFilePanel() {
+  const panel = document.getElementById('files-panel');
+  if (!panel) return;
+  panel.style.display = state.files.length ? '' : 'none';
+  const countEl = document.getElementById('files-count');
+  if (countEl) countEl.textContent = `${state.files.filter(r => r.selected).length}/${state.files.length}`;
+  const list = document.getElementById('files-list');
+  if (!list) return;
+  list.innerHTML = '';
+  state.files.forEach(rec => {
+    rec.count = fileConvCount(rec.key);
+    const row = document.createElement('label');
+    row.className = `file-row ${rec.status}${rec.selected ? ' selected' : ''}`;
+    row.title = `${rec.name}\n${rec.count} conversation${rec.count !== 1 ? 's' : ''} in memory · ${fmtBytes(rec.size)} on disk\n${rec.selected ? 'Untick to unload it from memory' : 'Tick to load it from the original file'}`;
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = !!rec.selected;
+    cb.title = rec.selected
+      ? `Unload ${rec.name} from memory — tick again to reload it`
+      : `Load ${rec.name} into memory and show its conversations`;
+    cb.addEventListener('change', () => { toggleFileRecord(rec, cb.checked); });
+    const body = document.createElement('span');
+    body.style.minWidth = '0';
+    const nameEl = document.createElement('span');
+    nameEl.className = 'file-name';
+    nameEl.textContent = rec.name;
+    const meta = document.createElement('span');
+    meta.className = 'file-meta';
+    const c = document.createElement('span');
+    c.textContent = `${rec.count} conv${rec.count !== 1 ? 's' : ''}`;
+    const sz = document.createElement('span');
+    sz.textContent = fmtBytes(rec.size);
+    const chip = document.createElement('span');
+    chip.className = `file-chip ${rec.status}`;
+    chip.textContent = rec.status === 'resident' ? 'in memory'
+      : rec.status === 'loading' ? 'loading'
+      : rec.status === 'error' ? 'error'
+      : 'not loaded';
+    meta.append(c, sz, chip);
+    body.append(nameEl, meta);
+    row.append(cb, body);
+    list.appendChild(row);
+  });
+}
+
+async function toggleFileRecord(rec, checked) {
+  if (checked) {
+    rec.selected = true;
+    if (rec.status === 'resident' && rec.count > 0) { renderFilePanel(); return; }
+    await reloadFileRecord(rec);
+  } else {
+    rec.selected = false;
+    purgeFileRecord(rec);
+  }
+}
+
+function purgeFileRecord(rec, silent) {
+  if (rec.status === 'loading') rec._cancel = true;
+  const owns = c => c._fileKey === rec.key;
+  const wasActive = state.conversations.some(c => c.id === state.activeConvId && owns(c));
+  let removed = 0;
+  const strip = arr => arr.filter(c => {
+    if (owns(c)) { removed++; return false; }
+    return true;
+  });
+  state.conversations = strip(state.conversations);
+  state.hiddenConversations = strip(state.hiddenConversations);
+  state.deletedConversations = strip(state.deletedConversations);
+  rec.status = 'purged';
+  rec.count = 0;
+
+  for (const id of [...state.searchMatches.keys()]) {
+    if (!state.conversations.some(c => c.id === id)) state.searchMatches.delete(id);
+  }
+  if (wasActive) {
+    state.activeConvId = null;
+    state.selectedNodeId = null;
+    state.searchQuery = '';
+    state.searchMatches.clear();
+    state.searchCollapsedConvs.clear();
+    state._branchPath = null;
+    state.nodePositions.clear();
+    state.initialPositions.clear();
+    document.getElementById('sidebar-search').value = '';
+    document.getElementById('search-results-panel').style.display = 'none';
+    document.getElementById('search-results-list').innerHTML = '';
+    document.getElementById('node-empty').style.display = '';
+    document.getElementById('node-view').style.display = 'none';
+    document.getElementById('branch-empty').style.display = '';
+    document.getElementById('branch-view').style.display = 'none';
+    document.getElementById('btn-close-conv').style.display = 'none';
+    renderGraph(null);
+  }
+  if (silent) return;
+  renderConvList();
+  renderFilePanel();
+  showNotif(`Unloaded ${rec.name} from memory${removed ? ` — ${removed} conversation${removed !== 1 ? 's' : ''} released` : ''}`, '');
+}
+
+async function reloadFileRecord(rec) {
+  rec._cancel = false;
+  rec.status = 'loading';
+  renderFilePanel();
+  try {
+    let file = null;
+    if (rec.zip) file = await zipEntryToFile(rec.zip);
+    else if (rec.handle) file = rec.handle;
+    if (!file) throw new Error('the original file is no longer available — load it again from disk');
+    await loadFile(file, { skipWarn: true });
+    if (rec.status === 'loading') rec.status = 'purged';
+  } catch (err) {
+    rec.status = 'error';
+    showNotif(`Could not reload ${rec.name}: ${err.message}`, 'error');
+  }
+  renderFilePanel();
+}
+
+async function setAllFiles(checked) {
+  if (checked) {
+    for (const rec of state.files) {
+      if (!rec.selected || rec.status !== 'resident') {
+        rec.selected = true;
+        await reloadFileRecord(rec);
+      }
+    }
+  } else {
+    state.files.forEach(rec => { rec.selected = false; purgeFileRecord(rec, true); });
+    renderConvList();
+    renderFilePanel();
+  }
+}
+
+// First load: keep only the largest file (or the largest numbered group).
+// Later loads: keep whatever the user already had, and add the new files.
+function _applyIncomingSelection(recs) {
+  const anyResident = state.files.some(r => r.status === 'resident' && r.count > 0);
+  if (!anyResident) {
+    const totals = new Map();
+    recs.forEach(r => totals.set(r.group, (totals.get(r.group) || 0) + r.size));
+    let best = null, bestSize = -1;
+    totals.forEach((sz, g) => { if (sz > bestSize) { bestSize = sz; best = g; } });
+    recs.forEach(r => { r.selected = r.group === best; });
+  } else {
+    recs.forEach(r => { r.selected = true; });
+  }
+}
+
+function _cancelPendingFiles() {
+  if (!_pendingRecords.length) return;
+  const stale = new Set(_pendingRecords.filter(r => r._new).map(r => r.key));
+  state.files = state.files.filter(r => !stale.has(r.key));
+  _pendingRecords = [];
+  _pendingFiles = [];
+  _pendingFileMap = new Map();
+  renderFilePanel();
+}
+
+async function _loadPendingRecords() {
+  const recs = _pendingRecords.slice();
+  recs.forEach(r => { delete r._new; });
+  const toLoad = recs.filter(r => r.selected);
+  const skipped = recs.length - toLoad.length;
+  _pendingRecords = [];
+  _pendingFiles = [];
+  if (skipped) {
+    showNotif(`${skipped} file${skipped !== 1 ? 's' : ''} left unloaded — tick under Files to load ${skipped !== 1 ? 'them' : 'it'}`, '');
+  }
+  // Sequential on purpose: 20 export parts parsed at once would spike memory.
+  const batch = toLoad.length > 1;
+  if (batch) { _batchLoading = true; _batchStats = { added: 0, updated: 0, skipped: 0, files: 0 }; }
+  for (const rec of toLoad) {
+    const file = _pendingFileMap.get(rec.key);
+    rec.status = 'loading';
+    renderFilePanel();
+    if (file) await loadFile(file);
+    else rec.status = 'error';
+  }
+  if (batch) {
+    const s = _batchStats;
+    const bits = [];
+    if (s.added) bits.push(`${s.added} new`);
+    if (s.updated) bits.push(`${s.updated} updated`);
+    if (s.skipped) bits.push(`${s.skipped} skipped`);
+    showNotif(`${bits.join(', ') || '0 new'} — from ${s.files} file${s.files !== 1 ? 's' : ''}`, s.added || s.updated ? 'success' : '');
+    _batchLoading = false;
+    _batchStats = null;
+  }
+  _pendingFileMap = new Map();
+  renderFilePanel();
+}
+
+// ============================================================
+// ZIP IMPORT — native reader, no library
+// Handles store (0) and deflate (8), nested folders, macOS junk,
+// ZIP64 directories and encrypted-entry detection.
+// ============================================================
+function _zipU16(dv, o) { return dv.getUint16(o, true); }
+function _zipU32(dv, o) { return dv.getUint32(o, true); }
+function _zipU64(dv, o) { return dv.getUint32(o, true) + dv.getUint32(o + 4, true) * 4294967296; }
+
+function _zipIsJunk(name) {
+  if (!name || name.endsWith('/')) return true;
+  if (/(^|\/)__MACOSX\//.test(name)) return true;
+  const base = name.split('/').pop() || '';
+  return !base || base === '.DS_Store' || base.startsWith('._');
+}
+
+async function zipDirectory(zipFile) {
+  if (typeof DecompressionStream === 'undefined') {
+    throw new Error('this browser cannot unpack ZIP files — extract the archive and load conversations.json instead');
+  }
+  const size = zipFile.size;
+  if (size < 22) throw new Error('not a ZIP archive (the file is too small)');
+  const tailLen = Math.min(size, 65557);
+  const tailStart = size - tailLen;
+  const tail = new DataView(await zipFile.slice(tailStart).arrayBuffer());
+  let eocd = -1;
+  for (let i = tail.byteLength - 22; i >= 0; i--) {
+    if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('not a ZIP archive, or the download is incomplete');
+  if (_zipU16(tail, eocd + 4) !== 0 || _zipU16(tail, eocd + 6) !== 0) {
+    throw new Error('multi-volume ZIP archives are not supported');
+  }
+  let count = _zipU16(tail, eocd + 10);
+  let cdSize = _zipU32(tail, eocd + 12);
+  let cdOffset = _zipU32(tail, eocd + 16);
+
+  if (count === 0xFFFF || cdSize === 0xFFFFFFFF || cdOffset === 0xFFFFFFFF) {
+    const locAbs = tailStart + eocd - 20;
+    if (locAbs < 0) throw new Error('ZIP64 archive is malformed');
+    const loc = new DataView(await zipFile.slice(locAbs, locAbs + 20).arrayBuffer());
+    if (loc.byteLength < 20 || loc.getUint32(0, true) !== 0x07064b50) throw new Error('ZIP64 archive is malformed');
+    const e64Abs = _zipU64(loc, 8);
+    const e64 = new DataView(await zipFile.slice(e64Abs, e64Abs + 56).arrayBuffer());
+    if (e64.byteLength < 56 || e64.getUint32(0, true) !== 0x06064b50) throw new Error('ZIP64 archive is malformed');
+    count = _zipU64(e64, 32);
+    cdSize = _zipU64(e64, 40);
+    cdOffset = _zipU64(e64, 48);
+  }
+  if (!count) throw new Error('the archive is empty');
+  if (cdOffset + cdSize > size) throw new Error('the archive looks truncated');
+
+  const cd = new DataView(await zipFile.slice(cdOffset, cdOffset + cdSize).arrayBuffer());
+  const entries = [];
+  let p = 0;
+  for (let n = 0; n < count; n++) {
+    if (p + 46 > cd.byteLength || cd.getUint32(p, true) !== 0x02014b50) break;
+    const flags = _zipU16(cd, p + 8);
+    const method = _zipU16(cd, p + 10);
+    let compSize = _zipU32(cd, p + 20);
+    let uncompSize = _zipU32(cd, p + 24);
+    const nameLen = _zipU16(cd, p + 28);
+    const extraLen = _zipU16(cd, p + 30);
+    const commentLen = _zipU16(cd, p + 32);
+    let localOff = _zipU32(cd, p + 42);
+    const name = new TextDecoder('utf-8').decode(new Uint8Array(cd.buffer, cd.byteOffset + p + 46, nameLen));
+
+    let e = p + 46 + nameLen;
+    const extraEnd = e + extraLen;
+    while (e + 4 <= extraEnd) {
+      const hid = _zipU16(cd, e), hsz = _zipU16(cd, e + 2);
+      if (hid === 0x0001) {
+        let q = e + 4;
+        if (uncompSize === 0xFFFFFFFF && q + 8 <= e + 4 + hsz) { uncompSize = _zipU64(cd, q); q += 8; }
+        if (compSize === 0xFFFFFFFF && q + 8 <= e + 4 + hsz) { compSize = _zipU64(cd, q); q += 8; }
+        if (localOff === 0xFFFFFFFF && q + 8 <= e + 4 + hsz) { localOff = _zipU64(cd, q); q += 8; }
+      }
+      e += 4 + hsz;
+    }
+
+    entries.push({ name, flags, method, compSize, uncompSize, localOff, archiveFile: zipFile });
+    p += 46 + nameLen + extraLen + commentLen;
+  }
+  return entries;
+}
+
+async function zipEntryToFile(ent) {
+  const entryName = ent.name || ent.path || 'archive entry';
+  if (ent.flags & 1) throw new Error(`"${entryName}" is password-protected — remove the password and re-zip`);
+  if (ent.uncompSize > ZIP_MAX_ENTRY_BYTES) throw new Error(`"${entryName}" is larger than 2 GB`);
+  const lhBuf = await ent.archiveFile.slice(ent.localOff, ent.localOff + 30).arrayBuffer();
+  if (lhBuf.byteLength < 30) throw new Error('corrupt ZIP entry: ' + entryName);
+  const lh = new DataView(lhBuf);
+  if (lh.getUint32(0, true) !== 0x04034b50) throw new Error('corrupt ZIP entry: ' + entryName);
+  const start = ent.localOff + 30 + _zipU16(lh, 26) + _zipU16(lh, 28);
+  const raw = ent.archiveFile.slice(start, start + ent.compSize);
+  let blob;
+  if (ent.method === 0) {
+    blob = raw;
+  } else if (ent.method === 8) {
+    const stream = raw.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    blob = await new Response(stream).blob();
+  } else {
+    throw new Error(`unsupported compression method ${ent.method} in "${entryName}"`);
+  }
+  if (blob.size > ZIP_MAX_ENTRY_BYTES) throw new Error(`"${entryName}" is larger than 2 GB`);
+  const base = entryName.split('/').pop() || entryName;
+  const file = new File([blob], base, { type: 'application/json', lastModified: Date.now() });
+  file._zip = {
+    archiveName: ent.archiveFile.name,
+    archiveFile: ent.archiveFile,
+    name: ent.name,
+    path: ent.name,
+    flags: ent.flags,
+    method: ent.method,
+    compSize: ent.compSize,
+    uncompSize: ent.uncompSize,
+    localOff: ent.localOff,
+  };
+  return file;
+}
+
+async function expandZip(zipFile) {
+  const entries = await zipDirectory(zipFile);
+  const files = entries.filter(e => !_zipIsJunk(e.name));
+  const convRe = /(^|\/)conversations(-\d+)?\.json$/i;
+  let picks = files.filter(e => convRe.test(e.name));
+
+  if (!picks.length) {
+    picks = files
+      .filter(e => /\.json$/i.test(e.name))
+      .filter(e => !/(^|\/)(shared_conversations|user|message_feedback|model_comparisons)\.json$/i.test(e.name))
+      .sort((a, b) => b.uncompSize - a.uncompSize)
+      .slice(0, 50);
+  }
+  if (!picks.length) {
+    const names = files.map(e => e.name.split('/').pop()).slice(0, 6).join(', ');
+    throw new Error('no conversation JSON found' + (names ? ` (found ${names})` : ' — the archive is empty'));
+  }
+  picks.sort((a, b) => a.name.localeCompare(b.name));
+
+  const out = [];
+  for (const ent of picks) out.push(await zipEntryToFile(ent));
+
+  const ignored = files.length - picks.length;
+  if (ignored > 0) {
+    const names = files.filter(e => !picks.includes(e)).map(e => e.name.split('/').pop()).slice(0, 4);
+    showNotif(`Unpacked ${picks.length} conversation file${picks.length !== 1 ? 's' : ''} from ${zipFile.name} — ignored ${ignored} other file${ignored !== 1 ? 's' : ''} (${names.join(', ')}${ignored > names.length ? '…' : ''})`, 'success');
+  } else {
+    showNotif(`Unpacked ${picks.length} file${picks.length !== 1 ? 's' : ''} from ${zipFile.name}`, 'success');
+  }
+  return out;
+}
+
+// ============================================================
 // CONVERSATION MANAGEMENT
 // ============================================================
-function loadFile(file) {
+function loadFile(file, opts) {
   const SIZE_WARN = (state.settings.largeFileWarn || 0) * 1024 * 1024;
-  if (SIZE_WARN > 0 && file.size > SIZE_WARN) {
+  if (!opts?.skipWarn && SIZE_WARN > 0 && file.size > SIZE_WARN) {
     const mb = (file.size / 1024 / 1024).toFixed(0);
     document.getElementById('large-file-desc').textContent =
       `"${file.name}" is ~${mb} MB. Files this large may exhaust browser memory during import and fail silently. You can try anyway, or split it into smaller chunks first and import those one by one.`;
     // Store file reference for deferred actions
     window._pendingLargeFile = file;
+    setFileStatus(file, 'queued');
     openModal('modal-large-file');
-    return;
+    return Promise.resolve();
   }
-  _doLoadFile(file);
+  setFileStatus(file, 'loading');
+  return _doLoadFile(file);
 }
 
 function _doLoadFile(file) {
   // opencode SQLite database files (.db) are binary, not JSON text.
   if (/\.(db|sqlite|sqlite3)$/i.test(file.name)) {
-    loadOpenCodeDB(file);
-    return;
+    return loadOpenCodeDB(file);
   }
-  const reader = new FileReader();
-  reader.onload = e => {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
     try {
       const text = e.target.result.replace(/^\uFEFF/, ''); // strip UTF-8 BOM if present
 
@@ -4182,13 +4667,31 @@ function _doLoadFile(file) {
         showNotif('Error parsing file: ' + err.message, 'error');
       }
       console.error(err);
+      setFileStatus(file, 'error');
+    } finally {
+      resolve();
     }
   };
+  reader.onerror = () => {
+    showNotif(`Could not read "${file.name}"`, 'error');
+    setFileStatus(file, 'error');
+    resolve();
+  };
   reader.readAsText(file);
+  });
 }
 
 // Shared ingest: dedupe/merge a converted array into the conversation store.
 function _finishLoad(converted, file) {
+  const rec = registerFile(file);
+  // The user unticked this file while it was still parsing — don't re-add it.
+  if (rec._cancel) {
+    rec._cancel = false;
+    rec.status = 'purged';
+    rec.selected = false;
+    renderFilePanel();
+    return;
+  }
   const existingMap = new Map([
     ...state.conversations.map(c => [c.id, { pool: 'conversations', conv: c }]),
     ...state.hiddenConversations.map(c => [c.id, { pool: 'hidden', conv: c }]),
@@ -4208,8 +4711,7 @@ function _finishLoad(converted, file) {
                   : state.deletedConversations;
         const idx = arr.findIndex(c => c.id === id);
         if (idx !== -1) {
-          const originalData = JSON.parse(JSON.stringify(data));
-          arr[idx] = { id, title: data.title || 'Untitled', data, format: data._format, _originalData: originalData };
+          arr[idx] = { id, title: data.title || 'Untitled', data, format: data._format, _fileKey: rec.key };
         }
         updated++;
       } else {
@@ -4218,14 +4720,17 @@ function _finishLoad(converted, file) {
       return;
     }
     existingMap.set(id, { pool: 'conversations' });
-    const originalData = JSON.parse(JSON.stringify(data));
     state.conversations.push({
       id, title: data.title || 'Untitled',
       data, format: data._format,
-      _originalData: originalData,
+      _fileKey: rec.key,
     });
     added++;
   });
+  rec.status = 'resident';
+  rec.selected = true;
+  delete rec._new;
+  rec.count = fileConvCount(rec.key);
   if (converted.length) setFormatBadge(converted[0]._format);
   document.getElementById('btn-close-conv').style.display = '';
   renderConvList();
@@ -4237,7 +4742,14 @@ function _finishLoad(converted, file) {
   if (updated) parts.push(`${updated} updated`);
   if (skipped) parts.push(`${skipped} skipped`);
   const summary = parts.join(', ') || '0 new';
-  showNotif(`${summary} — from ${file.name}`, added || updated ? 'success' : '');
+  if (_batchLoading && _batchStats) {
+    _batchStats.added += added;
+    _batchStats.updated += updated;
+    _batchStats.skipped += skipped;
+    _batchStats.files++;
+  } else {
+    showNotif(`${summary} — from ${file.name}`, added || updated ? 'success' : '');
+  }
 }
 
 // --------------------------------------------
@@ -4254,20 +4766,30 @@ function _loadSQL() {
 }
 
 function loadOpenCodeDB(file) {
-  const reader = new FileReader();
-  reader.onload = async e => {
-    try {
-      const mod = await _loadSQL();
-      const db = new mod.Database(new Uint8Array(e.target.result));
-      const convs = buildConversationsFromDB(db);
-      db.close();
-      _finishLoad(convs, file);
-    } catch (err) {
-      showNotif('Error parsing opencode database: ' + err.message, 'error');
-      console.error(err);
-    }
-  };
-  reader.readAsArrayBuffer(file);
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try {
+        const mod = await _loadSQL();
+        const db = new mod.Database(new Uint8Array(e.target.result));
+        const convs = buildConversationsFromDB(db);
+        db.close();
+        _finishLoad(convs, file);
+      } catch (err) {
+        showNotif('Error parsing opencode database: ' + err.message, 'error');
+        setFileStatus(file, 'error');
+        console.error(err);
+      } finally {
+        resolve();
+      }
+    };
+    reader.onerror = () => {
+      showNotif(`Could not read "${file.name}"`, 'error');
+      setFileStatus(file, 'error');
+      resolve();
+    };
+    reader.readAsArrayBuffer(file);
+  });
 }
 
 function _dbQ(db, sql) {
@@ -4548,6 +5070,7 @@ function renderConvList() {
     item.addEventListener('contextmenu', e => showContextMenu(e, conv.id));
     list.appendChild(item);
   });
+  renderFilePanel();
 }
 
 // ============================================================
@@ -4731,10 +5254,20 @@ document.getElementById('ctx-start-over').addEventListener('click', () => {
   state.hiddenConversations = [];
   state.deletedConversations = [];
 
-  // Reset each conversation's data from its original snapshot
+  // Replay node deletions in reverse order (a compact undo log replaces the
+  // old full-conversation deep clone, which doubled memory use).
   allConvs.forEach(conv => {
-    if (conv._originalData) {
-      conv.data = JSON.parse(JSON.stringify(conv._originalData));
+    if (Array.isArray(conv._undoNodes) && conv._undoNodes.length) {
+      conv._undoNodes.slice().reverse().forEach(u => {
+        if (!u || !u.node) return;
+        conv.data.mapping[u.id] = u.node;
+        const parent = u.parentId ? conv.data.mapping[u.parentId] : null;
+        if (parent && Array.isArray(parent.children) && !parent.children.includes(u.id)) {
+          const at = Math.max(0, Math.min(Number(u.index) || 0, parent.children.length));
+          parent.children.splice(at, 0, u.id);
+        }
+      });
+      conv._undoNodes = [];
     }
   });
 
@@ -4785,9 +5318,12 @@ document.getElementById('ctx-delete').addEventListener('click', () => {
     const conv = getActiveConv();
     if (conv) {
       const node = conv.data.mapping[ctxNodeId];
-      if (node?.parent) {
-        const parent = conv.data.mapping[node.parent];
+      if (node) {
+        const parent = node.parent ? conv.data.mapping[node.parent] : null;
+        const at = parent && Array.isArray(parent.children) ? parent.children.indexOf(ctxNodeId) : -1;
         if (parent) parent.children = parent.children.filter(c => c !== ctxNodeId);
+        if (!Array.isArray(conv._undoNodes)) conv._undoNodes = [];
+        conv._undoNodes.push({ id: ctxNodeId, node, parentId: node.parent || null, index: at });
       }
       delete conv.data.mapping[ctxNodeId];
       if (state.selectedNodeId === ctxNodeId) state.selectedNodeId = null;
@@ -5117,7 +5653,10 @@ function getCurrentContent() {
 // MODALS
 // ============================================================
 function openModal(id) { document.getElementById(id).classList.add('visible'); }
-function closeModal(id) { document.getElementById(id).classList.remove('visible'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('visible');
+  if (id === 'modal-load-mode' && !_pendingCommit) _cancelPendingFiles();
+}
 
 // Settings
 function buildSettings() {
@@ -5296,9 +5835,10 @@ const helpTopics = [
       <tr><td><strong>Qwen Chat</strong></td><td>Single or array with <code>chat.history.messages</code></td><td><code>chat.history.messages[].chat_type</code> + <code>content_list[]</code> phases — branching preserved via <code>parentId</code>/<code>childrenIds</code></td></tr>
       <tr><td><strong>Markdown / Text</strong></td><td><code>.md</code>, <code>.markdown</code>, <code>.txt</code></td><td>Not JSON — rendered directly. Each <code>## User</code> / <code>## Assistant</code> block becomes a <strong>user</strong>/<strong>assistant</strong> node in one top-to-bottom chain</td></tr>
       <tr><td><strong>opencode</strong></td><td>SQLite database (<code>.db</code>, <code>.sqlite</code>, <code>.sqlite3</code>)</td><td>Reads <code>session</code> / <code>message</code> / <code>part</code> tables via sql.js; each session becomes a conversation with <strong>user</strong>/<strong>assistant</strong> roles</td></tr>
+      <tr><td><strong>ZIP archive</strong></td><td><code>.zip</code></td><td>Unpacked in the browser; <code>conversations*.json</code> inside is loaded (largest JSON if there is no <code>conversations</code> file)</td></tr>
     </table>
     <p>All formats are automatically converted to a unified internal structure before rendering. The original data is preserved in <code>_original_data</code> for debugging.</p>
-    <div class="tip"><strong>Tip:</strong> You can load multiple files at once — each becomes a separate conversation entry in the sidebar.</div>
+    <div class="tip"><strong>Tip:</strong> You can load multiple files at once — each becomes a separate conversation entry in the sidebar. You can also drop the original ChatGPT <code>.zip</code> export: the app unpacks it in the browser and loads the <code>conversations.json</code> inside.</div>
   `},
   { id: 'loading', label: '📂 Loading & Unloading', content: `
     <h2>Loading & Unloading Conversations</h2>
@@ -5306,8 +5846,23 @@ const helpTopics = [
     <ul>
       <li>Click <strong>Load File</strong> in the top bar and select one or more <code>.json</code>, <code>.md</code> / <code>.markdown</code> / <code>.txt</code>, or opencode <code>.db</code> / <code>.sqlite</code> / <code>.sqlite3</code> files</li>
       <li><strong>opencode database</strong> - pick your <code>opencode.db</code> (typically <code>C:\Users\&lt;you&gt;\.local\share\opencode\opencode.db</code>) to import every session. Close opencode first so recent sessions are checkpointed into the file. Assistant messages include tool calls (<code>[tool:bash]</code> commands and their output) shown as code blocks.</li>
-      <li><strong>Drag and drop</strong> one or more JSON or Markdown files directly onto the graph area — a teal dashed overlay appears to confirm the drop zone is active</li>
+      <li><strong>Drag and drop</strong> one or more JSON, Markdown, SQLite or ZIP files directly onto the graph area — a teal dashed overlay appears to confirm the drop zone is active</li>
       <li>You can load files from multiple platforms in the same session; each is listed separately in the sidebar</li>
+    </ul>
+    <h3>ZIP archives</h3>
+    <ul>
+      <li>Drop the <code>.zip</code> straight from your email. The archive is unpacked inside the browser — nothing is uploaded and no extra library is needed.</li>
+      <li>Every <code>conversations.json</code> or numbered part (<code>conversations-000.json</code>, <code>conversations-001.json</code>, …) is loaded automatically, so a split ChatGPT export arrives in one go.</li>
+      <li><code>chat.html</code>, <code>user.json</code>, <code>message_feedback.json</code>, <code>shared_conversations.json</code>, <code>model_comparisons.json</code> and macOS <code>__MACOSX</code> junk are ignored and reported.</li>
+      <li>If the archive has no <code>conversations*.json</code>, every other JSON file inside is offered instead (largest first).</li>
+      <li>Password-protected, multi-volume and oversized archives are rejected with an explanation — extract them manually and load the JSON.</li>
+    </ul>
+    <h3>Files panel &amp; memory</h3>
+    <ul>
+      <li>After loading, a <strong>Files</strong> list appears above Conversations. Each row is one source file, with its conversation count and size.</li>
+      <li>On first load only the <strong>largest file</strong> — or the largest numbered group — is ticked and loaded. Other files stay listed as <em>not loaded</em>.</li>
+      <li>Unticking a file <strong>frees its conversations from memory immediately</strong>; ticking it again re-reads the original file (or the entry inside the ZIP) and puts them back. Only a tiny file handle is kept, never the contents.</li>
+      <li><strong>All</strong> loads every listed file; <strong>None</strong> releases everything. Either way the files stay listed so you can reload them.</li>
     </ul>
     <h3>Format Detection</h3>
     <p>Detection is fully automatic. The viewer inspects the JSON structure and picks the correct conversion path. If a file cannot be recognized, it falls back to a generic converter and displays what it can.</p>
@@ -5329,6 +5884,7 @@ const helpTopics = [
     <h3>Unloading</h3>
     <p>Click <strong>Unload All</strong> in the top bar to clear every loaded conversation and return to a blank slate. A confirmation dialog appears first. This action cannot be undone — export anything important before unloading.</p>
     <div class="tip"><strong>Tip:</strong> To remove a single conversation, right-click it in the sidebar and choose <strong>Delete Conv</strong>.</div>
+    <div class="tip"><strong>Tip:</strong> To free memory without losing anything, untick a file in the <strong>Files</strong> list. Its conversations leave memory; ticking it again reloads them from disk.</div>
   `},
   { id: 'sidebar', label: '🗃 Sidebar & Conversations', content: `
     <h2>Left Sidebar</h2>
@@ -5454,7 +6010,7 @@ const helpTopics = [
     <ul>
       <li><strong>Copy (clipboard icon)</strong> — copies content in the current view mode to clipboard. Flashes green on success</li>
       <li><strong>Export (download icon)</strong> — downloads a file in the format matching the active view mode</li>
-      <li><strong>Pop-out (external link icon)</strong> — opens the rendered HTML content in a new browser tab with clean styling</li>
+      <li><strong>Pop-out (external link icon)</strong> — opens this message in a new browser tab using the same layout and settings bar as the Branch pop-out: conversation title as the heading, with the role, model and timestamp underneath</li>
       <li><strong>PDF</strong> — opens a clean print-ready window with proper typography and 8.5×11 letter page layout. Respects the active view mode (Rendered/Markdown/HTML/JSON) and any active filters. The browser print dialog opens automatically — choose <em>Save as PDF</em> to save the file.</li>
       <li><strong>M</strong> — toggles the metadata bar below the content (shows timestamp, model, parent node ID, child count)</li>
       <li><strong>H</strong> — toggles search term highlighting. When on (teal), every occurrence of the active search query is highlighted in yellow within the content. Synced with the Branch panel's H button</li>
@@ -5555,7 +6111,7 @@ const helpTopics = [
     <ul>
       <li><strong>Copy</strong> — copies content to clipboard in the active view mode</li>
       <li><strong>Export</strong> — saves as <code>.md</code> (Rendered or Markdown mode), <code>.html</code> (HTML mode), or <code>.json</code> (JSON mode)</li>
-      <li><strong>Pop-out</strong> — opens rendered content in a new tab with clean typography</li>
+      <li><strong>Pop-out</strong> — opens this message in a new tab with the same branded layout as the Branch pop-out: conversation title, a role / model / timestamp line, and the theme and view controls</li>
       <li><strong>PDF</strong> — same as above. Exports only the currently visible (filtered) messages in the active view mode. Code blocks, tables, and headings are properly formatted.</li>
     </ul>
     <h3>Branch Panel</h3>
@@ -6213,35 +6769,84 @@ setupResize('rh-right', 'panel-right', 'right');
 // File input
 // File loading with project dialog
 let _pendingFiles = [];
+let _pendingRecords = [];
+let _pendingFileMap = new Map();
+let _pendingCommit = false;
+let _batchLoading = false;
+let _batchStats = null;
 
-function handleIncomingFiles(files) {
-  _pendingFiles = Array.from(files);
-  if (!_pendingFiles.length) return;
+function _isSupportedFile(name) {
+  return /\.(json|md|markdown|txt|db|sqlite|sqlite3|zip)$/i.test(name);
+}
+
+async function handleIncomingFiles(files) {
+  let list = Array.from(files || []);
+  if (!list.length) return;
+
+  const bad = list.filter(f => !_isSupportedFile(f.name));
+  if (bad.length) {
+    const names = bad.map(f => f.name).slice(0, 3).join(', ');
+    showNotif(`Can't open ${names}${bad.length > 3 ? ` and ${bad.length - 3} more` : ''} — supported: .json, .md, .txt, .db, .sqlite, .zip`, 'error');
+    list = list.filter(f => _isSupportedFile(f.name));
+  }
+  if (!list.length) return;
+
+  // ZIP archives are expanded into virtual File objects (one per conversation file)
+  const expanded = [];
+  for (const f of list) {
+    if (/\.zip$/i.test(f.name)) {
+      showNotif(`Reading ${f.name}…`, '');
+      try {
+        expanded.push(...(await expandZip(f)));
+      } catch (err) {
+        showNotif(`Could not open ${f.name}: ${err.message}`, 'error');
+      }
+    } else {
+      expanded.push(f);
+    }
+  }
+  if (!expanded.length) return;
+
+  _pendingFiles = expanded;
+  _pendingFileMap = new Map();
+  _pendingRecords = expanded.map(f => {
+    const rec = registerFile(f);
+    _pendingFileMap.set(rec.key, f);
+    return rec;
+  });
+  _applyIncomingSelection(_pendingRecords);
+  renderFilePanel();
+
   const total = state.conversations.length + state.hiddenConversations.length + state.deletedConversations.length;
   if (total === 0) {
-    // Nothing loaded yet — just load directly
-    _pendingFiles.forEach(loadFile);
-    _pendingFiles = [];
+    // Nothing loaded yet — load the selected file(s) directly
+    await _loadPendingRecords();
     return;
   }
   // Ask user what to do
   const desc = document.getElementById('load-mode-desc');
-  desc.textContent = `You have ${total} conversation${total !== 1 ? 's' : ''} loaded. What would you like to do with the ${_pendingFiles.length} incoming file${_pendingFiles.length !== 1 ? 's' : ''}?`;
+  const chosen = _pendingRecords.filter(r => r.selected).length;
+  desc.textContent = `You have ${total} conversation${total !== 1 ? 's' : ''} loaded. What would you like to do with the ${_pendingFiles.length} incoming file${_pendingFiles.length !== 1 ? 's' : ''}?`
+    + (chosen < _pendingFiles.length ? ` Only ${chosen} ${chosen === 1 ? 'is' : 'are'} selected by default — use the Files list to load the rest afterwards.` : '');
   openModal('modal-load-mode');
 }
 
 document.getElementById('load-mode-add').addEventListener('click', () => {
+  _pendingCommit = true;
   closeModal('modal-load-mode');
-  _pendingFiles.forEach(loadFile);
-  _pendingFiles = [];
+  _pendingCommit = false;
+  _loadPendingRecords().catch(err => showNotif('Load failed: ' + err.message, 'error'));
 });
 
 document.getElementById('load-mode-replace').addEventListener('click', () => {
+  _pendingCommit = true;
   closeModal('modal-load-mode');
+  _pendingCommit = false;
   // Unload everything first
   state.conversations = [];
   state.hiddenConversations = [];
   state.deletedConversations = [];
+  state.files = _pendingRecords.slice();
   state.activeConvId = null;
   state.selectedNodeId = null;
   state.searchQuery = '';
@@ -6260,13 +6865,15 @@ document.getElementById('load-mode-replace').addEventListener('click', () => {
   if (document.getElementById('node-location-bar')) document.getElementById('node-location-bar').style.display = 'none';
   renderConvList();
   renderGraph(null);
-  // Now load the new files
-  _pendingFiles.forEach(loadFile);
-  _pendingFiles = [];
+  // Now load the selected new files
+  _loadPendingRecords().catch(err => showNotif('Load failed: ' + err.message, 'error'));
 });
 
+document.getElementById('files-all').addEventListener('click', () => { setAllFiles(true); });
+document.getElementById('files-none').addEventListener('click', () => { setAllFiles(false); });
+
 document.getElementById('file-input').addEventListener('change', e => {
-  handleIncomingFiles(e.target.files);
+  handleIncomingFiles(e.target.files).catch(err => showNotif('Load failed: ' + err.message, 'error'));
   e.target.value = '';
 });
 
@@ -6277,8 +6884,8 @@ graphArea.addEventListener('dragleave', () => { document.getElementById('drop-ov
 graphArea.addEventListener('drop', e => {
   e.preventDefault();
   document.getElementById('drop-overlay').classList.remove('active');
-  const files = Array.from(e.dataTransfer.files).filter(f => /\.(json|md|markdown|txt)$/i.test(f.name));
-  handleIncomingFiles(files);
+  const files = Array.from(e.dataTransfer.files);
+  handleIncomingFiles(files).catch(err => showNotif('Load failed: ' + err.message, 'error'));
 });
 
 // Clicking the drop-zone placeholder opens the file picker
@@ -6588,6 +7195,7 @@ function openPopoutPage(opt) {
 <meta charset="UTF-8">
 <title>${escapeHtml(title)}</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
   :root{
     --bg:#f5f6fc;--panel:#eef0f8;--panel2:#e8eaf2;--border:#c8cce0;
     --text:#1a1d2e;--text2:#2a2d3e;--muted:#6b7280;--accent:#00c49a;
@@ -6611,7 +7219,7 @@ function openPopoutPage(opt) {
     }
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:system-ui,sans-serif;padding:32px;max-width:820px;margin:0 auto;line-height:1.7;background:var(--bg);color:var(--text);transition:background .15s,color .15s}
+  body{font-family:'DM Sans','Outfit',system-ui,sans-serif;padding:32px;max-width:820px;margin:0 auto;line-height:1.7;background:var(--bg);color:var(--text);transition:background .15s,color .15s}
   h1{font-size:17px;font-weight:600;margin-bottom:6px;padding-bottom:12px;border-bottom:2px solid var(--border);color:var(--text)}
   .meta{font-size:11px;color:var(--muted);margin-bottom:18px}
   .settings-bar{display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text)}
@@ -6628,7 +7236,7 @@ function openPopoutPage(opt) {
   .msg-wrap{margin-bottom:8px;padding:14px 16px;border-radius:8px;border-left:3px solid}
   .msg-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:20px}
   .msg-role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
-  .msg-date{font-size:10px;font-family:monospace;color:var(--muted);opacity:.85}
+  .msg-date{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);opacity:.85}
   body.hide-ts .msg-date{display:none}
   .chk-wrap{display:none;align-items:center;margin-right:2px}
   body.show-checks .chk-wrap{display:flex}
@@ -6640,8 +7248,8 @@ function openPopoutPage(opt) {
   .msg-body h1,.msg-body h2,.msg-body h3{font-weight:600;margin:14px 0 6px;color:var(--text)}
   .msg-body ul,.msg-body ol{margin:6px 0 6px 18px;color:var(--text2)} .msg-body li{margin-bottom:3px}
   .msg-body pre{background:var(--panel2);padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0;color:var(--text)}
-  pre.msg-body{white-space:pre-wrap;font-size:13px;font-family:monospace;background:var(--panel2);padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0;color:var(--text)}
-  .msg-body code{font-family:monospace;font-size:12.5px}
+  pre.msg-body{white-space:pre-wrap;font-size:13px;font-family:'JetBrains Mono',monospace;background:var(--panel2);padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0;color:var(--text)}
+  .msg-body code{font-family:'JetBrains Mono',monospace;font-size:12.5px}
   .msg-body pre code{background:none;padding:0}
   .msg-body :not(pre)>code{background:var(--panel2);padding:2px 5px;border-radius:3px;font-size:12px}
   .msg-body blockquote{border-left:3px solid var(--accent);padding-left:12px;color:var(--muted);font-style:italic;margin:8px 0}
@@ -6855,18 +7463,23 @@ document.getElementById('btn-popout').addEventListener('click', () => {
   const conv = getActiveConv();
   const node = conv?.data?.mapping?.[nodeId];
   const text = node ? getNodeText(node) : '';
-  const title = node ? (getNodeRole(node) + ' message') : 'Message';
-  const ts = node?.message?.create_time ? formatNodeDate(node.message.create_time) : '';
-
   const role = node ? getNodeRole(node) : 'other';
+  const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Message';
+  const ts = node?.message?.create_time ? formatNodeDate(node.message.create_time) : '';
+  const rawModel = node?.message?.metadata?.model;
+  const model = typeof rawModel === 'string' ? rawModel : '';
+
   const renderedHtml = DOMPurify.sanitize(marked.parse(text || ''));
   const json = node ? JSON.stringify(node, null, 2) : '';
 
   openPopoutPage({
-    title,
-    meta: ts || '',
+    // Same header contract as the Branch pop-out: conversation title as the
+    // heading, with this message's role / model / timestamp in the meta line.
+    title: conv?.title || (roleLabel + ' message'),
+    meta: `${roleLabel} message${model ? ' · ' + model : ''}${ts ? ' · ' + ts : ''}`,
     mode,
     multi: false,
+    asTab: true,
     messages: [{ role, ts, md: text || '', html: renderedHtml, json }],
     fullMd: text || '',
     fullHtml: renderedHtml,
@@ -7388,6 +8001,7 @@ document.getElementById('btn-unload-all').addEventListener('click', () => {
   state.conversations = [];
   state.hiddenConversations = [];
   state.deletedConversations = [];
+  state.files = [];
   state.activeConvId = null;
   state.selectedNodeId = null;
   state.searchQuery = '';
@@ -7642,9 +8256,15 @@ function runSplitter(mode) {
         // Auto-import chunks sequentially
         closeModal('modal-split-file');
         window._pendingLargeFile = null;
+        const splitRec = registerFile(file);
+        splitRec.status = 'loading';
+        splitRec.selected = true;
         let idx = 0;
         function importNext() {
           if (idx >= chunks.length) {
+            splitRec.status = 'resident';
+            splitRec.count = fileConvCount(splitRec.key);
+            renderFilePanel();
             showNotif(`Split import complete — ${chunks.length} chunk${chunks.length !== 1 ? 's' : ''} loaded`, 'success');
             return;
           }
@@ -7674,16 +8294,14 @@ function runSplitter(mode) {
                             : state.deletedConversations;
                   const i2 = arr.findIndex(c => c.id === id);
                   if (i2 !== -1) {
-                    const od = JSON.parse(JSON.stringify(data));
-                    arr[i2] = { id, title: data.title || 'Untitled', data, format: data._format, _originalData: od };
+                    arr[i2] = { id, title: data.title || 'Untitled', data, format: data._format, _fileKey: splitRec.key };
                   }
                   updated++;
                 } else { skipped++; }
                 return;
               }
               existingMap.set(id, { pool: 'conversations' });
-              const od = JSON.parse(JSON.stringify(data));
-              state.conversations.push({ id, title: data.title || 'Untitled', data, format: data._format, _originalData: od });
+              state.conversations.push({ id, title: data.title || 'Untitled', data, format: data._format, _fileKey: splitRec.key });
               added++;
             });
             if (converted.length) setFormatBadge(converted[0]._format);
@@ -8091,11 +8709,21 @@ const changelog = [
   {
     version: 'v7.9.0', date: '2026-10-19', latest: true,
     items: [
+      { type: 'new', text: '<strong>ZIP import</strong> - drop the ChatGPT export <code>.zip</code> straight from your inbox. The archive is unpacked inside the browser (no upload, no extra library) and every <code>conversations.json</code> or numbered part inside it is loaded. <code>chat.html</code>, <code>user.json</code>, <code>message_feedback.json</code>, <code>shared_conversations.json</code> and macOS <code>__MACOSX</code> junk are ignored; password-protected, multi-volume and oversized archives are rejected with a clear message.' },
+      { type: 'new', text: '<strong>Numbered exports open as one set</strong> - <code>conversations-000.json</code>, <code>-001.json</code>, <code>-002.json</code>, ... (and the app\'s own <code>_part1of5_1000convs</code> chunks) are grouped by name, ticked together and treated as a single export instead of twenty unrelated files.' },
+      { type: 'new', text: '<strong>Files panel</strong> - a new <strong>Files</strong> list above Conversations shows every loaded file with its conversation count, size and a status chip (<em>in memory</em>, <em>loading</em>, <em>not loaded</em>, <em>error</em>). Tick a file to keep it in memory, untick it to release its conversations; ticking it again reloads it from the original file. On first load the largest file - or the largest numbered group - is selected automatically, and <strong>All</strong> / <strong>None</strong> load or release everything.' },
+      { type: 'change', text: '<strong>ZIP entries are read on demand</strong> - an unpacked archive does not stay inflated in memory. Unloaded ZIP members are re-extracted from the archive when you tick them again, and only the entry you asked for is inflated, not the whole archive.' },
+      { type: 'change', text: '<strong>Roughly half the memory per conversation</strong> - the app used to keep a second full JSON copy of every conversation so Start Over could restore it. That copy is gone: node deletions are recorded in a small per-node undo log and replayed by Start Over.' },
+      { type: 'change', text: '<strong>Quieter multi-file imports</strong> - files are parsed one at a time instead of all at once (no memory spike on a 20-part export), and the result is a single summary notification instead of one per file.' },
+      { type: 'fix', text: '<strong>Cancelling a load leaves no ghosts</strong> - closing the Add / Replace dialog no longer leaves the incoming files listed as phantom rows in the Files panel.' },
+      { type: 'fix', text: '<strong>Drop zone accepts more and complains less</strong> - <code>.zip</code> and SQLite <code>.db</code> / <code>.sqlite</code> files now work via drag-and-drop (previously only the file picker accepted them), and unsupported files produce a message instead of being silently ignored.' },
       { type: 'new', text: '<strong>Branch pop-out opens in a new tab</strong> - clicking Pop out in the Branch panel now opens a normal browser tab beside the current one instead of a separate sized window.' },
       { type: 'new', text: '<strong>Switch views inside the popout</strong> - both popouts have a <strong>View</strong> selector (Rendered / Markdown / HTML / JSON) that re-renders the page in place, so you no longer have to re-open the popout to change format.' },
       { type: 'new', text: '<strong>Copy matches the view</strong> - every message box in a popout now has its own Copy control, and it always copies in the active view: Rendered copies formatted content, Markdown copies the raw markdown, HTML copies the HTML source, JSON copies the node JSON.' },
       { type: 'change', text: '<strong>Simpler popout copy bar</strong> - the four fixed buttons were replaced by one <code>Copy all (Rendered|Markdown|HTML|JSON)</code> button that follows the selected view. The per-message format dropdown (As seen / HTML / MD / JSON / Plain text) still exists in Rendered view.' },
       { type: 'change', text: '<strong>Bulk copy works in every view</strong> - "Select messages" and "Copy selected (N)" in the branch popout are no longer limited to Rendered view.' },
+      { type: 'change', text: '<strong>Selected-node pop-out matches the Branch pop-out</strong> - it now opens in a normal tab instead of a small 860x700 window, and uses the same branded header: the conversation title as the heading, with the message role, model and timestamp in the meta line.' },
+      { type: 'change', text: '<strong>Pop-outs use the app typography</strong> - both pop-outs now load DM Sans for UI text and JetBrains Mono for code and timestamps, so they read as the same product instead of a plain system-font page. Offline they fall back to system fonts.' },
       { type: 'new', text: '<strong>Tooltips on every control</strong> - buttons, selects, inputs, tabs, role filters, theme dots, minimap, conversation list items and popout controls now all show a tooltip explaining what they do.' },
       { type: 'new', text: '<strong>Windows XP theme preset</strong> - a new Luna-inspired theme (silver window chrome, blue accents, green highlights) is available from the theme dots and as a Quick Preset inside the custom theme panel.' },
       { type: 'change', text: '<strong>System is the default theme</strong> - the app now follows your operating system\'s light/dark preference out of the box and switches live when the OS theme changes. Pick any dot (including the new half-light/half-dark <strong>System</strong> dot) to override it.' },

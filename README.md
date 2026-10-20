@@ -35,11 +35,21 @@ You: "Explain recursion" ┤
 
 That's the whole idea. A list view flattens this into a tidy column and quietly drops the branch you didn't pick. The export didn't. This app draws what the export actually contains — including the answers the interface forgot.
 
+## How it compares
+
+| | The chat interface | This viewer |
+| --- | --- | --- |
+| Regenerated answers | Only the one that stayed | Every branch, still readable |
+| Shape of a conversation | One long scroll | A tree you can pan, zoom and prune |
+| Getting it out | Copy, paste, reformat | PDF, HTML, Markdown, JSON, PNG or SVG |
+| Where it runs | Their servers | Your browser tab |
+| Offline | No | Yes, once the page has loaded |
+
 ## What you get
 
 **A real tree, not a timeline.** Every message is a node, every regeneration is a sibling branch, and you can pan, zoom and click your way through the whole thing. There's a minimap for when the tree gets ambitious. Colors tell you who's talking — blue for you, green for the model, grey dashed for the system messages hiding in the plumbing.
 
-**A branch panel that keeps its bearings.** Pick any node and see the exact path that leads to it — role chips, message previews, and little arrows to hop between siblings so you can compare what the model said the first time versus the fifth.
+**A branch panel that keeps its bearings.** Pick any node and see the exact path that leads to it — role chips, message previews, model names and timestamps, top to bottom. To compare regenerations, click the competing sibling in the graph and the panel redraws with its path.
 
 **Search that finds the thing you half-remember.** Full-text across every loaded conversation, grouped by conversation, with matches highlighted. No more scrolling through 400 messages hunting for "the bit about the database".
 
@@ -79,7 +89,7 @@ That's the whole idea. A list view flattens this into a tidy column and quietly 
 
 ## Your conversations stay yours
 
-Everything runs in your browser. The file you drop in is parsed, rendered and stored locally — there is no server, no account, no upload, no analytics and no telemetry.
+Everything runs in your browser. The file you drop in is parsed, rendered and kept entirely in the tab — there is no server, no account, no upload, no analytics and no telemetry.
 
 The third-party libraries are pinned with SRI integrity hashes and the page ships a Content Security Policy, so a tampered CDN file gets refused rather than executed. Message bodies are sanitised before rendering, and imported titles, model names and node IDs are escaped everywhere they appear. Imported files are treated as what they are: untrusted input.
 
@@ -98,6 +108,23 @@ No build step, no `npm install`, no "please create an account to continue". One 
 Haven't exported yet? ChatGPT hides it under **Settings → Data Controls → Export Data** (you get an email with a ZIP — drop the ZIP itself, no need to extract it; `conversations.json` and its numbered parts are found automatically). Claude: **Settings → Export Data**. Everyone else: poke around settings for "export".
 
 It needs an internet connection the first time (the pinned libraries and fonts come from a CDN, then your browser caches them). After that, everything works offline except importing an opencode `.db`, which fetches the SQLite engine on demand.
+
+Updating is the same operation in reverse: download the new HTML over the old one. Theme and settings live in `localStorage`; your conversations were never stored, so drop the export again when you want them back.
+
+## Quick reference
+
+| I want to… | Do this |
+| --- | --- |
+| Read a message | Click its node |
+| See how it was reached | The Branch panel redraws with its full path |
+| Compare regenerations | Click the competing sibling node |
+| Pan | Drag the graph |
+| Zoom | Scroll wheel, pinch, or the **+** / **−** buttons |
+| Act on a node | Right-click it: Copy Message / Select & View / Delete Node |
+| Act on a conversation | Right-click it: Show Only / Start Over / Export Conv / Delete Conv |
+| Close a dialog | Escape |
+| Free memory | Untick a file in the Files panel |
+| Take something with you | The Copy, Export and Print buttons |
 
 ## What it reads
 
@@ -169,6 +196,10 @@ There is no test suite. The test suite is a person clicking things and saying "h
 
 It works, it's honest about it, and the whole thing is small enough to read if you don't trust either of us.
 
+## Release notes
+
+Releases live in the in-app changelog: Help → **🆕 What's New**, with copy buttons for the whole log or a single release, in rendered, Markdown or HTML form.
+
 ## Libraries used
 
 | Library | Purpose |
@@ -181,8 +212,6 @@ It works, it's honest about it, and the whole thing is small enough to read if y
 
 Fonts: [DM Sans](https://fonts.google.com/specimen/DM+Sans), [Literata](https://fonts.google.com/specimen/Literata) and [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono), served via Google Fonts.
 
-jsPDF is still bundled for historical reasons and currently unused — PDF export goes through your browser's print dialog, which produces better output anyway.
-
 ---
 
 ## License
@@ -194,6 +223,3 @@ MIT — free to use, modify, and share. See [LICENSE](LICENSE) for details.
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=akivacp/chatgpt-json-tree-viewer&type=date&legend=top-left)](https://www.star-history.com/#akivacp/chatgpt-json-tree-viewer&type=date&legend=top-left)
-
-
-[Star History Chart](https://www.star-history.com/#akivacp/chatgpt-json-tree-viewer&type=date&legend=top-left)

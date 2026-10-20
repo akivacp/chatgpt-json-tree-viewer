@@ -119,7 +119,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js" integrity="sha384-odPBjvtXVM/5hOYIr3A1dB+flh0c3wAT3bSesIOqEGmyUA4JoKf/YTWy0XKOYAY7" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" integrity="sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js" integrity="sha384-8D3Rsfo535FqoC1pHCCQMrNf75UgzyoG/HQm9zOzITRrz3QKzecc2E7JXKGCXoWu" crossorigin="anonymous"></script>
 <style>
 :root {
@@ -6321,7 +6320,7 @@ const helpTopics = [
     </ul>
     <h3>What is downloaded from the internet</h3>
     <ul>
-      <li>Five libraries (D3, marked, DOMPurify, html2canvas, jsPDF) and the SQLite engine (sql.js) from <code>cdnjs.cloudflare.com</code> / <code>cdn.jsdelivr.net</code>. Every script tag carries an <strong>SRI integrity hash</strong>, so if a CDN ever serves a different file than the one pinned, the browser refuses to run it.</li>
+      <li>Four libraries (D3, marked, DOMPurify, html2canvas) and the SQLite engine (sql.js) from <code>cdnjs.cloudflare.com</code> / <code>cdn.jsdelivr.net</code>. Every script tag carries an <strong>SRI integrity hash</strong>, so if a CDN ever serves a different file than the one pinned, the browser refuses to run it.</li>
       <li>Fonts from <code>fonts.googleapis.com</code>. That stylesheet <em>cannot</em> be integrity-pinned because Google serves different CSS per browser. If you want zero third-party font requests, delete the <code>@import</code> line at the top of the <code>&lt;style&gt;</code> block &mdash; the app falls back to system fonts and nothing else breaks.</li>
       <li>The SQLite <code>.wasm</code> binary is fetched from jsDelivr the first time you import an opencode <code>.db</code> file, then executed inside the browser's WebAssembly sandbox.</li>
     </ul>
@@ -6367,12 +6366,6 @@ const helpTopics = [
         <td>v1.4.1</td>
         <td>MIT</td>
         <td><a href="https://html2canvas.hertzen.com" target="_blank" style="color:var(--accent-teal)">Niklas von Hertell</a></td>
-      </tr>
-      <tr>
-        <td><strong>jsPDF</strong></td>
-        <td>v2.5.1</td>
-        <td>MIT</td>
-        <td><a href="https://github.com/parallax/jsPDF" target="_blank" style="color:var(--accent-teal)">James Hall / parallax</a></td>
       </tr>
       <tr>
         <td><strong>sql.js</strong></td>
@@ -8709,13 +8702,10 @@ const changelog = [
   {
     version: 'v7.9.0', date: '2026-10-19', latest: true,
     items: [
-      { type: 'new', text: '<strong>ZIP import</strong> - drop the ChatGPT export <code>.zip</code> straight from your inbox. The archive is unpacked inside the browser (no upload, no extra library) and every <code>conversations.json</code> or numbered part inside it is loaded. <code>chat.html</code>, <code>user.json</code>, <code>message_feedback.json</code>, <code>shared_conversations.json</code> and macOS <code>__MACOSX</code> junk are ignored; password-protected, multi-volume and oversized archives are rejected with a clear message.' },
-      { type: 'new', text: '<strong>Numbered exports open as one set</strong> - <code>conversations-000.json</code>, <code>-001.json</code>, <code>-002.json</code>, ... (and the app\'s own <code>_part1of5_1000convs</code> chunks) are grouped by name, ticked together and treated as a single export instead of twenty unrelated files.' },
-      { type: 'new', text: '<strong>Files panel</strong> - a new <strong>Files</strong> list above Conversations shows every loaded file with its conversation count, size and a status chip (<em>in memory</em>, <em>loading</em>, <em>not loaded</em>, <em>error</em>). Tick a file to keep it in memory, untick it to release its conversations; ticking it again reloads it from the original file. On first load the largest file - or the largest numbered group - is selected automatically, and <strong>All</strong> / <strong>None</strong> load or release everything.' },
-      { type: 'change', text: '<strong>ZIP entries are read on demand</strong> - an unpacked archive does not stay inflated in memory. Unloaded ZIP members are re-extracted from the archive when you tick them again, and only the entry you asked for is inflated, not the whole archive.' },
+      { type: 'change', text: '<strong>Smaller page, faster first load</strong> - removed the unused jsPDF bundle (about 356 KB less to download). PDF export already goes through the browser print-to-PDF dialog, so the PDF buttons behave exactly as before.' },
+      { type: 'new', text: '<strong>ZIP import</strong> - drop the ChatGPT export <code>.zip</code> straight from your inbox. The archive is unpacked inside the browser (no upload, no extra library) and every <code>conversations.json</code> or numbered part (<code>conversations-000.json</code>, <code>-001.json</code>, ...) is loaded. <code>chat.html</code>, <code>user.json</code>, <code>message_feedback.json</code>, <code>shared_conversations.json</code> and macOS <code>__MACOSX</code> junk are ignored; password-protected, multi-volume and oversized archives are rejected with a clear message.' },
+      { type: 'new', text: '<strong>Files panel</strong> - a new <strong>Files</strong> list above Conversations shows every loaded file with its conversation count and size. Tick a file to keep it in memory, untick it to release its conversations; ticking it again reloads it from the original file. On first load the largest file - or the largest numbered group - is selected automatically, and <strong>All</strong> / <strong>None</strong> load or release everything.' },
       { type: 'change', text: '<strong>Roughly half the memory per conversation</strong> - the app used to keep a second full JSON copy of every conversation so Start Over could restore it. That copy is gone: node deletions are recorded in a small per-node undo log and replayed by Start Over.' },
-      { type: 'change', text: '<strong>Quieter multi-file imports</strong> - files are parsed one at a time instead of all at once (no memory spike on a 20-part export), and the result is a single summary notification instead of one per file.' },
-      { type: 'fix', text: '<strong>Cancelling a load leaves no ghosts</strong> - closing the Add / Replace dialog no longer leaves the incoming files listed as phantom rows in the Files panel.' },
       { type: 'fix', text: '<strong>Drop zone accepts more and complains less</strong> - <code>.zip</code> and SQLite <code>.db</code> / <code>.sqlite</code> files now work via drag-and-drop (previously only the file picker accepted them), and unsupported files produce a message instead of being silently ignored.' },
       { type: 'new', text: '<strong>Branch pop-out opens in a new tab</strong> - clicking Pop out in the Branch panel now opens a normal browser tab beside the current one instead of a separate sized window.' },
       { type: 'new', text: '<strong>Switch views inside the popout</strong> - both popouts have a <strong>View</strong> selector (Rendered / Markdown / HTML / JSON) that re-renders the page in place, so you no longer have to re-open the popout to change format.' },

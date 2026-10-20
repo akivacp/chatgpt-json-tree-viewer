@@ -193,4 +193,7 @@ MIT — free to use, modify, and share. See [LICENSE](LICENSE) for details.
 
 ## Star History
 
+[![Star History Chart](https://api.star-history.com/svg?repos=akivacp/chatgpt-json-tree-viewer&type=date&legend=top-left)](https://www.star-history.com/#akivacp/chatgpt-json-tree-viewer&type=date&legend=top-left)
+
+
 [Star History Chart](https://www.star-history.com/#akivacp/chatgpt-json-tree-viewer&type=date&legend=top-left)

@@ -69,6 +69,21 @@
      on this single file on purpose. If a change seems to belong in another
      file, ask first instead of editing it.
 
+  8. IF YOU TOUCH THE CDN TAGS, KEEP SRI AND THE CSP IN SYNC. Every <script> in
+     <head> is pinned with an integrity="sha384-..." hash, and the page carries a
+     Content-Security-Policy <meta> tag. That means:
+       - Never change a library version or URL without replacing that tag's
+         integrity hash with the new file's sha384 (cdnjs lists it on the library
+         page; otherwise hash the exact downloaded bytes). A stale hash makes the
+         browser refuse to run the library, which breaks the app outright.
+       - If you add a library or a host, add its hostname to the CSP script-src /
+         style-src / connect-src list as well, or it will be blocked silently.
+       - The Google Fonts @import is the only remote asset that cannot be pinned
+         (Google serves different CSS per browser). Leave it, or delete that one
+         line for zero third-party font requests.
+       - sql.js needs connect-src to the jsDelivr host plus 'wasm-unsafe-eval'
+         (and 'unsafe-eval' for older engines) to compile the SQLite .wasm file.
+
   --------------------------------------------------------------------------
   USER PREFERENCE (per rule 6 — filled in by the user; default is (a) if blank)
     - Ask each time / proceed automatically / custom:
@@ -77,21 +92,35 @@
           switch to (b) or (c) unless the user asks for it.
   --------------------------------------------------------------------------
 
-  Keep the file self-contained: no build step, no external assets other than
-  the CDN <script> tags at the top of <head>.
+  Keep the file self-contained: no build step, no external assets other than the
+  CDN <script> tags at the top of <head> (integrity-pinned, see rule 8), the
+  Google Fonts @import, and the SQLite .wasm file fetched on demand.
   ==========================================================================
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- CONTENT SECURITY POLICY
+     Restricts this page to the hosts it actually uses. Notes for maintainers:
+     sql.js needs 'wasm-unsafe-eval' (Chrome) + 'unsafe-eval' (older engines) to
+     compile WebAssembly, and connect-src must allow jsDelivr for the .wasm file.
+     The file splitter builds its Worker from a Blob URL (worker-src blob:).
+     The Google Fonts @import in the <style> block needs style-src + font-src. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data: https:; connect-src 'self' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob:; frame-src 'self' blob: data:; child-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>ChatGPT JSON Tree Viewer v7.9.0</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js"></script>
+<!-- Third-party libraries, integrity-pinned (SRI sha384). If a CDN ever serves a
+     different file than the hash below, the browser refuses to run it. Hashes are
+     the cdnjs-published values; re-check them if you ever bump a library version.
+     The one remote resource that cannot be pinned is the Google Fonts stylesheet
+     (@import in the <style> block) because Google serves different CSS per
+     browser - delete that one line for zero third-party font requests. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js" integrity="sha384-odPBjvtXVM/5hOYIr3A1dB+flh0c3wAT3bSesIOqEGmyUA4JoKf/YTWy0XKOYAY7" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" integrity="sha384-cwS6YdhLI7XS60eoDiC+egV0qHp8zI+Cms46R0nbn8JrmoAzV9uFL60etMZhAnSu" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js" integrity="sha384-8D3Rsfo535FqoC1pHCCQMrNf75UgzyoG/HQm9zOzITRrz3QKzecc2E7JXKGCXoWu" crossorigin="anonymous"></script>
 <style>
 :root {
   --bg-primary: #0d0f14;
@@ -3401,7 +3430,7 @@ function showNodeContent(nodeId) {
   if (node.parent) metaItems.push({ k: 'parent', v: node.parent.slice(0, 12) });
   if (node.children?.length) metaItems.push({ k: 'children', v: node.children.length });
   const metaRow = document.getElementById('meta-row');
-  metaRow.innerHTML = metaItems.map(m => `<div class="meta-kv"><span class="meta-key">${m.k}:</span><span class="meta-val">${m.v}</span></div>`).join('');
+  metaRow.innerHTML = metaItems.map(m => `<div class="meta-kv"><span class="meta-key">${escapeHtml(m.k)}:</span><span class="meta-val">${escapeHtml(m.v)}</span></div>`).join('');
 
   // Level chain — BFS to find all nodes at each depth, then walk the path
   const metaLevels = document.getElementById('meta-levels');
@@ -3827,10 +3856,10 @@ function updateBranchIndex() {
     const roleColor = role === 'user' ? 'var(--accent-blue)' : role === 'assistant' ? 'var(--accent-green)' : 'var(--text-muted)';
     item.innerHTML = `
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-        <span class="bm-role" style="color:${roleColor}">${role}</span>
+        <span class="bm-role" style="color:${roleColor}">${escapeHtml(role)}</span>
         ${levelLabel ? `<span style="font-size:9px;font-family:var(--font-mono);color:var(--accent-teal);background:rgba(0,212,170,0.1);padding:1px 4px;border-radius:3px;margin-left:auto">${levelLabel}</span>` : ''}
       </div>
-      <div class="bm-preview">${text.slice(0, 80)}</div>
+      <div class="bm-preview">${escapeHtml(text.slice(0, 80))}</div>
     `;
     item.addEventListener('click', () => {
       // Update selection and graph highlights without replacing the branch view
@@ -3918,7 +3947,11 @@ function formatNodeDate(t) {
 }
 
 function escapeHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Coerces null/undefined/numbers and escapes quotes as well, so the result is
+  // safe both in text nodes and inside single- or double-quoted attribute values.
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function runSearch(query) {
@@ -4004,13 +4037,13 @@ function runSearch(query) {
         const roleColor = role === 'user' ? 'var(--accent-blue)' : role === 'assistant' ? 'var(--accent-green)' : role === 'system' ? 'var(--text-muted)' : 'var(--accent-purple)';
         item.innerHTML = `
           <div class="search-msg-item-header">
-            <span class="search-msg-role" style="color:${roleColor}">${role}</span>
+            <span class="search-msg-role" style="color:${roleColor}">${escapeHtml(role)}</span>
             <span class="search-msg-depth" title="Depth in thread">↳${depth}</span>
             ${dateStr ? `<span class="search-msg-date">${dateStr}</span>` : ''}
           </div>
           <div class="search-msg-breadcrumb">${escapeHtml(conv.title)}${breadcrumb ? ` <span class="search-crumb-sep">›</span> ${escapeHtml(breadcrumb)}` : ''}</div>
           <div class="search-msg-preview">${highlightMatch(text, query)}</div>
-          <div class="search-msg-nav">Click to jump · node <span class="search-msg-nodeid">${nodeId.slice(0,10)}</span></div>
+          <div class="search-msg-nav">Click to jump · node <span class="search-msg-nodeid">${escapeHtml(nodeId.slice(0,10))}</span></div>
         `;
         item.addEventListener('click', () => {
           if (conv.id !== state.activeConvId) loadConversation(conv.id, true);
@@ -4051,13 +4084,13 @@ function runSearch(query) {
 
       item.innerHTML = `
         <div class="search-msg-item-header">
-          <span class="search-msg-role" style="color:${roleColor}">${role}</span>
+          <span class="search-msg-role" style="color:${roleColor}">${escapeHtml(role)}</span>
           <span class="search-msg-depth" title="Depth in thread">↳${depth}</span>
           ${dateStr ? `<span class="search-msg-date">${dateStr}</span>` : ''}
         </div>
         <div class="search-msg-breadcrumb">${escapeHtml(conv.title)}${breadcrumb ? ` <span class="search-crumb-sep">›</span> ${escapeHtml(breadcrumb)}` : ''}</div>
         <div class="search-msg-preview">${highlightMatch(text, query)}</div>
-        <div class="search-msg-nav">Click to jump · node <span class="search-msg-nodeid">${nodeId.slice(0,10)}</span></div>
+        <div class="search-msg-nav">Click to jump · node <span class="search-msg-nodeid">${escapeHtml(nodeId.slice(0,10))}</span></div>
       `;
       item.addEventListener('click', () => {
         if (conv.id !== state.activeConvId) loadConversation(conv.id, true);
@@ -5722,6 +5755,30 @@ const helpTopics = [
       <li><code>_format</code> — the detected format name for debugging</li>
     </ul>
   `},
+  { id: 'security', label: '🔒 Security & Privacy', content: `
+    <h2>Security &amp; Privacy</h2>
+    <h3>Your conversations never leave the browser</h3>
+    <ul>
+      <li>Files you load are parsed, rendered and kept entirely in this page. The app's own code contains no <code>fetch</code>, <code>XMLHttpRequest</code>, <code>WebSocket</code> or <code>sendBeacon</code> calls, so no message text is ever uploaded.</li>
+      <li>The only browser storage used is <code>localStorage</code>: theme choice, custom colours, panel layout and settings. Clearing site data removes all of it.</li>
+      <li>Copy buttons go to the system clipboard; nothing is written anywhere else.</li>
+    </ul>
+    <h3>What is downloaded from the internet</h3>
+    <ul>
+      <li>Five libraries (D3, marked, DOMPurify, html2canvas, jsPDF) and the SQLite engine (sql.js) from <code>cdnjs.cloudflare.com</code> / <code>cdn.jsdelivr.net</code>. Every script tag carries an <strong>SRI integrity hash</strong>, so if a CDN ever serves a different file than the one pinned, the browser refuses to run it.</li>
+      <li>Fonts from <code>fonts.googleapis.com</code>. That stylesheet <em>cannot</em> be integrity-pinned because Google serves different CSS per browser. If you want zero third-party font requests, delete the <code>@import</code> line at the top of the <code>&lt;style&gt;</code> block &mdash; the app falls back to system fonts and nothing else breaks.</li>
+      <li>The SQLite <code>.wasm</code> binary is fetched from jsDelivr the first time you import an opencode <code>.db</code> file, then executed inside the browser's WebAssembly sandbox.</li>
+    </ul>
+    <div class="tip"><strong>Content Security Policy:</strong> the page declares a CSP that allows scripts and styles only from the hosts above, limits network requests to the SQLite download, and blocks framing, plugins, <code>&lt;base&gt;</code> and form submissions outright. So even if something unexpected were injected, it could not load remote code or post your data anywhere.</div>
+    <h3>Imported files are treated as untrusted</h3>
+    <ul>
+      <li>Message bodies are sanitised with <strong>DOMPurify</strong> before being rendered as HTML.</li>
+      <li>Conversation titles, model names, node IDs, role labels and card previews are HTML-escaped everywhere they appear &mdash; panels, graph tooltip, search results, popouts, the print/PDF window and HTML exports.</li>
+      <li>Values injected into a generated popout or print window are escaped, so a crafted JSON file cannot close a tag and inject script.</li>
+    </ul>
+    <h3>Offline use</h3>
+    <p>Once the page has loaded, everything except opencode <code>.db</code> imports works offline; your browser will normally serve the pinned libraries from its cache.</p>
+  `},
   { id: 'license', label: '📜 License & Credits', content: `
     <h2>License & Credits</h2>
     <h3>This Project</h3>
@@ -5928,7 +5985,7 @@ function buildHelp() {
   sidebar._built = true;
 
   // Sidebar topic buttons
-  sidebar.innerHTML = helpTopics.map((t, i) => `<button class="help-topic-btn${i === 0 ? ' active' : ''}" data-topic="${t.id}">${t.label}</button>`).join('');
+  sidebar.innerHTML = helpTopics.map((t, i) => `<button class="help-topic-btn${i === 0 ? ' active' : ''}" data-topic="${t.id}" title="Show this Help topic">${t.label}</button>`).join('');
 
   // Content sections + search results container
   // Changelog gets a master copy bar (whole log) plus a copy group per release.
@@ -6832,8 +6889,8 @@ function exportPDF(forceBranch) {
   const wrapMsg = (role, body, timeStr) => {
     const color = roleColors[role] || '#6b7280';
     const bg = roleBgs[role] || roleBgs.other;
-    return `<div class="msg" data-role="${role}" data-color="${color}" data-time="${escapeHtml(timeStr || '')}" style="background:${bg};border-left-color:${color}">
-      <div class="msg-role" style="color:${color}">${roleLabels[role] || role}${timeStr ? `<span class="msg-role-time">${timeStr}</span>` : ''}</div>
+    return `<div class="msg" data-role="${escapeHtml(role)}" data-color="${color}" data-time="${escapeHtml(timeStr || '')}" style="background:${bg};border-left-color:${color}">
+      <div class="msg-role" style="color:${color}">${escapeHtml(roleLabels[role] || role)}${timeStr ? `<span class="msg-role-time">${escapeHtml(timeStr)}</span>` : ''}</div>
       <div class="msg-body">${body}</div>
     </div>`;
   };
@@ -6871,6 +6928,16 @@ function exportPDF(forceBranch) {
     }).join('');
   }
 
+  // Values injected into the generated print window's <script> block. JSON.stringify
+  // alone is not enough: it leaves "<" and U+2028/U+2029 raw, so a crafted
+  // conversation title could close the script tag or break the script.
+  const jsLiteral = (v) => {
+    const BS = String.fromCharCode(92);
+    return JSON.stringify(v)
+      .split('<').join(BS + 'u003c')
+      .split(String.fromCharCode(0x2028)).join(BS + 'u2028')
+      .split(String.fromCharCode(0x2029)).join(BS + 'u2029');
+  };
   const printWindow = window.open('', '_blank');
   printWindow.document.write(`<!DOCTYPE html>
 <html>
@@ -6917,9 +6984,9 @@ function exportPDF(forceBranch) {
   <div id="measure"></div>
   <div id="msgs">${htmlContent}</div>
   <script>
-    var DOC_TITLE = ${JSON.stringify(title)};
-    var DOC_MODE = ${JSON.stringify(mode)};
-    var DOC_CREATED = ${JSON.stringify(createdStr)};
+    var DOC_TITLE = ${jsLiteral(title)};
+    var DOC_MODE = ${jsLiteral(mode)};
+    var DOC_CREATED = ${jsLiteral(createdStr)};
     var roleLabels = { user: 'User', assistant: 'Assistant', system: 'System', other: 'Other' };
     var roleBgs = { user: 'rgba(37,99,235,0.07)', assistant: 'rgba(22,163,74,0.07)', system: 'rgba(107,114,128,0.08)', other: 'rgba(147,51,234,0.07)' };
     var measure = document.getElementById('measure');
@@ -7137,7 +7204,19 @@ function exportPDF(forceBranch) {
 
     var titleBlock = document.createElement('div');
     titleBlock.className = 'block';
-    titleBlock.innerHTML = '<div class="doc-wrap"><div class="doc-title">' + DOC_TITLE + '</div><div class="doc-subtitle">Created: ' + (DOC_CREATED || 'unknown') + (DOC_MODE ? ' &middot; View: ' + DOC_MODE : '') + '</div></div>';
+    // Built with DOM APIs (not innerHTML) so a crafted conversation title cannot
+    // inject markup into the print window.
+    var titleWrap = document.createElement('div');
+    titleWrap.className = 'doc-wrap';
+    var titleEl = document.createElement('div');
+    titleEl.className = 'doc-title';
+    titleEl.textContent = DOC_TITLE;
+    var subEl = document.createElement('div');
+    subEl.className = 'doc-subtitle';
+    subEl.textContent = 'Created: ' + (DOC_CREATED || 'unknown') + (DOC_MODE ? ' · View: ' + DOC_MODE : '');
+    titleWrap.appendChild(titleEl);
+    titleWrap.appendChild(subEl);
+    titleBlock.appendChild(titleWrap);
     place(titleBlock, msgs.length ? msgs[0].getAttribute('data-role') || '' : '', msgs.length ? msgs[0].getAttribute('data-color') || '#999' : '#999');
     msgs.forEach(function(m) { placeMessage(m); });
     if (!curBody) newPage('Message', '#999');
@@ -7187,9 +7266,9 @@ document.getElementById('btn-export-branch').addEventListener('click', () => {
       const role = getNodeRole(n);
       const text = getNodeText(n);
       const s = { user: { bg:'rgba(59,130,246,0.08)', border:'rgba(96,165,250,0.6)', label:'#3b82f6' }, assistant: { bg:'rgba(34,197,94,0.08)', border:'rgba(74,222,128,0.6)', label:'#22c55e' }, system: { bg:'rgba(107,114,128,0.08)', border:'rgba(156,163,175,0.5)', label:'#9ca3af' }, other: { bg:'rgba(168,85,247,0.08)', border:'rgba(192,132,252,0.6)', label:'#a855f7' } }[role] || { bg:'rgba(168,85,247,0.08)', border:'rgba(192,132,252,0.6)', label:'#a855f7' };
-      return `<div style="margin-bottom:8px;padding:14px 16px;border-radius:8px;background:${s.bg};border-left:3px solid ${s.border}"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${s.label};margin-bottom:8px;letter-spacing:.07em">${role}</div><div>${DOMPurify.sanitize(marked.parse(text || ''))}</div></div>`;
+      return `<div style="margin-bottom:8px;padding:14px 16px;border-radius:8px;background:${s.bg};border-left:3px solid ${s.border}"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${s.label};margin-bottom:8px;letter-spacing:.07em">${escapeHtml(role)}</div><div>${DOMPurify.sanitize(marked.parse(text || ''))}</div></div>`;
     }).join('');
-    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${conv?.title || 'Branch'}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;padding:32px;max-width:820px;margin:0 auto;line-height:1.7;color:#1a1d2e;background:#f0f2f8}h1{font-size:17px;font-weight:600;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #d0d4e8}p{margin-bottom:10px}pre{background:#dde0ee;padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0}code{font-family:monospace;font-size:12.5px}blockquote{border-left:3px solid #00c49a;padding-left:12px;color:#6b7280;font-style:italic;margin:8px 0}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{padding:6px 10px;border:1px solid #c8cce0}th{background:#dde0ee}</style></head><body><h1>${conv?.title || 'Branch'}</h1>${htmlParts}</body></html>`;
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(conv?.title || 'Branch')}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;padding:32px;max-width:820px;margin:0 auto;line-height:1.7;color:#1a1d2e;background:#f0f2f8}h1{font-size:17px;font-weight:600;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #d0d4e8}p{margin-bottom:10px}pre{background:#dde0ee;padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0}code{font-family:monospace;font-size:12.5px}blockquote{border-left:3px solid #00c49a;padding-left:12px;color:#6b7280;font-style:italic;margin:8px 0}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{padding:6px 10px;border:1px solid #c8cce0}th{background:#dde0ee}</style></head><body><h1>${escapeHtml(conv?.title || 'Branch')}</h1>${htmlParts}</body></html>`;
     exportText(html, safeName + '-branch', 'html');
   } else if (mode === 'markdown') {
     const text = path.map(n => `**[${getNodeRole(n).toUpperCase()}]**\n\n${getNodeText(n)}`).join('\n\n---\n\n');
@@ -7799,6 +7878,7 @@ document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
     fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.db,.sqlite,.sqlite3';
+    fileInput.title = 'Choose an opencode database file to convert (.db, .sqlite, .sqlite3)';
     fileInput.style.display = 'none';
     document.body.appendChild(fileInput);
     return fileInput;
@@ -8021,6 +8101,8 @@ const changelog = [
       { type: 'change', text: '<strong>System is the default theme</strong> - the app now follows your operating system\'s light/dark preference out of the box and switches live when the OS theme changes. Pick any dot (including the new half-light/half-dark <strong>System</strong> dot) to override it.' },
       { type: 'new', text: '<strong>Copy the changelog</strong> - the What\'s New page has a <strong>master copy bar</strong> for the entire log plus its own <strong>Rendered / Markdown / HTML</strong> buttons on every single release. Rendered copies rich formatted text (via <code>ClipboardItem</code>), Markdown copies editable source and HTML copies the raw markup.' },
       { type: 'new', text: '<strong>View the changelog as Markdown or HTML</strong> - a <strong>View</strong> selector at the top of What\'s New switches the whole log between the normal rendered layout and raw Markdown / HTML source, in place and without closing the help dialog.' },
+      { type: 'new', text: '<strong>Integrity-pinned libraries + Content Security Policy</strong> - every CDN script tag now carries an SRI <code>integrity</code> hash, so a tampered or substituted library file is refused by the browser, and the page declares a CSP that limits scripts, styles and network requests to the hosts it actually uses. A new <strong>Security &amp; Privacy</strong> Help topic documents what is fetched, what is stored and what is sanitised.' },
+      { type: 'fix', text: '<strong>Hardened rendering of untrusted files</strong> - conversation titles, model names, node IDs, role labels, message-card previews and search results are HTML-escaped everywhere they are shown, copied, printed or exported, and the popout/print windows escape the values they inject, so a crafted JSON file can no longer inject markup or break out of a script tag.' },
       { type: 'change', text: '<strong>Maintainer notes for AI agents</strong> - a comment block at the top of the file (and above the changelog) now instructs automated editors to bump the version, update the changelog, document changes in Help, and give <strong>every new button or feature a tooltip in the same edit</strong>. Editors must also <strong>ask the user whether to keep confirming each edit, proceed automatically, or follow their own instructions</strong> (with a USER PREFERENCE field to record the answer), and must <strong>edit only this file</strong> - never the similar-looking copies. The block requires editors to raise all of this with the user and confirm each step was followed.' },
     ]
   },

@@ -20,7 +20,7 @@
        - the console.log(...) line at the bottom of the script
        - the new changelog entry heading (see #2)
      Bump the MINOR number for features, the PATCH number for bug fixes
-     (e.g. v7.8.0 -> v7.9.0 for a feature, v7.9.1 for a fix).
+     (e.g. v8.0.0 -> v8.1.0 for a feature, v8.1.1 for a fix).
 
   2. UPDATE THE CHANGELOG array (`const changelog = [...]`, search for
      "CHANGELOG" further down). Add a NEW entry as the FIRST element with:
@@ -108,7 +108,7 @@
      The file splitter builds its Worker from a Blob URL (worker-src blob:).
      The Google Fonts @import in the <style> block needs style-src + font-src. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data: https:; connect-src 'self' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob:; frame-src 'self' blob: data:; child-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>ChatGPT JSON Tree Viewer v7.9.0</title>
+<title>ChatGPT JSON Tree Viewer v8.2.0</title>
 <!-- Third-party libraries, integrity-pinned (SRI sha384). If a CDN ever serves a
      different file than the hash below, the browser refuses to run it. Hashes are
      the cdnjs-published values; re-check them if you ever bump a library version.
@@ -390,6 +390,7 @@ body {
 .topbar-btn.primary:hover { background: var(--accent-teal-dim); border-color: var(--accent-teal-dim); }
 .topbar-btn svg { width: 14px; height: 14px; }
 #file-input { display: none; }
+#session-input { display: none; }
 
 /* Reset split button */
 .reset-btn-wrap {
@@ -502,7 +503,7 @@ body {
   flex-shrink: 0;
 }
 #sidebar-search {
-  width: 100%; padding: 7px 10px 7px 32px;
+  width: 100%; box-sizing: border-box; padding: 7px 10px 7px 32px;
   background: var(--bg-tertiary); border: 1px solid var(--border-color);
   border-radius: var(--radius-md); color: var(--text-primary);
   font-family: var(--font-ui); font-size: 13px;
@@ -1000,7 +1001,7 @@ body {
   position: relative; flex: 1;
 }
 #branch-search-input {
-  width: 100%; padding: 5px 8px 5px 26px;
+  width: 100%; box-sizing: border-box; padding: 5px 8px 5px 26px;
   background: var(--bg-tertiary); border: 1px solid var(--border-color);
   border-radius: var(--radius-sm); color: var(--text-primary);
   font-size: 12px; font-family: var(--font-ui);
@@ -1129,25 +1130,54 @@ body {
 }
 
 /* Changelog */
-.cl-version { padding: 20px 24px 0; }
-.cl-version:last-child { padding-bottom: 24px; }
-.cl-version + .cl-version { border-top: 1px solid var(--border-color); margin-top: 4px; }
-.cl-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.cl-version { padding: 0; }
+.cl-version:last-child { padding-bottom: 0; }
+.cl-version + .cl-version { border-top: 1px solid var(--border-color); }
+.cl-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.cl-entry-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  position: sticky; top: -20px; z-index: 5;
+  margin: 0 -24px; padding: 10px 24px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 6px 12px -8px rgba(0,0,0,0.5);
+}
+.cl-entry-spacer { flex: 1 1 8px; }
+.cl-entry-controls { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.cl-entry-caption { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.cl-only-btn {
+  background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);
+  font-family: var(--font-ui); font-size: 10px; font-weight: 600; letter-spacing: 0.02em;
+  padding: 3px 8px; border-radius: var(--radius-sm); cursor: pointer; white-space: nowrap;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.cl-only-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-light); }
+.cl-only-btn.active { background: var(--accent-teal); color: #000; border-color: var(--accent-teal); }
+#cl-rendered.cl-solo .cl-version { display: none; }
+#cl-rendered.cl-solo .cl-version.cl-solo-active { display: block; }
 .cl-tag { font-size: 13px; font-weight: 700; font-family: var(--font-mono); color: var(--accent-teal); background: rgba(0,212,170,0.1); padding: 2px 8px; border-radius: 4px; }
 .cl-tag.latest { background: var(--accent-teal); color: #000; }
 .cl-date { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
+.cl-entry-body { padding: 14px 0 22px; }
+.cl-version:last-child .cl-entry-body { padding-bottom: 24px; }
+.cl-group + .cl-group { margin-top: 16px; }
+.cl-group-head { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+.cl-group-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+.cl-group.new .cl-group-dot { background: var(--accent-green); }
+.cl-group.change .cl-group-dot { background: var(--accent-blue); }
+.cl-group.fix .cl-group-dot { background: var(--accent-yellow); }
+.cl-group.removed .cl-group-dot,
+.cl-group.security .cl-group-dot { background: var(--accent-red, #f87171); }
+.cl-group-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-primary); }
+.cl-group-count { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
 .cl-items { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .cl-item { display: flex; gap: 10px; font-size: 13px; color: var(--text-secondary); line-height: 1.6; align-items: flex-start; }
 .cl-item::before { display: none; }
-.cl-item .cl-badge { font-size: 9px; font-weight: 700; letter-spacing: .05em; padding: 2px 5px; border-radius: 3px; flex-shrink: 0; margin-top: 3px; text-transform: uppercase; }
-.cl-item.new .cl-badge { background: rgba(74,222,128,0.15); color: var(--accent-green); }
-.cl-item.fix .cl-badge { background: rgba(251,191,36,0.15); color: var(--accent-yellow); }
-.cl-item.change .cl-badge { background: rgba(96,165,250,0.15); color: var(--accent-blue); }
 
-/* Changelog copy controls — a master bar for the whole log plus one group per release */
+/* Changelog copy controls — a master bar for the whole log plus one sticky bar per release */
 .cl-intro { padding: 20px 24px 4px; }
 .cl-intro p { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
-.cl-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 24px 12px; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); position: sticky; top: -20px; z-index: 3; box-shadow: 0 6px 12px -8px rgba(0,0,0,0.5); }
+.cl-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 24px 12px; border-bottom: 1px solid var(--border-color); background: var(--bg-panel); position: relative; z-index: 1; }
 .cl-toolbar-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
 .cl-toolbar-hint { font-size: 11px; color: var(--text-muted); flex: 1; min-width: 160px; }
 .cl-copy-group { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
@@ -1160,9 +1190,6 @@ body {
 }
 .cl-copy-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-light); }
 .cl-copy-btn.copied { background: var(--accent-green); color: #000; border-color: var(--accent-green); }
-.cl-header .cl-copy-group { margin-left: auto; align-self: center; }
-.cl-copy-group.in-header .cl-copy-btn { font-size: 9px; padding: 2px 6px; opacity: 0.55; }
-.cl-version:hover .cl-copy-group.in-header .cl-copy-btn { opacity: 1; }
 .cl-view-wrap { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .cl-view-select {
   padding: 3px 6px; background: var(--bg-tertiary); border: 1px solid var(--border-color);
@@ -1172,6 +1199,12 @@ body {
 .cl-view-select:focus { outline: none; border-color: var(--accent-teal); color: var(--text-primary); }
 .cl-raw {
   margin: 0; padding: 20px 24px 24px; overflow-x: auto;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
+  color: var(--text-secondary); white-space: pre-wrap; word-break: break-word;
+  background: var(--bg-primary);
+}
+.cl-entry-raw {
+  margin: 0; padding: 16px 0 22px; overflow-x: auto;
   font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
   color: var(--text-secondary); white-space: pre-wrap; word-break: break-word;
   background: var(--bg-primary);
@@ -1252,6 +1285,116 @@ body {
 .branch-msg-wrap.jump-highlight {
   animation: branch-msg-pulse 1.2s ease-out;
 }
+
+/* ===== SIDEBAR SEARCH RESULTS (flex layout, never clipped) ===== */
+/* The results panel and the conversation list share the remaining height and
+   each scrolls on its own. Without this the fixed-height results list could be
+   cut off by the sidebar's overflow when the window was short. */
+#search-results-panel {
+  display: none; flex-direction: column;
+  flex: 1 1 auto; min-height: 0;
+  border-bottom: 1px solid var(--border-color);
+}
+#search-results-panel .conversations-header { flex-shrink: 0; }
+.search-role-filters {
+  display: flex; align-items: center; gap: 3px; flex-wrap: wrap;
+  padding: 0 8px 6px; flex-shrink: 0;
+}
+.search-role-btn {
+  padding: 2px 7px; border-radius: 99px; font-size: 10px; font-weight: 600;
+  border: 1px solid var(--border-color); background: transparent;
+  color: var(--text-muted); cursor: pointer; font-family: var(--font-ui);
+  transition: all var(--transition);
+}
+.search-role-btn:hover { border-color: var(--border-light); color: var(--text-primary); }
+.search-role-btn.active[data-srole="user"]      { background: rgba(59,130,246,0.2);  color: #60a5fa; border-color: rgba(96,165,250,0.5); }
+.search-role-btn.active[data-srole="assistant"] { background: rgba(34,197,94,0.2);   color: #4ade80; border-color: rgba(74,222,128,0.5); }
+.search-role-btn.active[data-srole="system"]    { background: rgba(107,114,128,0.2); color: #9ca3af; border-color: rgba(156,163,175,0.5); }
+.search-role-btn.active[data-srole="other"]     { background: rgba(168,85,247,0.2);  color: #c084fc; border-color: rgba(192,132,252,0.5); }
+.search-role-btn.active[data-srole="all"]       { background: var(--bg-active); color: var(--text-primary); border-color: var(--border-light); }
+#search-results-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 6px 6px; }
+.search-empty { padding: 18px 10px; text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+#conv-list { min-height: 0; }
+#sidebar-left.search-mode #conv-list { flex: 0 0 32%; min-height: 80px; }
+#sidebar-left.search-mode #files-panel { max-height: 18vh; }
+
+/* ===== GRAPH ROLE FILTERS ===== */
+#role-filters {
+  position: absolute; top: 12px; left: 12px; z-index: 20;
+  display: none; flex-direction: column; gap: 5px; padding: 6px;
+  background: var(--bg-secondary); border: 1px solid var(--border-color);
+  border-radius: var(--radius-md); box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+.role-filter-btn {
+  position: relative; width: 34px; height: 34px; border-radius: 50%;
+  border: 1.5px solid var(--border-color); background: var(--bg-tertiary);
+  color: var(--text-secondary); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-ui); font-size: 13px; font-weight: 700;
+  transition: all var(--transition);
+}
+.role-filter-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.role-filter-btn[data-grole="user"]      { color: #60a5fa; border-color: rgba(96,165,250,0.55); }
+.role-filter-btn[data-grole="assistant"] { color: #4ade80; border-color: rgba(74,222,128,0.55); }
+.role-filter-btn[data-grole="system"]    { color: #9ca3af; border-color: rgba(156,163,175,0.55); }
+.role-filter-btn[data-grole="other"]     { color: #c084fc; border-color: rgba(192,132,252,0.55); }
+.role-filter-btn.off { opacity: 0.35; filter: grayscale(1); border-style: dashed; }
+.role-filter-count {
+  position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px;
+  padding: 0 3px; border-radius: 99px; background: var(--bg-tertiary);
+  border: 1px solid var(--border-color); color: var(--text-muted);
+  font-size: 8.5px; font-weight: 700; line-height: 13px; text-align: center;
+  pointer-events: none;
+}
+#role-filter-all { width: 34px; height: 22px; border-radius: 99px; font-size: 9px; }
+
+/* Star badges on graph nodes */
+.node-star {
+  font-size: 12px; fill: var(--accent-yellow);
+  stroke: var(--bg-primary); stroke-width: 2.5; paint-order: stroke;
+  pointer-events: none;
+}
+.action-btn.starred { color: var(--accent-yellow); border-color: var(--accent-yellow); background: rgba(251,191,36,0.12); }
+.recent-star-btn.starred { color: var(--accent-yellow); }
+
+/* ===== RECENT / STARRED PANEL ===== */
+#recent-content { padding: 10px 12px; }
+.recent-section + .recent-section { margin-top: 18px; }
+.recent-section-head {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-muted);
+}
+.recent-count {
+  font-size: 10px; font-family: var(--font-mono); color: var(--text-muted);
+  background: var(--bg-tertiary); padding: 1px 6px; border-radius: 99px;
+}
+.recent-item {
+  padding: 8px 10px; margin-bottom: 6px;
+  border: 1px solid var(--border-color); border-radius: var(--radius-md);
+  background: var(--bg-tertiary); cursor: pointer;
+  transition: all var(--transition);
+}
+.recent-item:hover { background: var(--bg-hover); border-color: var(--border-light); }
+.recent-item.missing { opacity: 0.6; cursor: default; }
+.recent-item-top { display: flex; align-items: center; gap: 6px; }
+.recent-item-conv {
+  flex: 1; min-width: 0; font-size: 10px; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.recent-item-time { flex-shrink: 0; font-size: 9px; font-family: var(--font-mono); color: var(--text-muted); }
+.recent-star-btn {
+  flex-shrink: 0; padding: 0 2px; border: none; background: transparent;
+  color: var(--text-muted); cursor: pointer; font-size: 14px; line-height: 1;
+  transition: color var(--transition), transform var(--transition);
+}
+.recent-star-btn:hover { transform: scale(1.2); }
+.recent-item-preview {
+  margin-top: 4px; font-size: 12px; line-height: 1.45; color: var(--text-secondary);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.recent-empty { padding: 24px 8px; text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+#minimap.panning { cursor: grabbing; border-color: var(--accent-teal); }
 
 /* ===== PRINT ===== */
 @media print {
@@ -1465,13 +1608,14 @@ body {
         <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/>
       </svg>
       ChatGPT JSON Tree Viewer
-      <span class="logo-version">v7.9.0</span>
+      <span class="logo-version">v8.2.0</span>
     </div>
     <button class="topbar-btn primary" onclick="document.getElementById('file-input').click()" title="Load conversation files — JSON, Markdown/Text, or an opencode .db (you can also drag files onto the graph)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Load File
     </button>
     <input type="file" id="file-input" accept=".json,.md,.markdown,.txt,.db,.sqlite,.sqlite3,.zip" multiple title="Choose conversation files to import (.json, .md, .markdown, .txt, .db, .sqlite, .sqlite3, .zip)">
+    <input type="file" id="session-input" accept=".json,application/json" title="Choose a saved session file (.json) to restore stars and visit history">
     <span id="format-badge" title="Format detected in the loaded file"></span>
     <button class="topbar-btn" id="btn-close-conv" title="Close current conversation" style="display:none;color:var(--accent-red);border-color:rgba(239,68,68,0.4);">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -1522,6 +1666,14 @@ body {
         <button class="tools-opt" id="btn-convert-db" title="Convert an opencode .db to conversations.json">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M15 11h3a2 2 0 012 2v6"/></svg>
           Convert db
+        </button>
+        <button class="tools-opt" id="btn-save-session" title="Save your starred messages and recent visit history as a session file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Session
+        </button>
+        <button class="tools-opt" id="btn-load-session" title="Restore starred messages and visit history from a saved session file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Load Session
         </button>
       </div>
     </div>
@@ -1618,6 +1770,14 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M15 11h3a2 2 0 012 2v6"/></svg>
         Convert db
       </button>
+      <button class="mob-menu-btn" id="mob-save-session" title="Save your starred messages and recent visits as a session file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Session
+      </button>
+      <button class="mob-menu-btn" id="mob-load-session" title="Restore starred messages and visit history from a session file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Load Session
+      </button>
       <button class="mob-menu-btn" id="mob-help" title="Open the help guide and version history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Help
@@ -1685,15 +1845,23 @@ body {
         </div>
         <div id="files-list"></div>
       </div>
-      <div class="conversations-header">
-        <span>Conversations</span>
-        <span class="conv-count" id="conv-count">0</span>
-      </div>
-      <div id="search-results-panel" style="display:none;flex-direction:column;border-bottom:1px solid var(--border-color);">
+      <div id="search-results-panel">
         <div class="conversations-header" style="padding-bottom:2px;">
           <span id="search-results-label">Messages</span>
         </div>
-        <div id="search-results-list" style="overflow-y:auto;max-height:400px;padding:0 6px 6px;"></div>
+        <div class="search-role-filters" id="search-role-filters">
+          <span class="branch-filter-label">Show:</span>
+          <button class="search-role-btn active" data-srole="user" title="Include User messages in the search results">User</button>
+          <button class="search-role-btn active" data-srole="assistant" title="Include Assistant messages in the search results">Assistant</button>
+          <button class="search-role-btn active" data-srole="system" title="Include System messages in the search results">System</button>
+          <button class="search-role-btn active" data-srole="other" title="Include messages with other or unknown roles in the search results">Other</button>
+          <button class="search-role-btn active" data-srole="all" title="Include every role in the search results">All</button>
+        </div>
+        <div id="search-results-list"></div>
+      </div>
+      <div class="conversations-header">
+        <span>Conversations</span>
+        <span class="conv-count" id="conv-count">0</span>
       </div>
       <div id="conv-list"></div>
     </div>
@@ -1703,6 +1871,13 @@ body {
 
     <!-- GRAPH AREA -->
     <div id="graph-area">
+      <div id="role-filters" title="Graph role filters — click a letter to show or hide that role type">
+        <button class="role-filter-btn" data-grole="user" title="Show or hide User nodes in the graph"><span class="rf-letter">U</span><span class="role-filter-count">0</span></button>
+        <button class="role-filter-btn" data-grole="assistant" title="Show or hide Assistant nodes in the graph"><span class="rf-letter">A</span><span class="role-filter-count">0</span></button>
+        <button class="role-filter-btn" data-grole="system" title="Show or hide System nodes in the graph"><span class="rf-letter">S</span><span class="role-filter-count">0</span></button>
+        <button class="role-filter-btn" data-grole="other" title="Show or hide Other nodes in the graph"><span class="rf-letter">?</span><span class="role-filter-count">0</span></button>
+        <button class="role-filter-btn" id="role-filter-all" title="Toggle every role type at once — hides them all when everything is shown">All</button>
+      </div>
       <div id="drop-overlay" title="Release the mouse button to load the file(s)">Drop JSON, Markdown or ZIP here</div>
       <div id="empty-state">
         <h2>No conversation loaded</h2>
@@ -1760,11 +1935,11 @@ body {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
       </div>
-      <div id="minimap" title="Minimap — click to jump the viewport there, Ctrl/⌘+drag to move the map">
+      <div id="minimap" title="Minimap — drag to pan the graph, click to jump, Ctrl/⌘+drag to move the map itself">
         <canvas id="minimap-canvas"></canvas>
         <div id="minimap-viewport"></div>
         <div id="minimap-label">Map</div>
-        <div id="minimap-drag-hint">ctrl+drag</div>
+        <div id="minimap-drag-hint">drag · ctrl=move</div>
       </div>
     </div>
 
@@ -1776,6 +1951,7 @@ body {
       <div id="panel-tabs">
         <button class="panel-tab active" data-panel="node" title="Show the content of the node selected in the graph">Selected Node</button>
         <button class="panel-tab" data-panel="branch" title="Show the whole branch conversation leading to the selected node">Branch</button>
+        <button class="panel-tab" data-panel="recent" title="Recently visited and starred messages — click an entry to jump back to it">Recent</button>
       </div>
       <div id="panel-content">
         <!-- Node panel -->
@@ -1814,6 +1990,7 @@ body {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               </button>
               <button class="action-btn" id="btn-toggle-meta" title="Show or hide the node metadata bar (model, timestamps, token counts)" style="font-size:10px;font-family:var(--font-mono)">M</button>
+              <button class="action-btn" id="btn-star-node" title="Star this message to keep it in the Starred list" style="font-size:14px">☆</button>
               <button class="action-btn active" id="btn-toggle-highlight" title="Highlight search terms inside the rendered message" style="font-size:10px;font-family:var(--font-mono)">H</button>
             </div>
             <div class="content-scroll md-content" id="content-rendered"></div>
@@ -1886,6 +2063,21 @@ body {
             <div class="content-scroll" id="branch-content" style="font-size:13px;"></div>
           </div>
         </div>
+        <!-- Recent / Starred panel -->
+        <div class="panel-tab-content" id="ptab-recent">
+          <div class="content-toolbar">
+            <span style="font-size:11px;color:var(--text-muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase">History</span>
+            <div class="toolbar-sep"></div>
+            <button class="action-btn" id="btn-save-session-recent" title="Save stars and recent visits as a session file">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button class="action-btn" id="btn-load-session-recent" title="Restore stars and recent visits from a session file — asks whether to merge or replace">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </button>
+            <button class="action-btn" id="btn-clear-recent" title="Clear the recently visited list (stars are kept)" style="font-size:12px">⌫</button>
+          </div>
+          <div class="content-scroll" id="recent-content"></div>
+        </div>
       </div>
       <!-- Branch index -->
       <div id="branch-index-panel">
@@ -1933,6 +2125,10 @@ body {
   <div class="ctx-item ctx-node-only" id="ctx-node-copy">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
     Copy Message
+  </div>
+  <div class="ctx-item ctx-node-only" id="ctx-node-star" title="Star or unstar this message so it is easy to find again">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <span id="ctx-node-star-label">Star Node</span>
   </div>
   <div class="ctx-item ctx-node-only" id="ctx-node-select">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
@@ -2092,6 +2288,28 @@ body {
   </div>
 </div>
 
+<!-- SESSION IMPORT MODAL -->
+<div class="modal-backdrop" id="modal-session-import">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-header">
+      <h2>Load Session</h2>
+      <button class="modal-close" title="Close this dialog without importing the session" onclick="closeModal('modal-session-import')">✕</button>
+    </div>
+    <div class="modal-body" style="flex-direction:column;padding:20px;gap:12px;">
+      <p id="session-import-desc" style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:4px;"></p>
+      <button class="topbar-btn primary" id="session-import-merge" title="Add the session's stars and visits to what you already have" style="width:100%;justify-content:center;padding:10px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Merge with current history
+      </button>
+      <button class="topbar-btn" id="session-import-replace" title="Discard current stars and visits, then use the session file's history" style="width:100%;justify-content:center;padding:10px;color:var(--accent-red);border-color:rgba(239,68,68,0.4);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        Replace current history
+      </button>
+      <p id="session-import-note" style="font-size:11px;color:var(--text-muted);text-align:center;line-height:1.5;margin:0;"></p>
+    </div>
+  </div>
+</div>
+
 <!-- CONVERT DB MODAL -->
 <div class="modal-backdrop" id="modal-convert-db">
   <div class="modal-box" style="max-width:700px">
@@ -2174,7 +2392,7 @@ body {
 <div class="modal-backdrop" id="modal-help">
   <div class="modal-box" style="max-width:900px;width:94vw;height:82vh;">
     <div class="modal-header">
-      <h2>ChatGPT JSON Tree Viewer v7.9.0 — Help</h2>
+      <h2>ChatGPT JSON Tree Viewer v8.2.0 - Help</h2>
       <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-help')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;overflow:hidden;">
@@ -2243,10 +2461,17 @@ const state = {
     exportChunkSize: 1000, // conversations per chunk when export is large, 0 = always single file
     searchDebounceMs: 220, // ms delay before search runs after user stops typing
     searchDebounceEnabled: true,
+    recentNodesEnabled: true,   // show the Recent tab and record visits
+    recentNodesMax: 25,         // maximum recent visits to keep
+    rememberHistory: true,      // auto-save stars + visits in localStorage
   },
   transform: d3.zoomIdentity,
   nodePositions: new Map(), // nodeId -> {x, y}
   initialPositions: new Map(),
+  starred: new Map(),      // convId -> Set of nodeIds
+  recentNodes: [],         // [{ convId, nodeId, ts }] newest first
+  searchRoleFilters: new Set(['user','assistant','system','other']),
+  graphRoleFilters: { user: true, assistant: true, system: true, other: true },
 };
 
 // Load persisted theme/settings
@@ -2263,6 +2488,9 @@ try {
   const s = JSON.parse(localStorage.getItem('mv-settings') || '{}');
   Object.assign(state.settings, s);
 } catch(e) {}
+
+// Stars and recent visits are restored at the end of the script, after all
+// storage helpers are defined and the DOM is ready.
 
 // ============================================================
 // FORMAT DETECTION & CONVERSION
@@ -2966,6 +3194,510 @@ function convertOpenCode(data) {
 function genId() { return Math.random().toString(36).slice(2, 10); }
 
 // ============================================================
+// STARS, RECENT VISITS & SESSIONS
+// ============================================================
+const SESSION_FILE_TYPE = 'chatgpt-json-tree-viewer-session';
+const HISTORY_STORAGE_KEY = 'mv-history';
+let _historySaveTimer = null;
+let _pendingSessionPayload = null;
+
+// Collapse every role the app knows about into the four filter buckets.
+function roleBucket(role) {
+  return (role === 'user' || role === 'assistant' || role === 'system') ? role : 'other';
+}
+
+function allConversationPools() {
+  return [...state.conversations, ...state.hiddenConversations, ...state.deletedConversations];
+}
+
+function findConvById(convId) {
+  return allConversationPools().find(c => c.id === convId) || null;
+}
+
+function getStarredSet(convId) {
+  if (!state.starred.has(convId)) state.starred.set(convId, new Set());
+  return state.starred.get(convId);
+}
+
+function isNodeStarred(convId, nodeId) {
+  return !!(convId && nodeId && state.starred.get(convId)?.has(nodeId));
+}
+
+function totalStarCount() {
+  let n = 0;
+  state.starred.forEach(set => { n += set.size; });
+  return n;
+}
+
+function maxRecent() {
+  return Math.max(5, Math.min(100, parseInt(state.settings.recentNodesMax) || 25));
+}
+
+// ------------------------------------------------------------
+// Recently visited
+// ------------------------------------------------------------
+function recordVisit(convId, nodeId) {
+  if (!state.settings.recentNodesEnabled || !convId || !nodeId) return;
+  state.recentNodes = state.recentNodes.filter(r => !(r.convId === convId && r.nodeId === nodeId));
+  state.recentNodes.unshift({ convId, nodeId, ts: Date.now() });
+  state.recentNodes = state.recentNodes.slice(0, maxRecent());
+  scheduleHistorySave();
+  updateRecentTabVisibility();
+  if (isRecentTabActive()) renderRecentPanel();
+}
+
+function clearRecentVisits() {
+  if (!state.recentNodes.length) { showNotif('No recent visits to clear'); return; }
+  if (!confirm('Clear the recently visited list?\n\nYour starred messages are kept.')) return;
+  state.recentNodes = [];
+  scheduleHistorySave();
+  renderRecentPanel();
+  showNotif('Recent visits cleared', 'success');
+}
+
+function isRecentTabActive() {
+  return !!document.getElementById('ptab-recent')?.classList.contains('active');
+}
+
+function activatePanelTab(name) {
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.toggle('active', t.dataset.panel === name));
+  document.querySelectorAll('.panel-tab-content').forEach(p => p.classList.toggle('active', p.id === `ptab-${name}`));
+  if (name === 'recent') renderRecentPanel();
+}
+
+function updateRecentTabVisibility() {
+  const tab = document.querySelector('.panel-tab[data-panel="recent"]');
+  if (!tab) return;
+  const on = !!state.settings.recentNodesEnabled;
+  tab.style.display = on ? '' : 'none';
+  if (!on && tab.classList.contains('active')) activatePanelTab('node');
+}
+
+function formatHistoryTime(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  if (diff < 60000) return 'just now';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+  const d = new Date(ts);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function findNodeRecord(convId, nodeId) {
+  // Deleted conversations stay out of reach on purpose: their nodes may be
+  // partly missing, so history entries for them show as unavailable.
+  const conv = [...state.conversations, ...state.hiddenConversations].find(c => c.id === convId) || null;
+  const node = conv?.data?.mapping?.[nodeId] || null;
+  return { conv, node: node && node.message ? node : null };
+}
+
+// Show Only stashes conversations instead of deleting them. Bring one back so a
+// star or history entry can still be opened.
+function ensureConvVisible(convId) {
+  if (state.conversations.some(c => c.id === convId)) return true;
+  const idx = state.hiddenConversations.findIndex(c => c.id === convId);
+  if (idx < 0) return false;
+  const [conv] = state.hiddenConversations.splice(idx, 1);
+  state.conversations.push(conv);
+  renderConvList();
+  return true;
+}
+
+function jumpToHistoryNode(convId, nodeId) {
+  const available = ensureConvVisible(convId);
+  const { conv, node } = findNodeRecord(convId, nodeId);
+  if (!available || !conv || !node) {
+    showNotif('This conversation is not loaded — open its conversations.json first, then load the session again.', 'error');
+    return;
+  }
+  if (state.activeConvId !== convId) {
+    loadConversation(convId, false, nodeId);
+  } else {
+    activatePanelTab('node');
+    selectNode(nodeId);
+    scrollToNode(nodeId, true);
+  }
+}
+
+function renderRecentPanel() {
+  const host = document.getElementById('recent-content');
+  if (!host) return;
+  host.innerHTML = '';
+
+  if (!state.settings.recentNodesEnabled) {
+    host.innerHTML = '<div class="recent-empty">Recent visits are turned off.<br>Enable <strong>Keep recent visits</strong> in Tools → Settings to use this tab.</div>';
+    return;
+  }
+
+  const starEntries = [];
+  state.starred.forEach((set, convId) => set.forEach(nodeId => starEntries.push({ convId, nodeId })));
+  // Put the open conversation's stars first, then group by conversation title.
+  starEntries.sort((a, b) => {
+    if (a.convId === state.activeConvId && b.convId !== state.activeConvId) return -1;
+    if (b.convId === state.activeConvId && a.convId !== state.activeConvId) return 1;
+    const ca = findConvById(a.convId)?.title || '';
+    const cb = findConvById(b.convId)?.title || '';
+    return ca.localeCompare(cb);
+  });
+  const recent = state.recentNodes.slice(0, maxRecent());
+
+  if (!starEntries.length && !recent.length) {
+    host.innerHTML = '<div class="recent-empty">No stars or visits yet.<br>Select a node, then click <strong>☆</strong> in the toolbar (or right-click → <strong>Star Node</strong>) to keep it here.</div>';
+    return;
+  }
+
+  host.appendChild(buildHistorySection('★ Starred', starEntries, true));
+  host.appendChild(buildHistorySection('Recent visits', recent, false));
+}
+
+function buildHistorySection(title, entries, isStarSection) {
+  const sec = document.createElement('div');
+  sec.className = 'recent-section';
+  const head = document.createElement('div');
+  head.className = 'recent-section-head';
+  head.innerHTML = `<span>${title}</span><span class="recent-count">${entries.length}</span>`;
+  sec.appendChild(head);
+
+  if (!entries.length) {
+    const empty = document.createElement('div');
+    empty.className = 'recent-empty';
+    empty.style.padding = '10px 4px';
+    empty.textContent = isStarSection ? 'No starred messages yet.' : 'No recent visits yet.';
+    sec.appendChild(empty);
+    return sec;
+  }
+
+  entries.forEach(entry => {
+    const { conv, node } = findNodeRecord(entry.convId, entry.nodeId);
+    const convTitle = conv ? (conv.title || conv.data?.title || 'Untitled') : (entry.convId || 'Unknown conversation');
+    const role = node ? getNodeRole(node) : 'unknown';
+    const preview = node
+      ? getNodeText(node).replace(/\s+/g, ' ').slice(0, 180)
+      : 'Message not found — load the matching conversation file to restore it.';
+    const starred = isNodeStarred(entry.convId, entry.nodeId);
+
+    const item = document.createElement('div');
+    item.className = 'recent-item' + (conv && node ? '' : ' missing');
+    item.innerHTML = `
+      <div class="recent-item-top">
+        <span class="node-role-badge role-${roleBucket(role) === 'other' ? 'other' : role}" style="font-size:9px;padding:1px 6px">${escapeHtml(role)}</span>
+        <span class="recent-item-conv">${escapeHtml(convTitle)}</span>
+        ${isStarSection ? '' : `<span class="recent-item-time">${formatHistoryTime(entry.ts)}</span>`}
+      </div>
+      <div class="recent-item-preview">${escapeHtml(preview || '(empty message)')}</div>`;
+
+    if (conv && node) {
+      const dateStr = formatNodeDate(node.message?.create_time);
+      item.title = `${role} · ${convTitle}${dateStr ? ' · ' + dateStr : ''}\nClick to jump to this message`;
+      item.addEventListener('click', () => jumpToHistoryNode(entry.convId, entry.nodeId));
+    } else {
+      item.title = 'This conversation is not loaded. Open the matching conversations.json, then load the session again.';
+    }
+
+    const starBtn = document.createElement('button');
+    starBtn.className = 'recent-star-btn' + (starred ? ' starred' : '');
+    starBtn.textContent = starred ? '★' : '☆';
+    starBtn.title = starred ? 'Remove this message from Starred' : 'Star this message';
+    starBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleStar(entry.convId, entry.nodeId);
+    });
+    item.querySelector('.recent-item-top').appendChild(starBtn);
+
+    sec.appendChild(item);
+  });
+  return sec;
+}
+
+// ------------------------------------------------------------
+// Stars
+// ------------------------------------------------------------
+function toggleStar(convId, nodeId) {
+  if (!convId || !nodeId) return false;
+  const set = getStarredSet(convId);
+  let starred;
+  if (set.has(nodeId)) { set.delete(nodeId); starred = false; }
+  else { set.add(nodeId); starred = true; }
+  if (!set.size) state.starred.delete(convId);
+  scheduleHistorySave();
+  if (getActiveConv()?.id === convId) {
+    renderStarBadges();
+    updateStarButton();
+  }
+  if (isRecentTabActive()) renderRecentPanel();
+  showNotif(starred ? 'Message starred' : 'Star removed', starred ? 'success' : '');
+  return starred;
+}
+
+function updateStarButton() {
+  const btn = document.getElementById('btn-star-node');
+  if (!btn) return;
+  const conv = getActiveConv();
+  const starred = !!(conv && state.selectedNodeId && isNodeStarred(conv.id, state.selectedNodeId));
+  btn.textContent = starred ? '★' : '☆';
+  btn.classList.toggle('starred', starred);
+  btn.title = starred
+    ? 'Unstar this message (remove it from the Starred list)'
+    : 'Star this message to keep it in the Starred list';
+}
+
+function renderStarBadges() {
+  const conv = getActiveConv();
+  if (!conv) return;
+  d3.selectAll('g.node').each(function(d) {
+    const id = d?.data?.id;
+    if (!id) return;
+    const g = d3.select(this);
+    g.selectAll('.node-star').remove();
+    if (isNodeStarred(conv.id, id)) {
+      g.append('text')
+        .attr('class', 'node-star')
+        .attr('x', -13).attr('y', -13)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .text('★');
+    }
+  });
+}
+
+// ------------------------------------------------------------
+// Local history persistence
+// ------------------------------------------------------------
+function scheduleHistorySave() {
+  clearTimeout(_historySaveTimer);
+  _historySaveTimer = setTimeout(saveHistoryNow, 350);
+}
+
+function saveHistoryNow() {
+  clearTimeout(_historySaveTimer);
+  if (!state.settings.rememberHistory) {
+    try { localStorage.removeItem(HISTORY_STORAGE_KEY); } catch (e) {}
+    return;
+  }
+  const starred = {};
+  state.starred.forEach((set, convId) => { if (set.size) starred[convId] = [...set]; });
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify({
+      v: 1,
+      starred,
+      recent: state.recentNodes.slice(0, maxRecent()),
+      savedAt: new Date().toISOString(),
+    }));
+  } catch (e) {}
+}
+
+function restoreHistoryFromStorage() {
+  if (!state.settings.rememberHistory) return;
+  try {
+    const raw = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || 'null');
+    if (!raw) return;
+    if (raw.starred && typeof raw.starred === 'object') {
+      state.starred = new Map();
+      Object.entries(raw.starred).forEach(([convId, ids]) => {
+        const valid = Array.isArray(ids) ? ids.filter(id => typeof id === 'string' && id) : [];
+        if (valid.length) state.starred.set(convId, new Set(valid));
+      });
+    }
+    if (Array.isArray(raw.recent)) {
+      state.recentNodes = raw.recent
+        .filter(r => r && r.convId && r.nodeId)
+        .map(r => ({ convId: r.convId, nodeId: r.nodeId, ts: Number(r.ts) || 0 }))
+        .sort((a, b) => b.ts - a.ts)
+        .slice(0, maxRecent());
+    }
+  } catch (e) {}
+}
+
+// ------------------------------------------------------------
+// Session files
+// ------------------------------------------------------------
+function buildSessionData() {
+  const starred = {};
+  state.starred.forEach((set, convId) => { if (set.size) starred[convId] = [...set]; });
+  const recent = state.recentNodes.slice(0, maxRecent());
+  const referenced = new Set([...Object.keys(starred), ...recent.map(r => r.convId)]);
+  return {
+    _type: SESSION_FILE_TYPE,
+    _version: 1,
+    app: 'ChatGPT JSON Tree Viewer v8.2.0',
+    savedAt: new Date().toISOString(),
+    activeConvId: state.activeConvId,
+    starred,
+    recent,
+    conversations: allConversationPools()
+      .filter(c => referenced.has(c.id))
+      .map(c => ({ id: c.id, title: c.title || c.data?.title || 'Untitled' })),
+  };
+}
+
+function saveSessionFile() {
+  if (!totalStarCount() && !state.recentNodes.length) {
+    showNotif('Nothing to save yet — star a message or visit a node first.', 'error');
+    return;
+  }
+  const stamp = new Date().toISOString().slice(0, 10);
+  exportJSON(buildSessionData(), `session-${stamp}`);
+  showNotif(`Session saved — ${totalStarCount()} star${totalStarCount() === 1 ? '' : 's'}, ${state.recentNodes.length} visit${state.recentNodes.length === 1 ? '' : 's'}`, 'success');
+}
+
+function openSessionPicker() {
+  document.getElementById('session-input')?.click();
+}
+
+async function handleSessionFile(file) {
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    if (!payload || payload._type !== SESSION_FILE_TYPE) {
+      throw new Error('This is not a viewer session file. Use a file created with Tools → Save Session.');
+    }
+    _pendingSessionPayload = payload;
+
+    let stars = 0;
+    Object.values(payload.starred || {}).forEach(ids => { if (Array.isArray(ids)) stars += ids.length; });
+    const recentCount = Array.isArray(payload.recent) ? payload.recent.length : 0;
+    const loadedIds = new Set(allConversationPools().map(c => c.id));
+    const referenced = new Set([
+      ...Object.keys(payload.starred || {}),
+      ...(Array.isArray(payload.recent) ? payload.recent.map(r => r && r.convId).filter(Boolean) : []),
+    ]);
+    const loadedRefs = [...referenced].filter(id => loadedIds.has(id)).length;
+
+    document.getElementById('session-import-desc').innerHTML =
+      `This session has <strong>${stars}</strong> starred message${stars === 1 ? '' : 's'} and ` +
+      `<strong>${recentCount}</strong> recent visit${recentCount === 1 ? '' : 's'}. ` +
+      `<strong>${loadedRefs}</strong> of ${referenced.size} referenced conversation${referenced.size === 1 ? '' : 's'} ` +
+      `${loadedRefs === 1 ? 'is' : 'are'} currently loaded.`;
+    document.getElementById('session-import-note').textContent = loadedRefs < referenced.size
+      ? 'Entries for conversations that are not loaded will start working once you open the matching conversations.json.'
+      : '';
+    openModal('modal-session-import');
+  } catch (err) {
+    showNotif('Could not load session: ' + (err?.message || err), 'error');
+  }
+}
+
+function applySessionData(payload, mode) {
+  if (!payload) return;
+  if (mode === 'replace') {
+    state.starred.clear();
+    state.recentNodes = [];
+  }
+
+  let addedStars = 0;
+  Object.entries(payload.starred || {}).forEach(([convId, ids]) => {
+    if (!Array.isArray(ids)) return;
+    const set = getStarredSet(convId);
+    ids.forEach(id => {
+      if (typeof id === 'string' && id && !set.has(id)) { set.add(id); addedStars++; }
+    });
+    if (!set.size) state.starred.delete(convId);
+  });
+
+  const seen = new Set(state.recentNodes.map(r => r.convId + '|' + r.nodeId));
+  let addedRecent = 0;
+  (Array.isArray(payload.recent) ? payload.recent : []).forEach(r => {
+    if (!r || !r.convId || !r.nodeId) return;
+    const key = r.convId + '|' + r.nodeId;
+    if (seen.has(key)) return;
+    seen.add(key);
+    state.recentNodes.push({ convId: r.convId, nodeId: r.nodeId, ts: Number(r.ts) || Date.now() });
+    addedRecent++;
+  });
+  state.recentNodes.sort((a, b) => b.ts - a.ts);
+  state.recentNodes = state.recentNodes.slice(0, maxRecent());
+
+  saveHistoryNow();
+  updateRecentTabVisibility();
+  renderStarBadges();
+  updateStarButton();
+  if (isRecentTabActive()) renderRecentPanel();
+
+  _pendingSessionPayload = null;
+  closeModal('modal-session-import');
+  showNotif(
+    `Session ${mode === 'replace' ? 'restored' : 'merged'} — ${addedStars} star${addedStars === 1 ? '' : 's'}, ${addedRecent} visit${addedRecent === 1 ? '' : 's'} added`,
+    'success'
+  );
+}
+
+// ------------------------------------------------------------
+// Graph role filters
+// ------------------------------------------------------------
+function updateRoleFilters(conv) {
+  const bar = document.getElementById('role-filters');
+  if (bar) bar.style.display = conv ? 'flex' : 'none';
+  const counts = { user: 0, assistant: 0, system: 0, other: 0 };
+  const otherRoles = {};
+  if (conv) {
+    Object.values(conv.data.mapping || {}).forEach(node => {
+      if (!node?.message) return;
+      const raw = getNodeRole(node);
+      const bucket = roleBucket(raw);
+      counts[bucket]++;
+      if (bucket === 'other') otherRoles[raw] = (otherRoles[raw] || 0) + 1;
+    });
+  }
+
+  document.querySelectorAll('.role-filter-btn[data-grole]').forEach(btn => {
+    const role = btn.dataset.grole;
+    const on = state.graphRoleFilters[role] !== false;
+    btn.classList.toggle('off', !on);
+    const countEl = btn.querySelector('.role-filter-count');
+    if (countEl) countEl.textContent = counts[role] > 999 ? '999+' : counts[role];
+    const letterEl = btn.querySelector('.rf-letter');
+
+    if (role === 'other' && letterEl) {
+      const top = Object.entries(otherRoles).sort((a, b) => b[1] - a[1])[0];
+      letterEl.textContent = top && top[0] !== 'unknown' ? top[0].charAt(0).toUpperCase() : '?';
+      const topText = top ? ` — most common: ${top[0]} (${top[1]})` : '';
+      btn.title = `${on ? 'Hide' : 'Show'} other-role nodes${topText} · ${counts.other} total`;
+    } else {
+      btn.title = `${on ? 'Hide' : 'Show'} ${role} nodes · ${counts[role]} total`;
+    }
+  });
+
+  const allBtn = document.getElementById('role-filter-all');
+  if (allBtn) {
+    const roles = ['user', 'assistant', 'system', 'other'];
+    const allOn = roles.every(r => state.graphRoleFilters[r] !== false);
+    const allOff = roles.every(r => state.graphRoleFilters[r] === false);
+    allBtn.classList.toggle('off', !allOn);
+    allBtn.title = allOn
+      ? 'Hide every role type — all roles are currently shown'
+      : allOff
+        ? 'Show every role type — all roles are currently hidden'
+        : 'Show every role type — some roles are currently hidden';
+  }
+}
+
+// Search-result role filters
+function syncSearchRoleButtons() {
+  const all = ['user', 'assistant', 'system', 'other'];
+  document.querySelectorAll('.search-role-btn').forEach(btn => {
+    const role = btn.dataset.srole;
+    if (role === 'all') btn.classList.toggle('active', all.every(r => state.searchRoleFilters.has(r)));
+    else btn.classList.toggle('active', state.searchRoleFilters.has(role));
+  });
+}
+
+function toggleSearchRole(role) {
+  const all = ['user', 'assistant', 'system', 'other'];
+  if (role === 'all') {
+    all.forEach(r => state.searchRoleFilters.add(r));
+  } else if (state.searchRoleFilters.has(role)) {
+    // Keep at least one role enabled so the results never become empty by accident.
+    if (state.searchRoleFilters.size === 1) { showNotif('Keep at least one role enabled'); return; }
+    state.searchRoleFilters.delete(role);
+  } else {
+    state.searchRoleFilters.add(role);
+  }
+  syncSearchRoleButtons();
+  if (state.searchQuery.trim()) runSearch(state.searchQuery);
+}
+
+// ============================================================
 // GRAPH LAYOUT & RENDERING
 // ============================================================
 let simulation = null;
@@ -3026,7 +3758,8 @@ function buildTreeData(conv) {
 
     const hidden =
       (!state.settings.showSystem && role === 'system') ||
-      (!state.settings.showOther && role !== 'user' && role !== 'assistant' && role !== 'system');
+      (!state.settings.showOther && role !== 'user' && role !== 'assistant' && role !== 'system') ||
+      state.graphRoleFilters[roleBucket(role)] === false;
 
     if (hidden) {
       // Return all children in place of this node
@@ -3059,13 +3792,18 @@ function renderGraph(conv) {
 
   if (!conv) {
     document.getElementById('empty-state').style.display = '';
+    updateRoleFilters(null);
     updateMinimap();
     return;
   }
   document.getElementById('empty-state').style.display = 'none';
+  // Refresh the role-filter buttons before building the tree: hiding every
+  // role makes buildTreeData() return null, and the bar must still show that
+  // all roles are off.
+  updateRoleFilters(conv);
 
   const treeData = buildTreeData(conv);
-  if (!treeData) return;
+  if (!treeData) { updateMinimap(); return; }
 
   const W = document.getElementById('graph-area').offsetWidth;
   const H = document.getElementById('graph-area').offsetHeight;
@@ -3179,8 +3917,10 @@ function renderGraph(conv) {
   zoom = d3.zoom()
     .scaleExtent([0.05, 4])
     .on('zoom', (event) => {
-      root.attr('transform', event.transform);
-      state.transform = event.transform;
+      const t = event.transform;
+      if (!t || !Number.isFinite(t.k) || !Number.isFinite(t.x) || !Number.isFinite(t.y)) return;
+      root.attr('transform', t);
+      state.transform = t;
       updateMinimapViewport();
     });
 
@@ -3190,6 +3930,7 @@ function renderGraph(conv) {
   fitGraph();
   updateNodeHighlights();
   updateMinimap();
+  renderStarBadges();
 }
 
 function linkPath(d) {
@@ -3291,6 +4032,10 @@ function collectSubtree(nodeId) {
 function fitGraph() {
   const area = document.getElementById('graph-area');
   const W = area.offsetWidth, H = area.offsetHeight;
+  // The graph lives in a panel that can be hidden (mobile layout, collapsed
+  // view). Fitting while it has no size would produce a NaN zoom transform, so
+  // wait until it is visible — the mobile switcher calls fitGraph() again.
+  if (!W || !H) return;
   const positions = Array.from(state.nodePositions.values());
   if (!positions.length) return;
   const xs = positions.map(p => p.x);
@@ -3331,6 +4076,8 @@ function selectNode(nodeId) {
   showNodeContent(nodeId);
   showBranchContent(nodeId);
   updateBranchIndex();
+  updateStarButton();
+  recordVisit(state.activeConvId, nodeId);
 }
 
 function getAncestors(nodeId) {
@@ -3952,6 +4699,8 @@ function scrollToNode(nodeId, zoomIn = false) {
   if (!pos) return;
   const area = document.getElementById('graph-area');
   const W = area.offsetWidth, H = area.offsetHeight;
+  // Nothing to centre on while the graph panel is hidden (mobile layout).
+  if (!W || !H) return;
   const targetScale = zoomIn ? Math.max(state.transform.k, 1.4) : state.transform.k;
   const t = d3.zoomIdentity
     .translate(W / 2 - targetScale * pos.x, H / 2 - targetScale * pos.y)
@@ -4032,10 +4781,14 @@ function runSearch(query) {
     panel.style.display = 'none';
     resultsList.innerHTML = '';
     state.searchCollapsedConvs.clear();
+    document.getElementById('sidebar-left').classList.remove('search-mode');
     renderConvList();
     updateNodeHighlights();
     return;
   }
+
+  document.getElementById('sidebar-left').classList.add('search-mode');
+  syncSearchRoleButtons();
 
   const q = query.toLowerCase();
   const convsToSearch = state.searchScope === 'all'
@@ -4049,6 +4802,7 @@ function runSearch(query) {
     const matches = new Set();
     Object.entries(conv.data.mapping).forEach(([id, node]) => {
       if (!node.message) return;
+      if (!state.searchRoleFilters.has(roleBucket(getNodeRole(node)))) return;
       const text = getNodeText(node).toLowerCase();
       if (text.includes(q)) {
         matches.add(id);
@@ -4168,7 +4922,11 @@ function runSearch(query) {
     });
   }
 
-  panel.style.display = totalMatches > 0 ? 'flex' : 'none';
+  if (!totalMatches) {
+    resultsList.innerHTML = `<div class="search-empty">No messages match this search with the selected roles.${state.searchRoleFilters.size < 4 ? '<br>Try enabling more role filters above.' : ''}</div>`;
+  }
+
+  panel.style.display = 'flex';
 
   renderConvList();
   updateNodeHighlights();
@@ -4330,6 +5088,7 @@ function purgeFileRecord(rec, silent) {
     document.getElementById('sidebar-search').value = '';
     document.getElementById('search-results-panel').style.display = 'none';
     document.getElementById('search-results-list').innerHTML = '';
+    document.getElementById('sidebar-left').classList.remove('search-mode');
     document.getElementById('node-empty').style.display = '';
     document.getElementById('node-view').style.display = 'none';
     document.getElementById('branch-empty').style.display = '';
@@ -4916,7 +5675,7 @@ function _dbBuildConversation(sess, msgs, partByMsg, includeTools = true) {
   };
 }
 
-function loadConversation(convId, preserveSearch = false) {
+function loadConversation(convId, preserveSearch = false, preferredNodeId = null) {
   state.activeConvId = convId;
   state.selectedNodeId = null;
 
@@ -4925,28 +5684,45 @@ function loadConversation(convId, preserveSearch = false) {
     document.getElementById('sidebar-search').value = '';
     document.getElementById('search-results-panel').style.display = 'none';
     document.getElementById('search-results-list').innerHTML = '';
+    document.getElementById('sidebar-left').classList.remove('search-mode');
     state.searchMatches.clear();
     state.searchCollapsedConvs.clear();
   }
 
   const conv = state.conversations.find(c => c.id === convId);
+
+  // Jumping to a specific message (search / history): make sure its role is not
+  // filtered out, otherwise the node would not exist in the graph to centre on.
+  if (preferredNodeId && conv?.data?.mapping?.[preferredNodeId]) {
+    const prefNode = conv.data.mapping[preferredNodeId];
+    const prefRole = getNodeRole(prefNode);
+    const bucket = roleBucket(prefRole);
+    if (state.graphRoleFilters[bucket] === false) state.graphRoleFilters[bucket] = true;
+    if (bucket === 'system' && !state.settings.showSystem) state.settings.showSystem = true;
+    if (bucket === 'other' && !state.settings.showOther) state.settings.showOther = true;
+  }
+
   updateTopbarTitle(conv?.title || conv?.data?.title || null);
   renderConvList();
   renderGraph(conv);
   tagLinks();
   setTimeout(() => { updateMinimap(); if (preserveSearch) updateNodeHighlights(); }, 100);
 
-  // Auto-select the most recent message node so the Selected Node and Branch
-  // panels show content (and the graph highlights it) immediately.
-  const latestId = getLatestMessageNodeId(conv);
-  if (latestId) {
-    setTimeout(() => { selectNode(latestId); scrollToNode(latestId, true); }, 60);
-  }
-
   document.getElementById('node-empty').style.display = '';
   document.getElementById('node-view').style.display = 'none';
   document.getElementById('branch-empty').style.display = '';
   document.getElementById('branch-view').style.display = 'none';
+
+  // Auto-select the newest message that is actually visible in the graph, so
+  // clicking a conversation immediately lands on its latest message.
+  const targetId = preferredNodeId || getNewestVisibleNodeId(conv);
+  if (targetId) {
+    activatePanelTab('node');
+    selectNode(targetId);
+    // renderGraph() runs a 500ms fit transition; wait for it to finish before
+    // centring so the two zoom animations do not fight each other.
+    setTimeout(() => scrollToNode(targetId, true), 560);
+  }
 }
 
 function toMillis(t) {
@@ -4995,6 +5771,29 @@ function getLatestMessageNodeId(conv) {
   });
   // No usable timestamps (e.g. Markdown docs): use the last node in thread order
   return bestId || lastId;
+}
+
+// A node is visible in the graph only when neither the global settings nor the
+// per-role graph filter buttons hide its role.
+function isNodeVisibleInGraph(node) {
+  if (!node || !node.message) return false;
+  const role = getNodeRole(node);
+  if (!state.settings.showSystem && role === 'system') return false;
+  if (!state.settings.showOther && role !== 'user' && role !== 'assistant' && role !== 'system') return false;
+  return state.graphRoleFilters[roleBucket(role)] !== false;
+}
+
+function getNewestVisibleNodeId(conv) {
+  const mapping = conv?.data?.mapping || {};
+  let bestId = null, bestTime = -1, lastId = null;
+  Object.values(mapping).forEach(n => {
+    if (!n || !n.message || !isNodeVisibleInGraph(n)) return;
+    lastId = n.id;
+    const ms = toMillis(n.message.create_time);
+    if (ms > bestTime) { bestTime = ms; bestId = n.id; }
+  });
+  if (bestId || lastId) return bestId || lastId;
+  return getLatestMessageNodeId(conv);
 }
 
 function getConvSortValue(conv, field) {
@@ -5203,6 +6002,8 @@ function showContextMenu(e, convId, nodeId) {
   const cm = document.getElementById('context-menu');
   cm.className = ctxMode === 'node' ? 'node-mode' : '';
   document.getElementById('ctx-delete-label').textContent = ctxMode === 'node' ? 'Delete Node' : 'Delete Conv';
+  const starLabel = document.getElementById('ctx-node-star-label');
+  if (starLabel) starLabel.textContent = ctxNodeId && isNodeStarred(convId, ctxNodeId) ? 'Unstar Node' : 'Star Node';
   // Show Restore All only when there are hidden conversations
   const restoreBtn = document.getElementById('ctx-restore-all');
   restoreBtn.style.display = (ctxMode === 'conv' && state.hiddenConversations.length > 0) ? '' : 'none';
@@ -5282,6 +6083,7 @@ document.getElementById('ctx-start-over').addEventListener('click', () => {
   document.getElementById('sidebar-search').value = '';
   document.getElementById('search-results-panel').style.display = 'none';
   document.getElementById('search-results-list').innerHTML = '';
+  document.getElementById('sidebar-left').classList.remove('search-mode');
   document.getElementById('node-empty').style.display = '';
   document.getElementById('node-view').style.display = 'none';
   document.getElementById('branch-empty').style.display = '';
@@ -5309,6 +6111,10 @@ document.getElementById('ctx-node-copy').addEventListener('click', () => {
 });
 document.getElementById('ctx-node-select').addEventListener('click', () => {
   if (ctxNodeId) { selectNode(ctxNodeId); scrollToNode(ctxNodeId); }
+  hideContextMenu();
+});
+document.getElementById('ctx-node-star').addEventListener('click', () => {
+  if (ctxNodeId) toggleStar(ctxConvId || state.activeConvId, ctxNodeId);
   hideContextMenu();
 });
 document.getElementById('ctx-delete').addEventListener('click', () => {
@@ -5352,7 +6158,7 @@ function updateTopbarTitle(title) {
   if (title) {
     document.title = title + ' — ChatGPT JSON Tree Viewer';
   } else {
-    document.title = 'ChatGPT JSON Tree Viewer v7.9.0';
+    document.title = 'ChatGPT JSON Tree Viewer v8.2.0';
   }
 }
 
@@ -5402,6 +6208,7 @@ function closeConversation() {
   document.getElementById('sidebar-search').value = '';
   document.getElementById('search-results-panel').style.display = 'none';
   document.getElementById('search-results-list').innerHTML = '';
+  document.getElementById('sidebar-left').classList.remove('search-mode');
   document.getElementById('node-empty').style.display = '';
   document.getElementById('node-view').style.display = 'none';
   document.getElementById('branch-empty').style.display = '';
@@ -5673,6 +6480,31 @@ function buildSettings() {
       </div>
     </div>
     <div class="setting-group">
+      <h3>History &amp; Stars</h3>
+      <div class="setting-row">
+        <div><div class="setting-label">Keep recent visits</div><div class="setting-desc">Record visited nodes and show the Recent tab</div></div>
+        <div class="toggle${state.settings.recentNodesEnabled ? ' on' : ''}" data-setting="recentNodesEnabled" title="Record recently visited messages and show the Recent tab in the right panel"></div>
+      </div>
+      <div class="setting-row" id="setting-row-recentNodes" style="${!state.settings.recentNodesEnabled ? 'opacity:0.4;pointer-events:none;' : ''}">
+        <div><div class="setting-label">Recent visits to keep</div><div class="setting-desc">How many entries the Recent tab remembers (5–100)</div></div>
+        <div class="setting-combo">
+          <input type="number" class="history-num" min="5" max="100" step="5" value="${maxRecent()}" title="How many recently visited messages to remember (5–100)" style="background:var(--bg-tertiary);border:1px solid var(--border-color);border-radius:var(--radius-sm);padding:5px 8px;color:var(--text-primary);font-size:12px;width:70px;text-align:right;">
+          <span class="range-val" id="range-val-recentNodesMax">${maxRecent()}</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Remember in this browser</div><div class="setting-desc">Auto-save stars and visits to localStorage, so they survive a reload</div></div>
+        <div class="toggle${state.settings.rememberHistory ? ' on' : ''}" data-setting="rememberHistory" title="Automatically save stars and recent visits in this browser's local storage"></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">Session file</div><div class="setting-desc">Export stars and visits to move them to another browser or keep a backup</div></div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="topbar-btn" id="settings-save-session" title="Save your starred messages and recent visits as a session file">Save</button>
+          <button class="topbar-btn" id="settings-load-session" title="Restore starred messages and recent visits from a saved session file">Load</button>
+        </div>
+      </div>
+    </div>
+    <div class="setting-group">
       <h3>Tooltips</h3>
       <div class="setting-row">
         <div><div class="setting-label">Show Tooltips</div><div class="setting-desc">Preview message content on hover</div></div>
@@ -5762,6 +6594,13 @@ function buildSettings() {
         const conv = getActiveConv();
         if (conv) renderGraph(conv);
       }
+      if (key === 'recentNodesEnabled') {
+        const row = document.getElementById('setting-row-recentNodes');
+        if (row) row.style.cssText = state.settings.recentNodesEnabled ? '' : 'opacity:0.4;pointer-events:none;';
+        updateRecentTabVisibility();
+        if (isRecentTabActive()) renderRecentPanel();
+      }
+      if (key === 'rememberHistory') saveHistoryNow();
     });
   });
 
@@ -5812,12 +6651,31 @@ function buildSettings() {
       if (hint) hint.textContent = val === 0 ? 'Single file always' : val + ' per chunk';
     });
   }
+
+  // Recent-visit limit
+  const recentMaxInput = body.querySelector('.history-num');
+  if (recentMaxInput) {
+    recentMaxInput.addEventListener('change', function() {
+      const val = Math.max(5, Math.min(100, Math.round((parseInt(this.value) || 25) / 5) * 5));
+      this.value = val;
+      state.settings.recentNodesMax = val;
+      const label = document.getElementById('range-val-recentNodesMax');
+      if (label) label.textContent = val;
+      state.recentNodes = state.recentNodes.slice(0, maxRecent());
+      localStorage.setItem('mv-settings', JSON.stringify(state.settings));
+      scheduleHistorySave();
+      if (isRecentTabActive()) renderRecentPanel();
+    });
+  }
+
+  body.querySelector('#settings-save-session')?.addEventListener('click', saveSessionFile);
+  body.querySelector('#settings-load-session')?.addEventListener('click', openSessionPicker);
 }
 
 // Help content
 const helpTopics = [
   { id: 'overview', label: '🗂 Overview', content: `
-    <h2>ChatGPT JSON Tree Viewer v7.9.0</h2>
+    <h2>ChatGPT JSON Tree Viewer v8.2.0</h2>
     <p>A client-side conversation tree visualizer for AI chat exports. Load JSON files from any major AI platform and explore the branching structure of your conversations as an interactive node graph. <strong>All processing happens entirely in your browser</strong> — no data is ever sent to a server.</p>
     <h3>Supported Formats</h3>
     <table>
@@ -5896,7 +6754,7 @@ const helpTopics = [
       <li><strong>Message count</strong> — total nodes with messages</li>
       <li><strong>Yellow match badge</strong> — count of search hits (only shown during active search)</li>
     </ul>
-    <p>Click any conversation to load it into the graph. The active conversation is highlighted with a teal border.</p>
+    <p>Click any conversation to load it into the graph. The active conversation is highlighted with a teal border. Loading a conversation also selects and centres its <strong>newest visible message</strong> (respecting any active role filters), so the right panel is never left empty.</p>
     <h3>Sorting During Search</h3>
     <p>When a search query is active, conversations containing matches float to the top of the conversation list. Within each group, the selected <strong>Chats</strong> sort still applies. The <strong>Results</strong> sort controls independently sort the message search results by the same fields.</p>
     <h3>Right-Click Context Menu</h3>
@@ -5953,11 +6811,20 @@ const helpTopics = [
       <li><strong>Dimmed (35% opacity)</strong> — all nodes not on the selected path</li>
       <li><strong style="color:#fbbf24">Yellow glow</strong> — nodes matching an active search query (overrides dimming)</li>
     </ul>
+    <h3>Role Filters</h3>
+    <p>The round buttons in the top-left of the graph hide or show nodes by role:</p>
+    <ul>
+      <li><strong>U / A / S</strong> — user, assistant and system nodes. Each button shows a count badge of how many nodes it affects</li>
+      <li><strong>?</strong> — other roles (tools, unknown roles). The letter is replaced by the first letter of the <em>most common</em> other role in this conversation, and the tooltip names it</li>
+      <li><strong>All</strong> — toggles every role at once: when all roles are visible it hides them <em>all</em>; when any role is hidden it shows them all. The button dims while anything is hidden</li>
+    </ul>
+    <p>A filtered-out node is skipped and its children move up, so the remaining tree stays connected. These filters are independent of the <strong>Show System / Show Other</strong> settings.</p>
     <h3>Minimap</h3>
     <p>A small canvas overview appears in the bottom-right corner showing the full graph with a teal rectangle indicating the current viewport.</p>
     <ul>
+      <li><strong>Drag</strong> inside the minimap to move the graph continuously — the viewport follows your pointer in real time</li>
       <li><strong>Click</strong> the minimap to jump the viewport to that position</li>
-      <li><strong>Ctrl + drag</strong> (or ⌘ + drag on Mac) to reposition the minimap anywhere in the graph area</li>
+      <li><strong>Ctrl + drag</strong> (or ⌘ + drag on Mac) to reposition the minimap widget itself anywhere in the graph area</li>
       <li>The <strong>map icon button</strong> in the bottom-left controls hides/shows the minimap with a fade animation</li>
     </ul>
     <h3>Graph Controls (Bottom-Left)</h3>
@@ -5982,6 +6849,7 @@ const helpTopics = [
     <p>Right-clicking any node opens a context menu. It always repositions itself to avoid going off-screen.</p>
     <ul>
       <li><strong>Copy Message</strong> — copies the node's raw text content to the clipboard</li>
+      <li><strong>Star Node</strong> / <strong>Unstar Node</strong> — adds or removes the message from the <strong>Starred</strong> list in the right panel's Recent tab</li>
       <li><strong>Select & View</strong> — selects the node, scrolls the graph to center on it, and switches to the Selected Node panel</li>
       <li><strong>Delete Node</strong> — removes the node from the mapping and unlinks it from its parent. Its children become orphaned and disappear. This is permanent within the session.</li>
     </ul>
@@ -6012,6 +6880,7 @@ const helpTopics = [
       <li><strong>Pop-out (external link icon)</strong> — opens this message in a new browser tab using the same layout and settings bar as the Branch pop-out: conversation title as the heading, with the role, model and timestamp underneath</li>
       <li><strong>PDF</strong> — opens a clean print-ready window with proper typography and 8.5×11 letter page layout. Respects the active view mode (Rendered/Markdown/HTML/JSON) and any active filters. The browser print dialog opens automatically — choose <em>Save as PDF</em> to save the file.</li>
       <li><strong>M</strong> — toggles the metadata bar below the content (shows timestamp, model, parent node ID, child count)</li>
+      <li><strong>☆ / ★</strong> — stars the current message (or removes its star). Starred messages appear in the Recent tab and show a small gold star on the graph</li>
       <li><strong>H</strong> — toggles search term highlighting. When on (teal), every occurrence of the active search query is highlighted in yellow within the content. Synced with the Branch panel's H button</li>
     </ul>
     <h3>Search Highlighting</h3>
@@ -6063,7 +6932,7 @@ const helpTopics = [
         Markdown → <code>.md</code> with <code>---</code> separators<br>
         HTML → raw rendered HTML per message<br>
         JSON → structured <code>.json</code> array</li>
-      <li><strong>Pop-out</strong> — opens the full thread in a new browser tab with role-colored shading, timestamps, per-message Copy controls, and a settings bar at the top: theme (Main app / Light / Dark / System), per-message copy mode (dropdown, rendered, HTML, MD, or plain text only), timestamp toggle, and optional checkboxes for bulk-copying selected messages</li>
+      <li><strong>Pop-out</strong> — opens the full thread in a new browser tab with role-colored shading, timestamps, per-message Copy controls, and a settings bar at the top: theme (Main app / Light / Dark / System), per-message copy mode (dropdown, rendered, HTML, MD, or plain text only), timestamp toggle, and optional checkboxes for bulk-copying selected messages. The role / timestamp / Copy row stays pinned to the top of each message card while you scroll, then hands off to the next message.</li>
       <li><strong>GPT↓</strong> — downloads the current conversation as an OpenAI-compatible <code>conversations.json</code> file (single conversation)</li>
       <li><strong>H</strong> — toggles search highlighting (synced with the Selected Node panel)</li>
     </ul>
@@ -6077,8 +6946,10 @@ const helpTopics = [
       <li><strong>Current</strong> — searches only the active conversation</li>
       <li><strong>All</strong> — searches all loaded conversations simultaneously</li>
     </ul>
+    <h3>Role Filters</h3>
+    <p>The <strong>Show:</strong> row above the results has <strong>User / Assistant / System / Other</strong> buttons plus <strong>All</strong>. Click a role to include or exclude it from the search; clicking <strong>All</strong> enables every role. At least one role always stays enabled, and the search re-runs immediately when you toggle one.</p>
     <h3>Search Results Panel</h3>
-    <p>A results panel appears above the conversation list showing every matching message. Each result card contains:</p>
+    <p>A results panel appears above the conversation list showing every matching message. It stays open whenever the search box has text and scrolls independently of the conversation list, so long result lists are never cut off. If the role filters exclude everything, the panel says so instead of disappearing. Each result card contains:</p>
     <ul>
       <li><strong>Role label</strong> — color-coded (blue/green/gray/purple)</li>
       <li><strong>↳N depth</strong> — how deep in the tree the node sits (teal badge)</li>
@@ -6110,7 +6981,7 @@ const helpTopics = [
     <ul>
       <li><strong>Copy</strong> — copies content to clipboard in the active view mode</li>
       <li><strong>Export</strong> — saves as <code>.md</code> (Rendered or Markdown mode), <code>.html</code> (HTML mode), or <code>.json</code> (JSON mode)</li>
-      <li><strong>Pop-out</strong> — opens this message in a new tab with the same branded layout as the Branch pop-out: conversation title, a role / model / timestamp line, and the theme and view controls</li>
+      <li><strong>Pop-out</strong> — opens this message in a new tab with the same branded layout as the Branch pop-out: conversation title, a role / model / timestamp line, and the theme and view controls. The role, timestamp and Copy row stays pinned to the top of the message card while you scroll.</li>
       <li><strong>PDF</strong> — same as above. Exports only the currently visible (filtered) messages in the active view mode. Code blocks, tables, and headings are properly formatted.</li>
     </ul>
     <h3>Branch Panel</h3>
@@ -6124,7 +6995,7 @@ const helpTopics = [
           <li><strong>JSON</strong> → <code>.json</code> array of <code>{id, role, content, create_time, model}</code> objects</li>
         </ul>
       </li>
-      <li><strong>Pop-out</strong> — opens in a new tab with role-colored shading, timestamp headers, and a per-message Copy button that always matches the active view. A settings bar at the top controls the popout theme (Main app / Light / Dark / System), the view mode (Rendered / Markdown / HTML / JSON — switchable in place, no need to re-open the popout), the rendered-mode copy style (full dropdown, or a single one-click Rendered / HTML / MD / JSON / Plain text button), timestamp visibility, and checkboxes for bulk-copying the selected messages</li>
+      <li><strong>Pop-out</strong> — opens in a new tab with role-colored shading, timestamp headers, and a per-message Copy button that always matches the active view. The role / timestamp / Copy row sticks to the top of each message card while you scroll, then hands off to the next message; printing returns it to the normal flow. A settings bar at the top controls the popout theme (Main app / Light / Dark / System), the view mode (Rendered / Markdown / HTML / JSON — switchable in place, no need to re-open the popout), the rendered-mode copy style (full dropdown, or a single one-click Rendered / HTML / MD / JSON / Plain text button), timestamp visibility, and checkboxes for bulk-copying the selected messages</li>
       <li><strong>GPT↓</strong> — downloads the current conversation as a single-item OpenAI <code>conversations.json</code> array</li>
     </ul>
     <h3>Project Export (Top Bar)</h3>
@@ -6160,6 +7031,13 @@ const helpTopics = [
     <ul>
       <li><strong>Show System Nodes</strong> — when off, gray dashed system prompt nodes are hidden from the graph entirely (their children are still rendered)</li>
       <li><strong>Show Other Nodes</strong> — when off, purple unknown-role nodes are hidden</li>
+    </ul>
+    <h3>History &amp; Stars</h3>
+    <ul>
+      <li><strong>Keep recent visits</strong> — records every message you select and shows the <strong>Recent</strong> tab in the right panel</li>
+      <li><strong>Recent visits to keep</strong> — how many entries the list remembers (5–100, default 25)</li>
+      <li><strong>Remember in this browser</strong> — auto-saves stars and visits to <code>localStorage</code> so they survive a reload. Turn it off to keep them only for the current session</li>
+      <li><strong>Session file / Save &amp; Load</strong> — exports stars and visits as a <code>session-YYYY-MM-DD.json</code> file and restores one later (asking whether to merge or replace)</li>
     </ul>
     <h3>Tooltips</h3>
     <ul>
@@ -6235,7 +7113,7 @@ const helpTopics = [
     <ul>
       <li><strong>Left sidebar</strong> — search bar + conversations list. Min width 160px, max 400px</li>
       <li><strong>Center graph area</strong> — the interactive D3 tree visualization with grid background</li>
-      <li><strong>Right panel</strong> — Selected Node and Branch view tabs</li>
+      <li><strong>Right panel</strong> — Selected Node, Branch and Recent tabs</li>
     </ul>
     <h3>Resizing Panels</h3>
     <p>Drag the thin vertical dividers (resize handles) between the panels to resize them. The divider highlights teal when hovered. The minimap and graph viewport update in real time as you resize.</p>
@@ -6243,11 +7121,42 @@ const helpTopics = [
     <ul>
       <li><strong>Selected Node</strong> — shows the content of the currently clicked node</li>
       <li><strong>Branch</strong> — shows the full path from root to the selected node</li>
+      <li><strong>Recent</strong> — starred messages plus recently visited nodes, newest first. Hidden when <strong>Keep recent visits</strong> is turned off in Settings</li>
     </ul>
     <h3>Branch Index (Bottom of Right Panel)</h3>
     <p>A collapsible panel at the bottom of the right panel listing all messages in the current branch. Click the <strong>Branch Index</strong> header to expand/collapse it. Use the filter input to search within the index. Clicking any entry selects that node and scrolls the graph to it.</p>
     <h3>Print Mode</h3>
     <p>When printing (<kbd>Ctrl+P</kbd> / <kbd>⌘P</kbd>), the layout switches to show only the right panel content, hiding the graph, sidebar, and toolbars.</p>
+  `},
+  { id: 'history', label: '⭐ Starred & Sessions', content: `
+    <h2>Starred Messages &amp; Sessions</h2>
+    <h3>Starring a Message</h3>
+    <ul>
+      <li>Select a node, then click the <strong>☆</strong> button in the Selected Node toolbar — it becomes <strong>★</strong> when starred</li>
+      <li>Or right-click any graph node and choose <strong>Star Node</strong> / <strong>Unstar Node</strong></li>
+      <li>Starred nodes show a small gold star on the graph</li>
+    </ul>
+    <h3>Recent Tab</h3>
+    <p>The right panel's <strong>Recent</strong> tab lists:</p>
+    <ul>
+      <li><strong>★ Starred</strong> — every starred message, with the open conversation first</li>
+      <li><strong>Recent visits</strong> — the messages you selected most recently, newest first, with a relative time (“just now”, “12m ago”, “3h ago”)</li>
+    </ul>
+    <p>Click an entry to jump back to it: the app opens the right conversation if needed and selects and centres the message. Each entry also has a small ☆ button to add or remove its star. Use the <strong>⌫</strong> button in the tab toolbar to clear the visit list (stars are kept).</p>
+    <p>If an entry belongs to a conversation that is not loaded, it stays in the list and is marked as missing. Load the matching <code>conversations.json</code> (or re-import the session) and it works again.</p>
+    <h3>Saving and Loading a Session</h3>
+    <ul>
+      <li><strong>Tools → Save Session</strong>, the save icon in the Recent tab toolbar, or <strong>Settings → History &amp; Stars → Save</strong> downloads a <code>session-YYYY-MM-DD.json</code> file containing your stars and visit history</li>
+      <li><strong>Tools → Load Session</strong>, the import icon in the Recent tab toolbar, or the matching Settings button opens a picker and reads that file back</li>
+      <li>Because the same conversation IDs can also exist in another browser, importing asks you to choose:
+        <ul>
+          <li><strong>Merge with current history</strong> — adds anything new and keeps what you already have</li>
+          <li><strong>Replace current history</strong> — discards current stars/visits and uses the file's contents</li>
+        </ul>
+      </li>
+      <li>Stars and visits are also saved automatically in this browser (switchable under <strong>Settings → History &amp; Stars → Remember in this browser</strong>), so a reload keeps them without a session file</li>
+    </ul>
+    <div class="tip"><strong>Tip:</strong> Sessions store only conversation IDs, node IDs and titles — never message text — so the file is small and safe to keep next to your exports.</div>
   `},
   { id: 'keyboard', label: '⌨ Keyboard & Mouse', content: `
     <h2>Keyboard & Mouse Reference</h2>
@@ -6261,7 +7170,7 @@ const helpTopics = [
     <table>
       <tr><th>Action</th><th>Effect</th></tr>
       <tr><td>Left click on node</td><td>Select node, update right panel</td></tr>
-      <tr><td>Right click on node</td><td>Open node context menu (Copy, Select & View, Delete)</td></tr>
+      <tr><td>Right click on node</td><td>Open node context menu (Copy, Star Node, Select &amp; View, Delete)</td></tr>
       <tr><td>Drag on node</td><td>Move node + entire subtree</td></tr>
       <tr><td>Shift + drag on node</td><td>Move only that node</td></tr>
       <tr><td>Scroll wheel</td><td>Zoom in / out</td></tr>
@@ -6270,15 +7179,17 @@ const helpTopics = [
     <h3>Mouse — Sidebar</h3>
     <table>
       <tr><th>Action</th><th>Effect</th></tr>
-      <tr><td>Left click on conversation</td><td>Load that conversation into the graph</td></tr>
+      <tr><td>Left click on conversation</td><td>Load that conversation and select/centre its newest visible message</td></tr>
       <tr><td>Right click on conversation</td><td>Open conversation context menu</td></tr>
       <tr><td>Left click on search result</td><td>Jump to that node (zooms in)</td></tr>
+      <tr><td>Left click on a Recent entry</td><td>Open its conversation (if needed) and jump to that message</td></tr>
     </table>
     <h3>Mouse — Minimap</h3>
     <table>
       <tr><th>Action</th><th>Effect</th></tr>
+      <tr><td>Drag</td><td>Move the graph viewport continuously</td></tr>
       <tr><td>Left click</td><td>Pan the graph viewport to that position</td></tr>
-      <tr><td>Ctrl + drag (⌘ on Mac)</td><td>Reposition the minimap within the graph area</td></tr>
+      <tr><td>Ctrl + drag (⌘ on Mac)</td><td>Reposition the minimap widget within the graph area</td></tr>
     </table>
   `},
   { id: 'formats-detail', label: '🔧 Format Details', content: `
@@ -6315,7 +7226,7 @@ const helpTopics = [
     <h3>Your conversations never leave the browser</h3>
     <ul>
       <li>Files you load are parsed, rendered and kept entirely in this page. The app's own code contains no <code>fetch</code>, <code>XMLHttpRequest</code>, <code>WebSocket</code> or <code>sendBeacon</code> calls, so no message text is ever uploaded.</li>
-      <li>The only browser storage used is <code>localStorage</code>: theme choice, custom colours, panel layout and settings. Clearing site data removes all of it.</li>
+      <li>The only browser storage used is <code>localStorage</code>: theme choice, custom colours, panel layout, settings, and (when enabled) your stars and recent visit history. Clearing site data removes all of it. Session files are written by your browser's normal download flow and contain only your own stars/visit IDs plus conversation titles.</li>
       <li>Copy buttons go to the system clipboard; nothing is written anywhere else.</li>
     </ul>
     <h3>What is downloaded from the internet</h3>
@@ -6391,7 +7302,7 @@ const helpTopics = [
 // ============================================================
 // CHANGELOG COPY / VIEW HELPERS
 // ============================================================
-// "scope" is either 'master' (the whole log) or a version string ('v7.9.0').
+// "scope" is either 'master' (the whole log) or a version string ('v8.0.0').
 // Every scope can be copied as Rendered (rich, formatting preserved),
 // Markdown (editable source) or HTML (raw markup) — and the whole log can also
 // be *viewed* as Markdown or HTML via the View selector in the toolbar.
@@ -6436,35 +7347,82 @@ function clTitle(v) {
   return `${v.version} — ${v.date}${v.latest ? ' (latest)' : ''}`;
 }
 
+// Canonical order and human labels for changelog item types. Items inside a
+// release are grouped by type so New / Changed / Fixed never interleave.
+const CL_TYPE_ORDER = ['new', 'change', 'fix', 'removed', 'security', 'perf', 'docs', 'other'];
+const CL_TYPE_LABELS = { new: 'New', change: 'Changed', fix: 'Fixed', removed: 'Removed', security: 'Security', perf: 'Performance', docs: 'Docs', other: 'Other' };
+
+function clTypeKey(type) {
+  return CL_TYPE_LABELS[type] ? type : 'other';
+}
+
+function clGroupedItems(v) {
+  const map = new Map();
+  v.items.forEach(item => {
+    const key = clTypeKey(item.type);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(item);
+  });
+  return CL_TYPE_ORDER.filter(t => map.has(t)).map(t => ({ type: t, label: CL_TYPE_LABELS[t], items: map.get(t) }));
+}
+
+function clGroupsHtml(v) {
+  return clGroupedItems(v).map(g => `
+    <div class="cl-group ${g.type}">
+      <div class="cl-group-head">
+        <span class="cl-group-dot"></span>
+        <span class="cl-group-label">${g.label}</span>
+        <span class="cl-group-count">${g.items.length}</span>
+      </div>
+      <ul class="cl-items">${g.items.map(i => `<li class="cl-item ${clTypeKey(i.type)}"><span>${i.text}</span></li>`).join('')}</ul>
+    </div>`).join('');
+}
+
+function clVersionHeaderHtml(v) {
+  return `<div class="cl-header"><span class="cl-tag${v.latest ? ' latest' : ''}">${v.version}</span> <span class="cl-date">${v.date}</span>${v.latest ? ' <span style="font-size:10px;color:var(--accent-teal);font-weight:600">LATEST</span>' : ''}</div>`;
+}
+
+function clVersionMarkdown(v) {
+  const groups = clGroupedItems(v).map(g =>
+    `### ${g.label}\n\n${g.items.map(i => `- ${clHtmlToMarkdown(i.text)}`).join('\n')}`
+  ).join('\n\n');
+  return `## ${clTitle(v)}\n\n${groups}`;
+}
+
+function clVersionPlain(v) {
+  const groups = clGroupedItems(v).map(g =>
+    `  [${g.label}]\n${g.items.map(i => `  • ${clHtmlToText(i.text)}`).join('\n')}`
+  ).join('\n\n');
+  return `${clTitle(v)}\n${groups}`;
+}
+
 function clMarkdown(scope) {
-  const blocks = clScopedVersions(scope).map(v =>
-    `## ${clTitle(v)}\n\n${v.items.map(i => `- **${i.type}** — ${clHtmlToMarkdown(i.text)}`).join('\n')}`
-  );
+  const blocks = clScopedVersions(scope).map(clVersionMarkdown);
   const head = scope === 'master' ? '# ChatGPT JSON Tree Viewer — Changelog\n\n' : '';
   return head + blocks.join('\n\n') + '\n';
 }
 
 function clPlainText(scope) {
-  const blocks = clScopedVersions(scope).map(v =>
-    `${clTitle(v)}\n${v.items.map(i => `  • [${i.type}] ${clHtmlToText(i.text)}`).join('\n')}`
-  );
+  const blocks = clScopedVersions(scope).map(clVersionPlain);
   const head = scope === 'master' ? 'ChatGPT JSON Tree Viewer — Changelog\n\n' : '';
   return head + blocks.join('\n\n') + '\n';
 }
 
-// Raw HTML source, read from the rendered changelog so it always matches
-// exactly what's on screen (the copy buttons themselves are stripped out).
+// Raw HTML source for one release or the whole log. Built from the rendered
+// body (so it matches what is on screen) plus a clean header, and deliberately
+// excludes the sticky bars, view selectors and copy buttons.
 function clHtmlSource(scope) {
-  const host = document.getElementById('cl-rendered');
-  if (!host) return '';
-  let node = scope === 'master' ? host.cloneNode(true) : host.querySelector(`.cl-version[data-cl-version="${scope}"]`);
-  if (!node) return '';
-  if (scope !== 'master') node = node.cloneNode(true);
-  node.querySelectorAll('.cl-copy-group').forEach(g => g.remove());
-  const inner = node.innerHTML.trim();
+  const versions = clScopedVersions(scope);
+  if (!versions.length) return '';
+  const blocks = versions.map(v => {
+    const root = document.querySelector(`.cl-version[data-cl-version="${v.version}"]`);
+    const body = root ? root.querySelector('.cl-entry-body') : null;
+    const inner = (body ? body.innerHTML : clGroupsHtml(v)).trim();
+    return `<div class="cl-version">\n${clVersionHeaderHtml(v)}\n${inner}\n</div>`;
+  });
   return scope === 'master'
-    ? `<div class="changelog">\n${inner}\n</div>`
-    : `<div class="cl-version">\n${inner}\n</div>`;
+    ? `<div class="changelog">\n${blocks.join('\n')}\n</div>`
+    : blocks[0];
 }
 
 function clCopy(scope, kind, btn) {
@@ -6490,6 +7448,45 @@ function clCopy(scope, kind, btn) {
   else rich(clHtmlSource(scope), clPlainText(scope));
 }
 
+function setEntryView(version, kind) {
+  const root = document.querySelector(`.cl-version[data-cl-version="${version}"]`);
+  if (!root) return;
+  const body = root.querySelector('.cl-entry-body');
+  const raw = root.querySelector('.cl-entry-raw');
+  if (!body || !raw) return;
+  if (kind === 'rendered') {
+    raw.textContent = '';
+    raw.style.display = 'none';
+    body.style.display = '';
+    return;
+  }
+  raw.textContent = kind === 'markdown' ? clMarkdown(version) : clHtmlSource(version);
+  body.style.display = 'none';
+  raw.style.display = '';
+}
+
+function toggleChangelogSolo(version) {
+  const host = document.getElementById('cl-rendered');
+  if (!host) return;
+  const root = host.querySelector(`.cl-version[data-cl-version="${version}"]`);
+  if (!root) return;
+  const wasActive = host.classList.contains('cl-solo') && root.classList.contains('cl-solo-active');
+  host.querySelectorAll('.cl-version').forEach(v => {
+    v.classList.remove('cl-solo-active');
+    const btn = v.querySelector('.cl-only-btn');
+    if (btn) { btn.classList.remove('active'); btn.textContent = 'Only'; btn.title = 'Show only this release'; }
+  });
+  if (wasActive) {
+    host.classList.remove('cl-solo');
+    return;
+  }
+  host.classList.add('cl-solo');
+  root.classList.add('cl-solo-active');
+  const btn = root.querySelector('.cl-only-btn');
+  if (btn) { btn.classList.add('active'); btn.textContent = 'Show all'; btn.title = 'Bring every release back into view'; }
+  root.scrollIntoView({ block: 'start' });
+}
+
 function setChangelogView(kind) {
   const rendered = document.getElementById('cl-rendered');
   const raw = document.getElementById('cl-raw');
@@ -6506,8 +7503,8 @@ function setChangelogView(kind) {
   }
   if (hint) {
     hint.textContent = kind === 'rendered'
-      ? 'Copy the whole log here, or use the buttons on any single release below. Rendered keeps formatting, Markdown gives editable source, HTML gives markup.'
-      : `Showing the whole log as raw ${kind === 'markdown' ? 'Markdown' : 'HTML'} source. The Copy buttons above still work — switch View back to Rendered for the per-release copy buttons.`;
+      ? 'This bar copies the whole log. Every release below has its own sticky bar: Only isolates it, View renders it alone (Rendered / Markdown / HTML), Copy grabs the same formats.'
+      : `Showing the whole log as raw ${kind === 'markdown' ? 'Markdown' : 'HTML'} source. The Copy buttons above still work — switch View back to Rendered for the per-release bars.`;
   }
 }
 
@@ -6516,9 +7513,16 @@ function wireChangelogCopy() {
   if (!section || section._clWired) return;
   section._clWired = true;
   section.addEventListener('click', e => {
+    const only = e.target.closest ? e.target.closest('.cl-only-btn') : null;
+    if (only) { toggleChangelogSolo(only.dataset.clOnly); return; }
     const btn = e.target.closest ? e.target.closest('.cl-copy-btn') : null;
     if (!btn) return;
     clCopy(btn.dataset.clScope, btn.dataset.clKind, btn);
+  });
+  section.addEventListener('change', e => {
+    const sel = e.target.closest ? e.target.closest('.cl-entry-view') : null;
+    if (!sel) return;
+    setEntryView(sel.dataset.clEntryView, sel.value);
   });
   const sel = document.getElementById('cl-view-sel');
   if (sel) {
@@ -6540,7 +7544,7 @@ function buildHelp() {
   // Changelog gets a master copy bar (whole log) plus a copy group per release.
   // Every copy control offers Rendered (rich, keeps formatting), Markdown and
   // HTML, and the whole log can also be *viewed* as Markdown or HTML source.
-  const clCopyGroup = (scope, caption) => `<span class="cl-copy-group${scope === 'master' ? '' : ' in-header'}">${
+  const clCopyGroup = (scope, caption) => `<span class="cl-copy-group">${
     caption ? `<span class="cl-copy-caption">${caption}</span>` : ''
   }${
     [['rendered', 'Rendered', 'Copy as formatted rich text — paste it into Word, Docs or an email and it keeps its formatting'],
@@ -6552,29 +7556,41 @@ function buildHelp() {
 
   const changelogHtml = `<div class="cl-intro">
       <h2>Changelog</h2>
-      <p>Every release is listed newest first, with a <strong>LATEST</strong> marker on the current version. Use <strong>View</strong> to read the whole log as formatted text or as raw Markdown / HTML source, and the <strong>Copy</strong> buttons to grab either the <strong>whole log</strong> or <strong>one single release</strong> — in each case as Rendered (rich, formatting preserved), Markdown or HTML.</p>
+      <p>Every release is listed newest first and grouped by type — <strong>New</strong>, <strong>Changed</strong>, <strong>Fixed</strong> — so each version reads as a tidy summary instead of a mixed list. Each release has its own sticky bar: <strong>Only</strong> hides every other release, <strong>View</strong> reads that release on its own as Rendered, Markdown or HTML, and <strong>Copy</strong> grabs the same formats. The bar follows you until the next release.</p>
     </div>
     <div class="cl-toolbar">
       <span class="cl-toolbar-label">View</span>
-      <span class="cl-view-wrap"><select class="cl-view-select" id="cl-view-sel" title="Show the changelog as formatted text, or as raw Markdown / HTML source">
+      <span class="cl-view-wrap"><select class="cl-view-select" id="cl-view-sel" title="Show the whole changelog as formatted text, or as raw Markdown / HTML source">
         <option value="rendered">Rendered</option>
         <option value="markdown">Markdown</option>
         <option value="html">HTML</option>
       </select></span>
       <span class="cl-toolbar-label">Copy</span>
       ${clCopyGroup('master', 'whole log:')}
-      <span class="cl-toolbar-hint" id="cl-toolbar-hint">Copy the whole log here, or use the buttons on any single release below. Rendered keeps formatting, Markdown gives editable source, HTML gives markup.</span>
+      <span class="cl-toolbar-hint" id="cl-toolbar-hint">This bar copies the whole log. Every release below has its own sticky bar: Only isolates it, View renders it alone (Rendered / Markdown / HTML), Copy grabs the same formats.</span>
     </div>
     <div id="cl-rendered">` +
     changelog.map(v => `
     <div class="cl-version" data-cl-version="${v.version}">
-      <div class="cl-header">
+      <div class="cl-entry-bar">
         <span class="cl-tag${v.latest ? ' latest' : ''}">${v.version}</span>
         <span class="cl-date">${v.date}</span>
         ${v.latest ? '<span style="font-size:10px;color:var(--accent-teal);font-weight:600">LATEST</span>' : ''}
-        ${clCopyGroup(v.version)}
+        <span class="cl-entry-spacer"></span>
+        <span class="cl-entry-controls">
+          <button class="cl-only-btn" data-cl-only="${v.version}" title="Show only this release — click again to bring the rest back">Only</button>
+          <span class="cl-entry-caption">View</span>
+          <select class="cl-view-select cl-entry-view" data-cl-entry-view="${v.version}" title="Render this release on its own — switch between formatted text, Markdown source and HTML source">
+            <option value="rendered">Rendered</option>
+            <option value="markdown">Markdown</option>
+            <option value="html">HTML</option>
+          </select>
+          <span class="cl-entry-caption">Copy</span>
+          ${clCopyGroup(v.version)}
+        </span>
       </div>
-      <ul class="cl-items">${v.items.map(i => `<li class="cl-item ${i.type}"><span class="cl-badge">${i.type}</span><span>${i.text}</span></li>`).join('')}</ul>
+      <div class="cl-entry-body">${clGroupsHtml(v)}</div>
+      <pre class="cl-entry-raw" style="display:none" title="This release shown as raw source — use View in its bar to switch back"></pre>
     </div>
   `).join('') + `</div>
     <pre class="cl-raw" id="cl-raw" style="display:none" title="Raw changelog source — switch View to Rendered to go back to the formatted version"></pre>`;
@@ -6851,6 +7867,7 @@ document.getElementById('load-mode-replace').addEventListener('click', () => {
   document.getElementById('sidebar-search').value = '';
   document.getElementById('search-results-panel').style.display = 'none';
   document.getElementById('search-results-list').innerHTML = '';
+  document.getElementById('sidebar-left').classList.remove('search-mode');
   document.getElementById('node-empty').style.display = '';
   document.getElementById('node-view').style.display = 'none';
   document.getElementById('branch-empty').style.display = '';
@@ -6869,6 +7886,66 @@ document.getElementById('file-input').addEventListener('change', e => {
   handleIncomingFiles(e.target.files).catch(err => showNotif('Load failed: ' + err.message, 'error'));
   e.target.value = '';
 });
+
+// ============================================================
+// STARS, RECENT VISITS & SESSIONS (event wiring)
+// ============================================================
+// Search role filters
+document.querySelectorAll('.search-role-btn').forEach(btn => {
+  btn.addEventListener('click', () => toggleSearchRole(btn.dataset.srole));
+});
+syncSearchRoleButtons();
+
+// Graph role filters
+function rerenderAfterRoleFilterChange() {
+  const conv = getActiveConv();
+  if (conv) { renderGraph(conv); tagLinks(); }
+  else updateRoleFilters(null);
+}
+document.querySelectorAll('.role-filter-btn[data-grole]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const role = btn.dataset.grole;
+    state.graphRoleFilters[role] = state.graphRoleFilters[role] === false;
+    rerenderAfterRoleFilterChange();
+  });
+});
+document.getElementById('role-filter-all').addEventListener('click', () => {
+  const roles = ['user', 'assistant', 'system', 'other'];
+  // Toggle: all visible -> hide all; anything hidden -> show all.
+  const allOn = roles.every(r => state.graphRoleFilters[r] !== false);
+  roles.forEach(r => { state.graphRoleFilters[r] = !allOn; });
+  rerenderAfterRoleFilterChange();
+});
+
+// Star toolbar button
+document.getElementById('btn-star-node').addEventListener('click', () => {
+  if (state.activeConvId && state.selectedNodeId) toggleStar(state.activeConvId, state.selectedNodeId);
+});
+
+// Recent panel toolbar
+document.getElementById('btn-save-session-recent').addEventListener('click', saveSessionFile);
+document.getElementById('btn-load-session-recent').addEventListener('click', openSessionPicker);
+document.getElementById('btn-clear-recent').addEventListener('click', clearRecentVisits);
+
+// Session save / load (Tools menu, mobile menu, right panel)
+['btn-save-session', 'mob-save-session'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', () => { saveSessionFile(); closeMobMenu(); });
+});
+['btn-load-session', 'mob-load-session'].forEach(id => {
+  document.getElementById(id)?.addEventListener('click', () => { openSessionPicker(); closeMobMenu(); });
+});
+
+document.getElementById('session-input').addEventListener('change', e => {
+  const file = e.target.files?.[0];
+  e.target.value = '';
+  handleSessionFile(file);
+});
+
+document.getElementById('session-import-merge').addEventListener('click', () => applySessionData(_pendingSessionPayload, 'merge'));
+document.getElementById('session-import-replace').addEventListener('click', () => applySessionData(_pendingSessionPayload, 'replace'));
+
+// Make sure a debounced history save is not lost when the tab closes.
+window.addEventListener('beforeunload', () => { if (state.settings.rememberHistory) saveHistoryNow(); });
 
 // Drag and drop on graph
 const graphArea = document.getElementById('graph-area');
@@ -7091,12 +8168,7 @@ document.getElementById('result-sort-dir').addEventListener('click', e => {
 
 // Panel tabs
 document.querySelectorAll('.panel-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.panel-tab-content').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById(`ptab-${tab.dataset.panel}`)?.classList.add('active');
-  });
+  tab.addEventListener('click', () => activatePanelTab(tab.dataset.panel));
 });
 
 // View mode buttons
@@ -7164,7 +8236,7 @@ function openPopoutPage(opt) {
     const s = POPOUT_ROLE_STYLES[m.role] || POPOUT_ROLE_STYLES.other;
     const ts = m.ts ? `<span class="msg-date">${escapeHtml(m.ts)}</span>` : '';
     const chk = multi ? `<label class="chk-wrap" title="Select for bulk copy"><input type="checkbox" class="msg-check" data-i="${i}"></label>` : '';
-    return `<div class="msg-wrap" data-i="${i}" style="background:${s.bg};border-left-color:${s.border}">
+    return `<div class="msg-wrap" data-i="${i}" style="background:${s.bg};border-left-color:${s.border};--role-tint:${s.bg}">
       <div class="msg-head">
         ${chk}
         <span class="msg-role" style="color:${s.label}">${escapeHtml(m.role)}</span>
@@ -7226,8 +8298,8 @@ function openPopoutPage(opt) {
   .copy-btn:hover{background:var(--panel)}
   .copy-btn.copied{background:var(--accent);color:#fff;border-color:var(--accent)}
   .copy-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
-  .msg-wrap{margin-bottom:8px;padding:14px 16px;border-radius:8px;border-left:3px solid}
-  .msg-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:20px}
+  .msg-wrap{margin-bottom:8px;padding:14px 16px;border-radius:8px;border-left:3px solid;position:relative;--role-tint:transparent}
+  .msg-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-14px -16px 10px;padding:10px 16px;min-height:40px;border-radius:6px 6px 0 0;background:linear-gradient(var(--role-tint),var(--role-tint)),var(--bg);border-bottom:1px solid var(--border)}
   .msg-role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
   .msg-date{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);opacity:.85}
   body.hide-ts .msg-date{display:none}
@@ -7250,6 +8322,11 @@ function openPopoutPage(opt) {
   .msg-body td,.msg-body th{padding:6px 10px;border:1px solid var(--border);font-size:13px;color:var(--text2)}
   .msg-body th{background:var(--panel2);font-weight:600}
   .msg-body a{color:var(--accent)}
+  @media print{
+    body{padding:0;max-width:none}
+    .msg-head{position:static;margin:0 0 8px;padding:0;min-height:0;background:none;border-bottom:0;border-radius:0}
+    .msg-wrap{break-inside:avoid;padding:10px 12px}
+  }
 </style></head>
 <body>
   <h1>${escapeHtml(title)}</h1>
@@ -8006,6 +9083,7 @@ document.getElementById('btn-unload-all').addEventListener('click', () => {
   document.getElementById('sidebar-search').value = '';
   document.getElementById('search-results-panel').style.display = 'none';
   document.getElementById('search-results-list').innerHTML = '';
+  document.getElementById('sidebar-left').classList.remove('search-mode');
   document.getElementById('node-empty').style.display = '';
   document.getElementById('node-view').style.display = 'none';
   document.getElementById('branch-empty').style.display = '';
@@ -8608,31 +9686,55 @@ document.getElementById('btn-toggle-minimap').addEventListener('click', () => {
   btn.style.opacity = hidden ? '0.5' : '';
 });
 
-// Minimap interactions: ctrl+drag to move, plain click to navigate
+// Minimap interactions: drag to pan the graph, click to jump, Ctrl/⌘+drag to move the widget
 (function() {
   const mm = document.getElementById('minimap');
-  let isDragging = false;
-  let dragStartX, dragStartY, startLeft, startBottom;
+  let mode = null;          // 'pan' | 'move'
+  let moved = false;
+  let suppressClick = false;
+  let startX = 0, startY = 0, startLeft = 0, startBottom = 0;
+
+  function panToPoint(clientX, clientY) {
+    if (!mm._mmScale) return;
+    const rect = mm.getBoundingClientRect();
+    const mmX = clientX - rect.left;
+    const mmY = clientY - rect.top;
+    const gx = (mmX - mm._mmOffX) / mm._mmScale;
+    const gy = (mmY - mm._mmOffY) / mm._mmScale;
+    const area = document.getElementById('graph-area');
+    const k = state.transform.k;
+    const t = d3.zoomIdentity
+      .translate(area.offsetWidth / 2 - k * gx, area.offsetHeight / 2 - k * gy)
+      .scale(k);
+    // No transition: the minimap must follow the pointer in real time.
+    d3.select('#graph-svg').call(zoom.transform, t);
+  }
 
   mm.addEventListener('mousedown', e => {
-    if (e.ctrlKey || e.metaKey) {
-      // Start drag-to-reposition
-      e.preventDefault();
-      isDragging = true;
+    if (e.button !== 0) return;
+    e.preventDefault();
+    startX = e.clientX;
+    startY = e.clientY;
+    moved = false;
+    mode = (e.ctrlKey || e.metaKey) ? 'move' : 'pan';
+
+    if (mode === 'move') {
       mm.classList.add('dragging');
-      dragStartX = e.clientX;
-      dragStartY = e.clientY;
-      // Read current position
       const area = document.getElementById('graph-area');
       const areaRect = area.getBoundingClientRect();
       const mmRect = mm.getBoundingClientRect();
       startLeft = mmRect.left - areaRect.left;
       startBottom = areaRect.bottom - mmRect.bottom;
+    } else {
+      mm.classList.add('panning');
+    }
 
-      const onMove = e => {
-        if (!isDragging) return;
-        const dx = e.clientX - dragStartX;
-        const dy = e.clientY - dragStartY;
+    const onMove = ev => {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!moved && Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+
+      if (mode === 'move') {
         const area = document.getElementById('graph-area');
         const areaRect = area.getBoundingClientRect();
         const newLeft = Math.max(8, Math.min(areaRect.width - mm.offsetWidth - 8, startLeft + dx));
@@ -8640,31 +9742,30 @@ document.getElementById('btn-toggle-minimap').addEventListener('click', () => {
         mm.style.left = newLeft + 'px';
         mm.style.bottom = newBottom + 'px';
         mm.style.right = 'auto';
-      };
-      const onUp = () => {
-        isDragging = false;
-        mm.classList.remove('dragging');
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    }
+      } else {
+        panToPoint(ev.clientX, ev.clientY);
+      }
+    };
+
+    const onUp = () => {
+      mm.classList.remove('dragging', 'panning');
+      mode = null;
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      if (moved) {
+        // Swallow the click that follows a drag so it does not also re-centre.
+        suppressClick = true;
+        setTimeout(() => { suppressClick = false; }, 0);
+      }
+    };
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
   });
 
   mm.addEventListener('click', e => {
-    if (isDragging || e.ctrlKey || e.metaKey) return;
-    const rect = mm.getBoundingClientRect();
-    const mmX = e.clientX - rect.left;
-    const mmY = e.clientY - rect.top;
-    if (!mm._mmScale) return;
-    const gx = (mmX - mm._mmOffX) / mm._mmScale;
-    const gy = (mmY - mm._mmOffY) / mm._mmScale;
-    const area = document.getElementById('graph-area');
-    const t = d3.zoomIdentity
-      .translate(area.offsetWidth / 2 - state.transform.k * gx, area.offsetHeight / 2 - state.transform.k * gy)
-      .scale(state.transform.k);
-    d3.select('#graph-svg').transition().duration(300).call(zoom.transform, t);
+    if (suppressClick || e.ctrlKey || e.metaKey) return;
+    panToPoint(e.clientX, e.clientY);
   });
 })();
 
@@ -8683,8 +9784,11 @@ document.addEventListener('keydown', e => {
 });
 
 // Init
+restoreHistoryFromStorage();
 renderConvList();
 renderGraph(null);
+updateRecentTabVisibility();
+syncSearchRoleButtons();
 
 // ============================================================
 // CHANGELOG
@@ -8700,8 +9804,40 @@ renderGraph(null);
 // MAINTAINER NOTES block at the top of this file.
 const changelog = [
   {
-    version: 'v7.9.0', date: '2026-10-19', latest: true,
+    version: 'v8.2.0', date: '2026-10-28', latest: true,
     items: [
+      { type: 'new', text: '<strong>Import a session from the Recent tab</strong> - the Recent tab toolbar now has an <strong>import</strong> button next to Save and Clear. It opens the same session picker as <strong>Tools → Load Session</strong>, so you can restore stars and visit history without leaving the panel. Importing still asks whether to merge with or replace your current history.' },
+      { type: 'change', text: '<strong>Session buttons grouped together</strong> - Save, import and Clear now sit together in the Recent tab toolbar, so the panel can export, restore and reset history without opening Tools or Settings.' },
+    ]
+  },
+  {
+    version: 'v8.1.1', date: '2026-10-28', latest: false,
+    items: [
+      { type: 'fix', text: '<strong>The sidebar search box is no longer clipped</strong> - the search field now includes its own padding inside its width, so its rounded right edge stays inside the panel at every sidebar width (down to the 160px minimum). The <strong>Messages</strong> results panel also now sits directly above the conversation list, with the <strong>Conversations</strong> heading where it belongs instead of above the results.' },
+      { type: 'change', text: '<strong>Graph <code>All</code> role filter is a true toggle</strong> - when every role is visible, <strong>All</strong> now hides them all; when any role is hidden, <strong>All</strong> brings them all back. The button dims while anything is hidden, and its tooltip explains the next click.' },
+      { type: 'fix', text: '<strong>Hidden-panel graph safety</strong> - the graph no longer calculates a zero-size fit while its panel is hidden in the mobile layout, so switching to the graph panel always shows a valid, fitted tree instead of a blank or broken transform.' },
+    ]
+  },
+  {
+    version: 'v8.1.0', date: '2026-10-28', latest: false,
+    items: [
+      { type: 'new', text: '<strong>Star messages</strong> - click the <strong>☆</strong> button in the Selected Node toolbar, or right-click a graph node and choose <strong>Star Node</strong>, to keep a message in the new <strong>Recent</strong> tab. Starred nodes also show a small gold star on the graph.' },
+      { type: 'new', text: '<strong>Recent visits + Starred tab</strong> - the right panel has a third tab listing starred messages and your recently visited nodes, newest first. Click any entry to jump straight back to that message, even in another conversation. Enable or disable it under <strong>Tools → Settings → History &amp; Stars</strong>, where you can also choose how many visits to keep (5–100).' },
+      { type: 'new', text: '<strong>Session save / load</strong> - <strong>Tools → Save Session</strong> writes your stars and visit history to a small <code>session-YYYY-MM-DD.json</code> file. <strong>Load Session</strong> reads it back and asks whether to <strong>merge</strong> with what you already have or <strong>replace</strong> it. Entries for conversations that are not currently open are kept and start working again when you load the matching <code>conversations.json</code>.' },
+      { type: 'change', text: '<strong>History survives a reload</strong> - stars and recent visits are auto-saved to this browser\'s <code>localStorage</code> (switchable under <strong>Settings → History &amp; Stars</strong>), so closing the tab no longer loses them. Session files remain the way to move history to another browser.' },
+      { type: 'new', text: '<strong>Role filters in search results</strong> - the left search panel now has <strong>User / Assistant / System / Other / All</strong> buttons, so you can search only the roles you care about. The panel always stays open while a query is active and explains when a role filter leaves no matches.' },
+      { type: 'new', text: '<strong>Graph role filters</strong> - four round <strong>U / A / S / ?</strong> buttons in the top-left of the graph hide or show user, assistant, system and other-role nodes. Each button shows how many nodes it affects, the <strong>?</strong> button is labelled with the most common other role, and <strong>All</strong> turns every role back on.' },
+      { type: 'change', text: '<strong>Minimap drag-to-pan</strong> - drag inside the minimap to move the graph continuously (click still jumps, and the map follows your pointer). Hold <kbd>Ctrl</kbd> / <kbd>⌘</kbd> while dragging to reposition the minimap widget itself.' },
+      { type: 'change', text: '<strong>Conversations open on their newest message</strong> - clicking a conversation in the sidebar now selects and centres the newest message that is visible in the graph, instead of leaving the right panel empty. If that message\'s role is filtered out, its filter is temporarily re-enabled so the jump works.' },
+      { type: 'fix', text: '<strong>Search results are no longer cut off</strong> - the left sidebar\'s message results panel and conversation list now share the available height and scroll independently, so long result lists stay fully reachable on short windows.' },
+    ]
+  },
+  {
+    version: 'v8.0.0', date: '2026-10-20', latest: false,
+    items: [
+      { type: 'new', text: '<strong>Every release stands on its own</strong> - each changelog entry now has a sticky bar with its own <strong>View</strong> selector (Rendered / Markdown / HTML), <strong>Copy</strong> buttons and an <strong>Only</strong> toggle that hides the rest of the log. The bar stays with you while you read that release, then hands off to the next one.' },
+      { type: 'new', text: '<strong>Pop-out headers follow the message</strong> - role, timestamp and the per-message Copy controls stay pinned to the top of each message card in both pop-outs, then hand off to the next message. Printing is unchanged: headers return to normal flow on paper.' },
+      { type: 'change', text: '<strong>Changelog sorted by type</strong> - items inside each release are grouped under <strong>New</strong>, <strong>Changed</strong> and <strong>Fixed</strong> headings with counts, so a release no longer reads as a mixed list.' },
       { type: 'change', text: '<strong>Smaller page, faster first load</strong> - removed the unused jsPDF bundle (about 356 KB less to download). PDF export already goes through the browser print-to-PDF dialog, so the PDF buttons behave exactly as before.' },
       { type: 'new', text: '<strong>ZIP import</strong> - drop the ChatGPT export <code>.zip</code> straight from your inbox. The archive is unpacked inside the browser (no upload, no extra library) and every <code>conversations.json</code> or numbered part (<code>conversations-000.json</code>, <code>-001.json</code>, ...) is loaded. <code>chat.html</code>, <code>user.json</code>, <code>message_feedback.json</code>, <code>shared_conversations.json</code> and macOS <code>__MACOSX</code> junk are ignored; password-protected, multi-volume and oversized archives are rejected with a clear message.' },
       { type: 'new', text: '<strong>Files panel</strong> - a new <strong>Files</strong> list above Conversations shows every loaded file with its conversation count and size. Tick a file to keep it in memory, untick it to release its conversations; ticking it again reloads it from the original file. On first load the largest file - or the largest numbered group - is selected automatically, and <strong>All</strong> / <strong>None</strong> load or release everything.' },
@@ -9001,7 +10137,7 @@ const changelog = [
 ];
 
 
-console.log('ChatGPT JSON Tree Viewer v7.9.0 loaded. Drop a JSON file to get started.');
+console.log('ChatGPT JSON Tree Viewer v8.2.0 loaded. Drop a JSON file to get started.');
 
 // ============================================================
 // MOBILE HAMBURGER MENU

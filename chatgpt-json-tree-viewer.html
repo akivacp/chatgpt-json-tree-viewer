@@ -108,7 +108,7 @@
      The file splitter builds its Worker from a Blob URL (worker-src blob:).
      The Google Fonts @import in the <style> block needs style-src + font-src. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data: https:; connect-src 'self' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob:; frame-src 'self' blob: data:; child-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>ChatGPT JSON Tree Viewer v8.3.0</title>
+<title>ChatGPT JSON Tree Viewer v8.3.1</title>
 <!-- Third-party libraries, integrity-pinned (SRI sha384). If a CDN ever serves a
      different file than the hash below, the browser refuses to run it. Hashes are
      the cdnjs-published values; re-check them if you ever bump a library version.
@@ -1700,9 +1700,10 @@ body {
 .tl-marker:hover { opacity: 0.75; }
 .tl-marker.selected { stroke: var(--accent-pink); stroke-width: 2; }
 .tl-hour-line { stroke: var(--border-color); stroke-width: 1; }
-.tl-hour-label { fill: var(--text-muted); font-size: 9px; font-family: var(--font-mono); }
+.tl-hour-label { fill: var(--text-secondary); font-size: 11px; font-weight: 600; font-family: var(--font-mono); }
 .tl-playhead { stroke: var(--accent-yellow); stroke-width: 1.5; pointer-events: none; }
 .tl-playhead-handle { fill: var(--accent-yellow); pointer-events: all; cursor: ew-resize; }
+.tl-playhead-time { fill: var(--text-primary); font-size: 10px; font-weight: 700; font-family: var(--font-mono); text-anchor: middle; pointer-events: none; }
 .tl-session-band { fill: var(--accent-teal); opacity: 0.06; pointer-events: none; }
 .tl-ribbon-block { cursor: pointer; }
 .tl-ribbon-block:hover { opacity: 0.8; }
@@ -1931,7 +1932,7 @@ body {
         <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/>
       </svg>
       ChatGPT JSON Tree Viewer
-      <span class="logo-version">v8.3.0</span>
+      <span class="logo-version">v8.3.1</span>
     </div>
     <button class="topbar-btn primary" onclick="document.getElementById('file-input').click()" title="Load conversation files — JSON, Markdown/Text, or an opencode .db (you can also drag files onto the graph)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -2327,9 +2328,10 @@ body {
              <div id="timeline-chart-empty"></div>
            </div>
            <div id="timeline-overview" title="Time overview — drag the highlighted window to pan through the day, or drag its edges to change the zoom">
-             <div id="timeline-overview-window"></div>
-             <div id="tl-ov-handle-l" title="Drag the left edge of the time window to resize"></div>
-             <div id="tl-ov-handle-r" title="Drag the right edge of the time window to resize"></div>
+             <div id="timeline-overview-window">
+               <div id="tl-ov-handle-l" title="Drag to adjust the start time"></div>
+               <div id="tl-ov-handle-r" title="Drag to adjust the end time"></div>
+             </div>
            </div>
            <div id="timeline-sessions" title="Activity sessions — groups of messages separated by a gap longer than the session threshold"></div>
          </div>
@@ -2846,7 +2848,7 @@ body {
 <div class="modal-backdrop" id="modal-help">
   <div class="modal-box" style="max-width:900px;width:94vw;height:82vh;">
     <div class="modal-header">
-      <h2>ChatGPT JSON Tree Viewer v8.3.0 - Help</h2>
+      <h2>ChatGPT JSON Tree Viewer v8.3.1 - Help</h2>
       <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-help')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;overflow:hidden;">
@@ -3996,7 +3998,7 @@ function buildSessionData() {
   return {
     _type: SESSION_FILE_TYPE,
     _version: 1,
-    app: 'ChatGPT JSON Tree Viewer v8.3.0',
+    app: 'ChatGPT JSON Tree Viewer v8.3.1',
     savedAt: new Date().toISOString(),
     activeConvId: state.activeConvId,
     starred,
@@ -6649,7 +6651,7 @@ function updateTopbarTitle(title) {
   if (title) {
     document.title = title + ' — ChatGPT JSON Tree Viewer';
   } else {
-    document.title = 'ChatGPT JSON Tree Viewer v8.3.0';
+    document.title = 'ChatGPT JSON Tree Viewer v8.3.1';
   }
 }
 
@@ -7166,7 +7168,7 @@ function buildSettings() {
 // Help content
 const helpTopics = [
   { id: 'overview', label: '🗂 Overview', content: `
-    <h2>ChatGPT JSON Tree Viewer v8.3.0</h2>
+    <h2>ChatGPT JSON Tree Viewer v8.3.1</h2>
     <p>A client-side conversation tree visualizer for AI chat exports. Load JSON files from any major AI platform and explore the branching structure of your conversations as an interactive node graph. <strong>All processing happens entirely in your browser</strong> — no data is ever sent to a server.</p>
     <h3>Supported Formats</h3>
     <table>
@@ -7599,7 +7601,7 @@ const helpTopics = [
     <p>When the chart is zoomed out, messages sent within moments of each other stack into small clusters shown with a count badge; the cluster resolves into individual markers as you zoom in.</p>
     <p>The thin strip directly under the chart is a <strong>time overview</strong>: the highlighted rectangle is the window you are viewing. Drag it to pan through the day, or drag its left/right edges to resize the zoom.</p>
     <h3>Size ribbon</h3>
-    <p>The ribbon renders inside its own horizontally scrollable viewport with minimum clickable block widths, so conversations with thousands of messages stay navigable. Switch between <strong>Linear</strong> (true proportions) and <strong>Logarithmic</strong> (small messages stay visible when a few huge responses dominate) in the settings.</p>
+    <p>The ribbon renders inside its own horizontally scrollable viewport with minimum clickable block widths, so conversations with thousands of messages stay navigable. Switch between <strong>Linear</strong> (true proportions) and <strong>Logarithmic</strong> (small messages stay visible when a few huge responses dominate) in the settings. The ribbon has no hourly axis — it spans the whole day as a proportional strip, so clock times are only shown in the Time view (switch to Time and select a calendar day).</p>
     <ul>
       <li><strong>Left / Right arrow keys</strong> move the selection block through the ribbon when it has focus.</li>
     </ul>
@@ -7669,7 +7671,7 @@ const helpTopics = [
     <h3>Three-Panel Layout</h3>
     <ul>
       <li><strong>Left sidebar</strong> — search bar + conversations list. Min width 160px, max 400px</li>
-      <li><strong>Center graph area</strong> — the interactive D3 tree visualization with grid background. The <strong>Timeline Explorer</strong> dock (v8.3.0) slides in below it when opened from the graph controls; the graph canvas shrinks rather than being covered.</li>
+      <li><strong>Center graph area</strong> — the interactive D3 tree visualization with grid background. The <strong>Timeline Explorer</strong> dock (v8.3.1) slides in below it when opened from the graph controls; the graph canvas shrinks rather than being covered.</li>
       <li><strong>Right panel</strong> — Selected Node, Branch and Recent tabs</li>
     </ul>
     <h3>Resizing Panels</h3>
@@ -9257,7 +9259,7 @@ function exportPDF(forceBranch) {
   .msg-body th { background: #f0f0f0; font-weight: bold; }
   #measure { position: absolute; left: -9999px; top: 0; width: 7.1in; visibility: hidden; }
 /* ========================================================================
-   ChatGPT JSON Tree Viewer v8.3.0 — Windows application GUI refinement
+   ChatGPT JSON Tree Viewer v8.3.1 — Windows application GUI refinement
    Paste INSIDE the existing <style> element, near its END, before the closing style tag.
    CSS only: no new markup, JavaScript, fonts, libraries or network requests.
 
@@ -10739,7 +10741,21 @@ syncSearchRoleButtons();
 // MAINTAINER NOTES block at the top of this file.
 const changelog = [
   {
-    version: 'v8.3.0', date: '2026-11-02', latest: true,
+    version: 'v8.3.1', date: '2026-11-02', latest: true,
+    items: [
+      { type: 'fix', text: '<strong>Time chart markers now render</strong> - a missing <code>bytes</code> variable in the message-cluster tooltip caused a <code>ReferenceError</code> that prevented markers and hour labels from appearing; the tooltip now uses the existing <code>tlEntryBytes</code> helper.' },
+      { type: 'fix', text: '<strong>Hour labels are easier to read</strong> - the time axis now uses 11px semi-bold secondary-coloured text instead of 9px muted text, improving readability across Dark, Light, XP Luna and XP Classic.' },
+      { type: 'change', text: '<strong>Size view has no hourly axis</strong> - the Size ribbon spans the whole day as a proportional strip, so clock times are only shown in the Time view. Switch to Time and select a calendar day to see hour markings.' },
+      { type: 'fix', text: '<strong>Timeline panning uses the correct starting position</strong> - dragging the chart background now pans smoothly using the initial visible window instead of the click point, and dragging right moves toward earlier hours.' },
+      { type: 'fix', text: '<strong>Overview navigator maps to the full day</strong> - overview coordinates are now interpreted against the complete 24-hour day regardless of zoom, and its resize handles follow the highlighted window.' },
+      { type: 'fix', text: '<strong>Yellow playhead is easier to grab</strong> - the handle grew to 18 x 16 px, and clicking empty chart space jumps the playhead to the nearest message while dragging still pans.' },
+      { type: 'fix', text: '<strong>Clustered messages highlight correctly</strong> - cluster members are now tracked, so selecting any member highlights its cluster.' },
+      { type: 'fix', text: '<strong>Time labels adapt to zoom</strong> - tick spacing now switches to minutes and seconds at high zoom, so hour labels stay visible down to a one-minute window.' },
+      { type: 'change', text: '<strong>Playhead shows its time</strong> - the exact time is displayed under the yellow handle while it is visible.' },
+    ]
+  },
+  {
+    version: 'v8.3.0', date: '2026-11-02', latest: false,
     items: [
       { type: 'new', text: '<strong>Timeline Explorer</strong> - a collapsible dock under the graph with three synchronized views. The <strong>activity calendar</strong> shows which days were busy using both bubble size and message counts. The <strong>Time</strong> view places every message at its real timestamp on a 24-hour strip, with marker height showing message size. The <strong>Size</strong> view turns the same messages into a ribbon whose block widths are proportional to their byte size. Click any marker or block to select that message in the graph, or click a graph node to highlight it in the timeline.' },
       { type: 'new', text: '<strong>Message size inspector</strong> - the timeline footer reports the selected message\'s role, timestamp, branch level, child count, and both its <strong>UTF-8 text size</strong> and its <strong>serialized JSON size</strong> (B / KiB / MiB / GiB / TiB). Sizes are measured with <code>TextEncoder</code>, so they are accurate for non-ASCII text.' },
@@ -11535,12 +11551,26 @@ function timelineRenderChart(entries) {
     const maxBytes = Math.max(1, ...visible.map(tlEntryBytes));
 
     // Hour gridlines + labels
-    const step = span <= 2 ? 0.25 : span <= 6 ? 0.5 : span <= 12 ? 1 : 2;
+    let step;
+    if (span <= 1 / 60) step = 1 / 360;
+    else if (span <= 1 / 12) step = 1 / 60;
+    else if (span <= 0.25) step = 1 / 12;
+    else if (span <= 0.5) step = 0.25;
+    else if (span <= 2) step = 0.25;
+    else if (span <= 6) step = 0.5;
+    else if (span <= 12) step = 1;
+    else step = 2;
     for (let h = Math.ceil(domain.start / step) * step; h <= domain.end + 0.0001; h += step) {
       const x = ((h - domain.start) / span) * W;
       svg.appendChild(tlEl('line', { x1: x, y1: padTop - 6, x2: x, y2: baseline, class: 'tl-hour-line' }));
       const label = tlEl('text', { x: Math.min(W - 24, Math.max(2, x + 2)), y: H - 3, class: 'tl-hour-label' });
-      label.textContent = `${String(Math.floor(h)).padStart(2, '0')}:${String(Math.round((h % 1) * 60)).padStart(2, '0')}`;
+      const totalSec = Math.round(h * 3600);
+      const hh = Math.floor(totalSec / 3600);
+      const mm = Math.floor((totalSec % 3600) / 60);
+      const ss = totalSec % 60;
+      label.textContent = step < 1 / 60
+        ? `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
+        : `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
       svg.appendChild(label);
     }
 
@@ -11571,6 +11601,7 @@ function timelineRenderChart(entries) {
         cluster.last = e;
         cluster.lastH = hour;
         cluster.count += 1;
+        cluster.entries.push(e);
         cluster.maxH = Math.max(cluster.maxH, markerH(e));
       } else {
         if (cluster) clusters.push(cluster);
@@ -11581,6 +11612,7 @@ function timelineRenderChart(entries) {
 
     clusters.forEach(c => {
       const e = c.first;
+      const bytes = tlEntryBytes(e);
       const hour = c.firstH;
       const x = ((hour - domain.start) / span) * W;
       const w = c.count > 1 ? Math.max(3, ((c.lastH - c.firstH) / span) * W) : (span <= 2 ? 7 : span <= 6 ? 5 : 3);
@@ -11590,6 +11622,7 @@ function timelineRenderChart(entries) {
         rx: 1.5, fill: roleColor(c.first.bucket),
         class: 'tl-marker' + (c.first.nodeId === state.selectedNodeId ? ' selected' : ''),
         'data-node-id': c.first.nodeId,
+        'data-node-ids': c.entries.map(x => x.nodeId).join(','),
         'data-conv-id': c.first.convId,
       });
       if (c.count > 1) {
@@ -11612,7 +11645,7 @@ function timelineRenderChart(entries) {
       const x = ((tl.playhead - domain.start) / span) * W;
       if (x >= 0 && x <= W) {
         svg.appendChild(tlEl('line', { x1: x, y1: padTop - 8, x2: x, y2: baseline + 4, class: 'tl-playhead' }));
-        svg.appendChild(tlEl('rect', { x: x - 4, y: padTop - 13, width: 8, height: 5, rx: 1, class: 'tl-playhead-handle' }));
+        svg.appendChild(tlEl('rect', { x: x - 9, y: 2, width: 18, height: 16, rx: 3, class: 'tl-playhead-handle' }));
       }
     }
 
@@ -11644,6 +11677,7 @@ function timelineRenderChart(entries) {
         rx: w > 3 ? 1 : 0, fill: roleColor(e.bucket),
         class: 'tl-ribbon-block' + (e.nodeId === state.selectedNodeId ? ' selected' : ''),
         'data-node-id': e.nodeId,
+        'data-node-ids': e.nodeId,
         'data-conv-id': e.convId,
       });
       const t = document.createElementNS(TL_NS, 'title');
@@ -11773,7 +11807,8 @@ function timelineSelectEntry(entry) {
 
 function timelineHighlightEntry(entry) {
   document.querySelectorAll('#timeline-chart .tl-marker, #timeline-chart .tl-ribbon-block').forEach(el => {
-    const same = !!entry && el.getAttribute('data-node-id') === entry.nodeId && el.getAttribute('data-conv-id') === entry.convId;
+    const ids = (el.getAttribute('data-node-ids') || el.getAttribute('data-node-id') || '').split(',');
+    const same = !!entry && ids.indexOf(entry.nodeId) !== -1 && el.getAttribute('data-conv-id') === entry.convId;
     el.classList.toggle('selected', same);
   });
 }
@@ -11868,6 +11903,7 @@ function timelineMovePlayhead() {
   let handle = svg.querySelector('.tl-playhead-handle');
   if (x < 0 || x > W) {
     line?.remove(); handle?.remove();
+    svg.querySelector('.tl-playhead-time')?.remove();
     return;
   }
   if (!line) {
@@ -11875,13 +11911,26 @@ function timelineMovePlayhead() {
     svg.appendChild(line);
   }
   if (!handle) {
-    handle = tlEl('rect', { class: 'tl-playhead-handle', rx: 1 });
+    handle = tlEl('rect', { class: 'tl-playhead-handle', rx: 3 });
     svg.appendChild(handle);
   }
   line.setAttribute('x1', x); line.setAttribute('x2', x);
   line.setAttribute('y1', 8); line.setAttribute('y2', baseline + 4);
-  handle.setAttribute('x', x - 4); handle.setAttribute('y', 3);
-  handle.setAttribute('width', 8); handle.setAttribute('height', 5);
+  handle.setAttribute('x', x - 9); handle.setAttribute('y', 2);
+  handle.setAttribute('width', 18); handle.setAttribute('height', 16);
+  handle.setAttribute('rx', 3);
+  // Show the exact time under the handle while it is visible.
+  let timeLabel = svg.querySelector('.tl-playhead-time');
+  if (!timeLabel) {
+    timeLabel = tlEl('text', { class: 'tl-playhead-time' });
+    svg.appendChild(timeLabel);
+  }
+  const ph = tl.playhead;
+  const phH = String(Math.floor(ph)).padStart(2, '0');
+  const phM = String(Math.round((ph % 1) * 60)).padStart(2, '0');
+  timeLabel.textContent = `${phH}:${phM}`;
+  timeLabel.setAttribute('x', x);
+  timeLabel.setAttribute('y', 2 + 16 + 11);
 }
 
 // Scrub the playhead: highlight the nearest message; commit on release.
@@ -12063,8 +12112,9 @@ tlBindSetting('tl-set-include-system', 'includeSystem', v => !!v, () => {
 })();
 
 // Chart pointer interactions: click markers (handled per marker), drag the
-// yellow playhead to scrub, drag empty space to pan, wheel to zoom around the
-// pointer (down to a one-minute window), double-click empty space to reset.
+// yellow playhead to scrub, drag empty space to pan (or click to jump to the
+// nearest message), wheel to zoom around the pointer (down to a one-minute
+// window), double-click empty space to reset.
 (function() {
   const chart = document.getElementById('timeline-chart');
   if (!chart) return;
@@ -12077,15 +12127,26 @@ tlBindSetting('tl-set-include-system', 'includeSystem', v => !!v, () => {
     const domain = timelineCurrentDomain();
     const span = domain.end - domain.start;
     const hour = domain.start + ((e.clientX - rect.left) / rect.width) * span;
-    if (handle) {
+    // At full-day zoom, dragging the chart also scrubs the playhead (pan is a no-op at 24h span).
+    if (handle || span >= 23.999) {
       // Dragging the yellow playhead scrubs through messages; release commits.
-      _tlScrubDrag = { pointerId: e.pointerId, mode: 'scrub', startClientX: e.clientX, startHour: hour, lastClientX: e.clientX };
+      // At full-day zoom, chart drag also scrubs so the gesture works without needing to select a message first.
+      _tlScrubDrag = { pointerId: e.pointerId, mode: 'scrub', startClientX: e.clientX, startHour: hour, lastClientX: e.clientX, moved: false };
       chart.setPointerCapture(e.pointerId);
+      timelineScrubTo(hour, false);
       return;
     }
     if (e.target && e.target.closest && e.target.closest('.tl-marker')) return; // markers handle clicks themselves
-    // Dragging empty chart space pans the visible time window.
-    _tlScrubDrag = { pointerId: e.pointerId, mode: 'pan', startClientX: e.clientX, startHour: hour, lastClientX: e.clientX };
+    // Dragging empty chart space pans the visible time window; a plain click jumps to the nearest message.
+    _tlScrubDrag = {
+      pointerId: e.pointerId,
+      mode: 'pan',
+      startClientX: e.clientX,
+      initialStart: domain.start,
+      initialSpan: span,
+      lastClientX: e.clientX,
+      moved: false
+    };
     chart.setPointerCapture(e.pointerId);
   });
   chart.addEventListener('pointermove', e => {
@@ -12098,9 +12159,12 @@ tlBindSetting('tl-set-include-system', 'includeSystem', v => !!v, () => {
     if (_tlScrubDrag.mode === 'scrub') {
       timelineScrubTo(hour, false);
     } else {
-      const hours = (e.clientX - _tlScrubDrag.startClientX) / rect.width * span;
-      const start = Math.max(0, Math.min(24 - span, _tlScrubDrag.startHour + hours));
-      state.timeline.zoom = { start, end: start + span };
+      const drag = _tlScrubDrag;
+      if (Math.abs(e.clientX - drag.startClientX) <= 4) return;
+      drag.moved = true;
+      const deltaHours = (e.clientX - drag.startClientX) / rect.width * drag.initialSpan;
+      const start = Math.max(0, Math.min(24 - drag.initialSpan, drag.initialStart - deltaHours));
+      state.timeline.zoom = { start, end: start + drag.initialSpan };
       timelineRender();
     }
   });
@@ -12114,6 +12178,26 @@ tlBindSetting('tl-set-include-system', 'includeSystem', v => !!v, () => {
       const span = domain.end - domain.start;
       const hour = domain.start + ((drag.lastClientX - rect.left) / rect.width) * span;
       timelineScrubTo(hour, true);
+    } else if (!drag.moved) {
+      // Plain click on empty chart space: jump the playhead to the nearest message.
+      const tl = state.timeline;
+      const rect = chart.getBoundingClientRect();
+      const domain = timelineCurrentDomain();
+      const span = domain.end - domain.start;
+      const clickedHour = domain.start + ((drag.lastClientX - rect.left) / rect.width) * span;
+      const visible = timelineActiveEntries().filter(x => x.ts && tlDayKey(x.ts) === tl.day);
+      if (visible.length) {
+        let nearest = visible[0];
+        let best = Infinity;
+        visible.forEach(x => {
+          const d = Math.abs(tlHourFraction(x.ts) - clickedHour);
+          if (d < best) { best = d; nearest = x; }
+        });
+        timelineSelectEntry(nearest);
+      } else {
+        tl.playhead = Math.max(0, Math.min(24, clickedHour));
+        timelineMovePlayhead();
+      }
     }
   };
   chart.addEventListener('pointerup', endDrag);
@@ -12164,55 +12248,104 @@ tlBindSetting('tl-set-include-system', 'includeSystem', v => !!v, () => {
   });
 })();
 
+
   // Time overview: drag the highlighted window to pan, drag the edges to resize.
-  (function() {
+  (function () {
     const ov = document.getElementById('timeline-overview');
     if (!ov) return;
-    let ovDrag = null;
-    const hourFromClientX = e => {
-      const r = ov.getBoundingClientRect();
-      const domain = timelineCurrentDomain();
-      const span = domain.end - domain.start;
-      return domain.start + ((e.clientX - r.left) / r.width) * span;
+
+    let drag = null;
+
+    const clamp = (value, min, max) =>
+      Math.max(min, Math.min(max, value));
+
+    // The overview always displays a complete 24-hour day.
+    const hourAt = clientX => {
+      const rect = ov.getBoundingClientRect();
+      return clamp(
+        ((clientX - rect.left) / rect.width) * 24,
+        0, 24
+      );
     };
+
     ov.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return;
-      if (state.timeline.view !== 'time') return;
-      const handle = e.target && e.target.closest ? e.target.closest('#tl-ov-handle-l, #tl-ov-handle-r') : null;
-      const startHour = hourFromClientX(e);
-      ovDrag = {
-        mode: handle ? 'resize' : 'pan',
-        handle: handle ? (handle.id === 'tl-ov-handle-l' ? 'l' : 'r') : null,
-        pointerId: e.pointerId,
-        startClientX: e.clientX,
-        startHour,
-      };
-      ov.setPointerCapture(e.pointerId);
-    });
-    ov.addEventListener('pointermove', e => {
-      if (!ovDrag) return;
-      const r = ov.getBoundingClientRect();
+      if (e.button !== 0 || state.timeline.view !== 'time')
+        return;
+
+      const edge = e.target.closest(
+        '#tl-ov-handle-l, #tl-ov-handle-r'
+      );
+
       const domain = timelineCurrentDomain();
-      const span = domain.end - domain.start;
-      if (ovDrag.mode === 'resize') {
-        const hour = domain.start + ((e.clientX - r.left) / r.width) * span;
-        const tl = state.timeline;
-        const zoom = tl.zoom || { start: 0, end: 24 };
-        const minSpan = 1 / 60;
-        if (ovDrag.handle === 'l') tl.zoom = { start: Math.max(0, Math.min(zoom.end - minSpan, hour)), end: zoom.end };
-        else tl.zoom = { start: zoom.start, end: Math.min(24, Math.max(zoom.start + minSpan, hour)) };
-        timelineRender();
-      } else {
-        const hours = (e.clientX - ovDrag.startClientX) / r.width * span;
-        const start = Math.max(0, Math.min(24 - span, ovDrag.startHour + hours));
-        state.timeline.zoom = { start, end: start + span };
-        timelineRender();
-      }
+
+      drag = {
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        initialStart: domain.start,
+        initialEnd: domain.end,
+        span: domain.end - domain.start,
+        edge: edge?.id || null
+      };
+
+      ov.setPointerCapture(e.pointerId);
+      e.preventDefault();
     });
-    const endOv = () => { ovDrag = null; };
-    ov.addEventListener('pointerup', endOv);
-    ov.addEventListener('pointercancel', () => { ovDrag = null; });
+
+    ov.addEventListener('pointermove', e => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+
+      if (drag.edge) {
+        const hour = hourAt(e.clientX);
+        const minSpan = 1 / 60;
+
+        if (drag.edge === 'tl-ov-handle-l') {
+          state.timeline.zoom = {
+            start: clamp(hour, 0, drag.initialEnd - minSpan),
+            end: drag.initialEnd
+          };
+        } else {
+          state.timeline.zoom = {
+            start: drag.initialStart,
+            end: clamp(
+              hour, drag.initialStart + minSpan, 24
+            )
+          };
+        }
+      } else {
+        const rect = ov.getBoundingClientRect();
+
+        const deltaHours =
+          (e.clientX - drag.startX) / rect.width * 24;
+
+        const start = clamp(
+          drag.initialStart + deltaHours,
+          0,
+          24 - drag.span
+        );
+
+        state.timeline.zoom = {
+          start,
+          end: start + drag.span
+        };
+      }
+
+      timelineRender();
+    });
+
+    function endDrag(e) {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+
+      drag = null;
+
+      if (ov.hasPointerCapture(e.pointerId)) {
+        ov.releasePointerCapture(e.pointerId);
+      }
+    }
+
+    ov.addEventListener('pointerup', endDrag);
+    ov.addEventListener('pointercancel', endDrag);
   })();
+
 
 // Re-render on layout changes (panel resize, window resize, dock resize).
 if (window.ResizeObserver) {
@@ -12230,7 +12363,7 @@ window.addEventListener('resize', () => {
 // button in the graph controls (or the mobile menu) is used.
 timelineSetMode('off');
 
-console.log('ChatGPT JSON Tree Viewer v8.3.0 loaded. Drop a JSON file to get started.');
+console.log('ChatGPT JSON Tree Viewer v8.3.1 loaded. Drop a JSON file to get started.');
 
 
 

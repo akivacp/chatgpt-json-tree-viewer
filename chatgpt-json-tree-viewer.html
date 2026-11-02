@@ -108,7 +108,7 @@
      The file splitter builds its Worker from a Blob URL (worker-src blob:).
      The Google Fonts @import in the <style> block needs style-src + font-src. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data: https:; connect-src 'self' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob:; frame-src 'self' blob: data:; child-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>ChatGPT JSON Tree Viewer v8.2.0</title>
+<title>ChatGPT JSON Tree Viewer v8.3.0</title>
 <!-- Third-party libraries, integrity-pinned (SRI sha384). If a CDN ever serves a
      different file than the hash below, the browser refuses to run it. Hashes are
      the cdnjs-published values; re-check them if you ever bump a library version.
@@ -121,6 +121,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-wasm.js" integrity="sha384-8D3Rsfo535FqoC1pHCCQMrNf75UgzyoG/HQm9zOzITRrz3QKzecc2E7JXKGCXoWu" crossorigin="anonymous"></script>
 <style>
+/* Google Fonts must be imported before any other style rules — browsers
+   ignore an @import that appears after ordinary rules. */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Literata:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
 :root {
   --bg-primary: #0d0f14;
   --bg-secondary: #141720;
@@ -231,7 +235,7 @@
     --scrollbar-color: #00a882;
   }
 }
-[data-theme="xp"] {
+[data-theme="xp-classic"] {
   --bg-primary: #ece9d8;
   --bg-secondary: #d4d0c8;
   --bg-tertiary: #c9c5ba;
@@ -246,6 +250,29 @@
   --accent-teal: #0a53d0;
   --accent-teal-dim: #0842a8;
   --scrollbar-color: #0a53d0;
+  --node-user: linear-gradient(135deg, #4a9bff, #0058e6);
+  --node-user-border: #0058e6;
+  --node-assistant: linear-gradient(135deg, #7ed77e, #2f7d2f);
+  --node-assistant-border: #2f7d2f;
+  --node-other: linear-gradient(135deg, #d8b0ff, #7a3fbf);
+  --node-other-border: #7a3fbf;
+}
+
+/* Windows XP Luna — glossy blue treatment (the upgraded XP look). */
+[data-theme="xp"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #ece9d8;
+  --bg-tertiary: #f7f6ee;
+  --bg-panel: #f5f4eb;
+  --bg-hover: #e4edff;
+  --bg-active: #d6e6ff;
+  --border-color: #a8b5c8;
+  --border-light: #7f9db9;
+  --text-primary: #111111;
+  --text-secondary: #303c4a;
+  --accent-teal: #075ac9;
+  --accent-teal-dim: #03479e;
+  --scrollbar-color: #075ac9;
   --node-user: linear-gradient(135deg, #4a9bff, #0058e6);
   --node-user-border: #0058e6;
   --node-assistant: linear-gradient(135deg, #7ed77e, #2f7d2f);
@@ -292,8 +319,6 @@ body {
   transition: background var(--transition), color var(--transition);
 }
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Literata:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
-
 /* ===== LAYOUT ===== */
 #app { display: flex; flex-direction: column; height: 100vh; }
 #topbar {
@@ -318,9 +343,16 @@ body {
 /* Center graph */
 #graph-area {
   flex: 1; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; min-height: 0;
   background: var(--bg-primary);
   background-image: radial-gradient(circle at 1px 1px, var(--border-color) 1px, transparent 0);
   background-size: 32px 32px;
+}
+/* The graph canvas keeps the existing absolutely-positioned overlays
+   (role filters, minimap, controls, drop zone) inside its own box so the
+   Timeline Explorer dock can sit below it without covering them. */
+#graph-canvas-wrap {
+  position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden;
 }
 
 /* Right panel */
@@ -460,8 +492,12 @@ body {
 .theme-dot {
   width: 16px; height: 16px; border-radius: 50%; cursor: pointer;
   border: 2px solid transparent; transition: all var(--transition);
+  /* Real <button> elements so they work with keyboard and screen readers */
+  padding: 0; appearance: none; -webkit-appearance: none;
+  display: inline-block; flex: 0 0 auto; background-clip: padding-box;
 }
 .theme-dot:hover, .theme-dot.active { border-color: var(--text-primary); transform: scale(1.2); }
+.theme-dot:focus-visible { outline: 2px solid var(--accent-teal); outline-offset: 4px; }
 .theme-dot.t-dark { background: #1a1e2a; }
 .theme-dot.t-light { background: #e8eaf2; }
 .theme-dot.t-blue { background: #0a1525; border-color: #224060; }
@@ -469,6 +505,7 @@ body {
 .theme-dot.t-purple { background: #130c1a; border-color: #382255; }
 .theme-dot.t-system { background: linear-gradient(135deg, #e8eaf2 0%, #e8eaf2 50%, #1a1e2a 50%, #1a1e2a 100%); border-color: #8a90b8; }
 .theme-dot.t-xp { background: linear-gradient(180deg, #4a9bff 0%, #0058e6 52%, #7ed77e 52%, #2f7d2f 100%); border-color: #7f9db9; }
+.theme-dot.t-xp-classic { background: linear-gradient(180deg, #f1eee3 0%, #d4d0c8 52%, #e2ded0 52%, #cbd8ee 100%); border-color: #919b9c; }
 .theme-dot.t-custom { background: conic-gradient(red,yellow,lime,cyan,blue,magenta,red); }
 .theme-dot.t-custom.active { border-color: var(--text-primary); }
 #custom-theme-panel {
@@ -777,6 +814,7 @@ body {
   transition: all var(--transition);
 }
 .graph-ctrl-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.graph-ctrl-btn.active { color: var(--accent-teal); border-color: var(--accent-teal); background: var(--bg-active); }
 .graph-ctrl-btn svg { width: 14px; height: 14px; }
 
 /* Empty state */
@@ -1515,6 +1553,291 @@ body {
 .mob-nav-btn.active { color: var(--accent-teal); }
 .mob-nav-btn.active svg { stroke: var(--accent-teal); }
 
+/* ===== TIMELINE EXPLORER ===== */
+#timeline-dock {
+  flex: 0 0 auto; position: relative; display: flex; flex-direction: column;
+  height: 300px; min-height: 150px; max-height: 72vh;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-light);
+  overflow: hidden;
+  transition: height 0.18s ease;
+}
+#timeline-dock[data-mode="off"] { display: none; }
+#timeline-dock[data-mode="expanded"] { height: 58vh; }
+#timeline-resize {
+  position: absolute; top: 0; left: 0; right: 0; height: 6px;
+  cursor: row-resize; z-index: 6;
+}
+#timeline-resize:hover, #timeline-resize.dragging { background: var(--accent-teal); }
+#timeline-header {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 7px 10px 6px; border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0; background: var(--bg-secondary);
+}
+.tl-brand {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; color: var(--accent-teal);
+  letter-spacing: .02em; white-space: nowrap;
+}
+.tl-brand svg { width: 15px; height: 15px; }
+#timeline-subtitle {
+  font-size: 11px; color: var(--text-muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 260px;
+}
+.tl-seg {
+  display: inline-flex; border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0;
+}
+.tl-seg-btn {
+  padding: 4px 9px; font-size: 11px; font-family: var(--font-ui);
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  border: none; border-right: 1px solid var(--border-color); cursor: pointer;
+  transition: all var(--transition); white-space: nowrap;
+}
+.tl-seg-btn:last-child { border-right: none; }
+.tl-seg-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.tl-seg-btn.active { background: var(--accent-teal); color: #00110d; font-weight: 700; }
+.tl-seg-btn:focus-visible, .tl-icon-btn:focus-visible, .tl-clear-btn:focus-visible {
+  outline: 2px solid var(--accent-teal); outline-offset: 2px;
+}
+#timeline-scope {
+  font-size: 11px; font-family: var(--font-ui); padding: 3px 6px;
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+  cursor: pointer; max-width: 150px;
+}
+.tl-icon-btn {
+  width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 14px; line-height: 1; padding: 0;
+  transition: all var(--transition); flex-shrink: 0;
+}
+.tl-icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-light); }
+.tl-icon-btn svg { width: 13px; height: 13px; }
+.tl-icon-btn.active { color: var(--accent-teal); border-color: var(--accent-teal); }
+.tl-clear-btn {
+  padding: 3px 7px; font-size: 10px; font-family: var(--font-ui);
+  background: transparent; color: var(--text-muted); cursor: pointer;
+  border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+  transition: all var(--transition); white-space: nowrap;
+}
+.tl-clear-btn:hover { color: var(--text-primary); border-color: var(--border-light); background: var(--bg-hover); }
+#timeline-body {
+  flex: 1 1 auto; min-height: 0; display: flex; overflow: hidden;
+}
+#timeline-calendar-col {
+  width: 262px; flex-shrink: 0; display: flex; flex-direction: column;
+  padding: 6px 10px 8px; border-right: 1px solid var(--border-color);
+  overflow-y: auto; min-height: 0;
+}
+.tl-cal-head {
+  display: flex; align-items: center; gap: 5px; margin-bottom: 5px; flex-shrink: 0;
+}
+#tl-cal-month {
+  font-size: 11px; font-weight: 700; color: var(--text-primary);
+  flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#timeline-calendar {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;
+  font-size: 9px; flex-shrink: 0;
+}
+.tl-cal-wd {
+  text-align: center; color: var(--text-muted); font-weight: 700;
+  font-size: 9px; padding-bottom: 1px;
+}
+.tl-cal-day {
+  position: relative; min-height: 32px; border-radius: 4px;
+  border: 1px solid transparent; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 9px; color: var(--text-muted);
+  padding: 0; transition: background var(--transition), border-color var(--transition);
+}
+.tl-cal-day:hover { background: var(--bg-hover); }
+.tl-cal-day.outside { opacity: 0.32; }
+.tl-cal-day.today { border-color: var(--accent-yellow); }
+.tl-cal-day.selected { border-color: var(--accent-teal); background: var(--bg-active); color: var(--text-primary); }
+.tl-cal-day:focus-visible { outline: 2px solid var(--accent-teal); outline-offset: 1px; }
+.tl-cal-num { position: absolute; top: 1px; left: 3px; opacity: 0.65; }
+.tl-cal-bubble {
+  display: block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-teal); opacity: 0.85;
+  transition: width 0.15s, height 0.15s;
+}
+.tl-cal-bubble.lvl-0 { background: transparent; }
+.tl-cal-day.has-activity .tl-cal-bubble { box-shadow: 0 0 6px rgba(0,212,170,0.35); }
+.tl-cal-count {
+  position: absolute; top: 0; right: 2px; font-size: 8px;
+  color: var(--accent-teal); font-weight: 700; line-height: 1.2;
+}
+#timeline-cal-legend {
+  margin-top: 6px; font-size: 9px; color: var(--text-muted);
+  line-height: 1.45; flex-shrink: 0;
+}
+#timeline-chart-col {
+  flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;
+  padding: 6px 10px 7px; min-height: 0;
+}
+.tl-chart-head {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  margin-bottom: 4px; min-height: 20px;
+}
+#timeline-chart-title { font-size: 11px; font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+#timeline-chart-meta { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-spacer { flex: 1; }
+#timeline-chart {
+  position: relative; flex: 1 1 auto; min-height: 70px; overflow: hidden;
+  border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+  background: var(--bg-tertiary); cursor: crosshair; touch-action: none;
+}
+#timeline-chart:focus-visible { outline: 2px solid var(--accent-teal); outline-offset: 2px; }
+#timeline-chart svg { display: block; width: 100%; height: 100%; }
+#timeline-chart-empty {
+  position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 11px; text-align: center; padding: 10px; pointer-events: none;
+}
+.tl-marker { cursor: pointer; transition: opacity 0.12s; }
+.tl-marker:hover { opacity: 0.75; }
+.tl-marker.selected { stroke: var(--accent-pink); stroke-width: 2; }
+.tl-hour-line { stroke: var(--border-color); stroke-width: 1; }
+.tl-hour-label { fill: var(--text-muted); font-size: 9px; font-family: var(--font-mono); }
+.tl-playhead { stroke: var(--accent-yellow); stroke-width: 1.5; pointer-events: none; }
+.tl-playhead-handle { fill: var(--accent-yellow); pointer-events: all; cursor: ew-resize; }
+.tl-session-band { fill: var(--accent-teal); opacity: 0.06; pointer-events: none; }
+.tl-ribbon-block { cursor: pointer; }
+.tl-ribbon-block:hover { opacity: 0.8; }
+.tl-ribbon-block.selected { stroke: var(--accent-pink); stroke-width: 2; }
+.tl-axis-caption { fill: var(--text-muted); font-size: 9px; font-family: var(--font-mono); }
+.tl-marker-count { fill: var(--text-muted); font-size: 9px; text-anchor: middle; pointer-events: none; }
+
+/* ===== TIMELINE OVERVIEW (draggable 24h window) ===== */
+#timeline-overview {
+  position: relative; flex: 0 0 auto; height: 34px; margin-top: 2px;
+  border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+  background: var(--bg-tertiary); overflow: hidden; cursor: crosshair;
+}
+#timeline-overview-window {
+  position: absolute; top: 0; bottom: 0;
+  background: rgba(0, 212, 170, 0.14); border: 1px solid var(--accent-teal);
+}
+#tl-ov-handle-l, #tl-ov-handle-r { position: absolute; top: 0; bottom: 0; width: 10px; z-index: 3; }
+#tl-ov-handle-l { left: 0; cursor: ew-resize; }
+#tl-ov-handle-r { right: 0; cursor: ew-resize; }
+@media (max-width: 768px) {
+  #timeline-overview { height: 28px; }
+}
+#timeline-sessions {
+  display: flex; gap: 5px; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+  flex-shrink: 0; padding-top: 5px; margin-top: 4px;
+  border-top: 1px solid var(--border-color); min-height: 25px;
+}
+.tl-session-chip {
+  flex-shrink: 0; font-size: 10px; font-family: var(--font-ui);
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  border: 1px solid var(--border-color); border-radius: 99px;
+  padding: 3px 9px; cursor: pointer; transition: all var(--transition);
+  white-space: nowrap;
+}
+.tl-session-chip:hover { border-color: var(--accent-teal); color: var(--text-primary); }
+.tl-session-chip:focus-visible { outline: 2px solid var(--accent-teal); outline-offset: 2px; }
+.tl-session-chip .tl-session-time { color: var(--accent-teal); font-weight: 700; }
+#timeline-inspector {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 5px 10px; border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary); font-size: 10px; color: var(--text-secondary);
+  flex-shrink: 0; min-height: 26px;
+}
+#timeline-inspector span:empty { display: none; }
+.tl-insp-role { font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: 9px; }
+.tl-insp-role.user { color: var(--accent-blue); }
+.tl-insp-role.assistant { color: var(--accent-green); }
+.tl-insp-role.system { color: var(--text-muted); }
+.tl-insp-role.other { color: var(--accent-purple); }
+#tl-insp-time, #tl-insp-text-size, #tl-insp-json-size, #tl-insp-branch { font-family: var(--font-mono); font-size: 10px; }
+#tl-insp-hint { color: var(--text-muted); margin-left: auto; font-style: italic; }
+#timeline-settings-panel {
+  position: absolute; right: 8px; bottom: 8px; z-index: 20;
+  width: 320px; max-width: calc(100% - 16px); max-height: calc(100% - 60px);
+  overflow-y: auto; padding: 12px;
+  background: var(--bg-secondary); border: 1px solid var(--border-light);
+  border-radius: var(--radius-md); box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+  display: flex; flex-direction: column; gap: 8px;
+}
+#timeline-settings-panel[hidden] { display: none; }
+.tl-set-row { display: flex; align-items: center; gap: 8px; }
+.tl-set-row label { font-size: 11px; color: var(--text-secondary); flex: 1; }
+.tl-set-row select {
+  font-size: 11px; font-family: var(--font-ui); padding: 3px 5px;
+  background: var(--bg-tertiary); color: var(--text-primary);
+  border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+  max-width: 160px;
+}
+.tl-set-check {
+  display: flex; align-items: center; gap: 7px; cursor: pointer;
+  font-size: 11px; color: var(--text-secondary); padding: 2px 0;
+}
+.tl-set-check input { accent-color: var(--accent-teal); width: 13px; height: 13px; }
+
+/* Mobile custom-theme editor lives inside the hamburger menu */
+#mob-menu-inner { max-height: calc(100dvh - 60px); overflow-y: auto; }
+#mob-menu-inner > #custom-theme-panel.open {
+  position: static; grid-column: 1 / -1; width: auto;
+  max-height: 55vh; overflow-y: auto; box-shadow: none; margin-top: 6px;
+}
+
+/* ===== WINDOWS XP — LUNA VISUAL ENHANCEMENTS ===== */
+/* Scoped to the Luna theme so every other palette is untouched. */
+[data-theme="xp"] #topbar {
+  background: linear-gradient(180deg, #69b6ff 0%, #368dea 9%, #1162d8 44%, #0753c0 88%, #003e99 100%);
+  border-bottom: 2px solid #004aab;
+}
+[data-theme="xp"] #logo { color: #ffffff; text-shadow: 0 1px 1px #003b8c; }
+[data-theme="xp"] .logo-version { background: rgba(255,255,255,0.22); color: #ffffff; }
+[data-theme="xp"] .topbar-btn {
+  background: linear-gradient(180deg, #ffffff 0%, #eeeeee 45%, #d1d1d1 100%);
+  color: #000000; border: 1px solid #7f9db9; border-radius: 3px;
+  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #999999;
+}
+[data-theme="xp"] .topbar-btn:hover {
+  background: linear-gradient(180deg, #ffffff, #dceaff);
+  color: #000000; border-color: #316ac5;
+}
+[data-theme="xp"] .topbar-btn.primary {
+  background: linear-gradient(180deg, #65c863, #348e36 60%, #20732b);
+  color: #ffffff; border-color: #1d6424; font-weight: 700;
+}
+[data-theme="xp"] .topbar-btn.primary:hover {
+  background: linear-gradient(180deg, #7ed77e, #3da33f 60%, #27892f);
+  border-color: #1d6424;
+}
+[data-theme="xp"] .panel-tab {
+  background: linear-gradient(180deg, #f8f7f0, #d4d0c8);
+  border-right: 1px solid #919b9c;
+}
+[data-theme="xp"] .panel-tab.active {
+  background: #fffdf4; color: #003c91; border-bottom-color: #0058e6;
+}
+[data-theme="xp"] button:focus-visible { outline: 1px dotted #000000; outline-offset: 2px; }
+[data-theme="xp"] #timeline-dock { border-top: 2px solid #7f9db9; }
+
+@media (max-width: 768px) {
+  #timeline-dock { height: 46vh; max-height: 60vh; min-height: 190px; }
+  #timeline-dock[data-mode="expanded"] { height: 66vh; }
+  #timeline-header { gap: 6px; padding: 6px 8px; overflow-x: auto; flex-wrap: nowrap; }
+  #timeline-subtitle { display: none; }
+  #timeline-scope { max-width: 120px; }
+  #timeline-body { flex-direction: column; overflow-y: auto; }
+  #timeline-calendar-col {
+    width: 100%; border-right: none; border-bottom: 1px solid var(--border-color);
+    overflow-y: visible; flex-shrink: 0;
+  }
+  #timeline-chart-col { min-height: 150px; }
+  #timeline-chart { min-height: 90px; }
+  #timeline-inspector { gap: 7px; }
+  #tl-insp-hint { display: none; }
+  #timeline-settings-panel { position: fixed; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 70vh; }
+}
+
 /* ===== MOBILE MEDIA QUERY ===== */
 @media (max-width: 768px) {
   /* Show bottom nav */
@@ -1561,7 +1884,7 @@ body {
 
   /* Show the active mobile panel */
   #sidebar-left.mob-panel-active { display: flex !important; }
-  #graph-area.mob-panel-active { display: block !important; }
+  #graph-area.mob-panel-active { display: flex !important; flex-direction: column; }
   #panel-right.mob-panel-active { display: flex !important; }
 
   /* Touch-friendly conv items */
@@ -1608,7 +1931,7 @@ body {
         <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/>
       </svg>
       ChatGPT JSON Tree Viewer
-      <span class="logo-version">v8.2.0</span>
+      <span class="logo-version">v8.3.0</span>
     </div>
     <button class="topbar-btn primary" onclick="document.getElementById('file-input').click()" title="Load conversation files — JSON, Markdown/Text, or an opencode .db (you can also drag files onto the graph)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1687,14 +2010,15 @@ body {
       chatgpt-json-tree-viewer
     </a>
     <div id="theme-picker">
-      <div class="theme-dot t-system" data-theme="system" title="System theme — follows your OS light/dark setting (default)"></div>
-      <div class="theme-dot t-light" data-theme="light" title="Light theme — soft light gray with dark text"></div>
-      <div class="theme-dot t-dark" data-theme="dark" title="Dark theme — deep dark backgrounds with teal accents"></div>
-      <div class="theme-dot t-blue" data-theme="blue" title="Blue theme — deep navy with blue accents"></div>
-      <div class="theme-dot t-green" data-theme="green" title="Green theme — forest green with bright green accents"></div>
-      <div class="theme-dot t-purple" data-theme="purple" title="Purple theme — deep purple with lavender accents"></div>
-      <div class="theme-dot t-xp" data-theme="xp" title="Windows XP theme — Luna blue taskbar, silver windows, green Start button"></div>
-      <div class="theme-dot t-custom" data-theme="custom" title="Custom theme — open the color picker panel" id="btn-custom-theme"></div>
+      <button type="button" class="theme-dot t-system" data-theme="system" title="System theme — follows your OS light/dark setting (default)" aria-label="System theme" aria-pressed="false"></button>
+      <button type="button" class="theme-dot t-light" data-theme="light" title="Light theme — soft light gray with dark text" aria-label="Light theme" aria-pressed="false"></button>
+      <button type="button" class="theme-dot t-dark" data-theme="dark" title="Dark theme — deep dark backgrounds with teal accents" aria-label="Dark theme" aria-pressed="false"></button>
+      <button type="button" class="theme-dot t-blue" data-theme="blue" title="Blue theme — deep navy with blue accents" aria-label="Blue theme" aria-pressed="false"></button>
+      <button type="button" class="theme-dot t-green" data-theme="green" title="Green theme — forest green with bright green accents" aria-label="Green theme" aria-pressed="false"></button>
+      <button type="button" class="theme-dot t-purple" data-theme="purple" title="Purple theme — deep purple with lavender accents" aria-label="Purple theme" aria-pressed="false"></button>
+      <button type="button" class="theme-dot t-xp" data-theme="xp" title="Windows XP Luna theme — glossy blue gradient title bar, raised silver buttons, green Start-style primary button" aria-label="Windows XP Luna theme" aria-pressed="false"></button>
+      <button type="button" class="theme-dot t-xp-classic" data-theme="xp-classic" title="Windows 2000 / XP Classic theme — traditional gray panels, flat controls, square beveled buttons" aria-label="Windows 2000 / XP Classic theme" aria-pressed="false"></button>
+      <button type="button" class="theme-dot t-custom" data-theme="custom" title="Custom theme — open the color picker panel" aria-label="Custom theme colors" aria-pressed="false" id="btn-custom-theme"></button>
       <div id="custom-theme-panel">
         <div class="ctp-section">
           <h4>Quick Presets</h4>
@@ -1704,7 +2028,8 @@ body {
             <button class="ctp-preset" data-preset="blue" title="Start from the Blue theme colors">Blue</button>
             <button class="ctp-preset" data-preset="green" title="Start from the Green theme colors">Green</button>
             <button class="ctp-preset" data-preset="purple" title="Start from the Purple theme colors">Purple</button>
-            <button class="ctp-preset" data-preset="xp" title="Start from the Windows XP (Luna) theme colors">Windows XP</button>
+            <button class="ctp-preset" data-preset="xp" title="Start from the Windows XP Luna theme colors">Windows XP</button>
+            <button class="ctp-preset" data-preset="xp-classic" title="Start from the Windows 2000 / XP Classic theme colors">Windows XP Classic</button>
           </div>
         </div>
         <div class="ctp-divider"></div>
@@ -1761,6 +2086,10 @@ body {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.49"/></svg>
         Reset Layout
       </button>
+      <button class="mob-menu-btn" id="mob-timeline" title="Open the Timeline Explorer for the current conversation — time, message sizes and activity calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="12" width="3" height="8" rx="1"/><rect x="10" y="7" width="3" height="13" rx="1"/><rect x="15" y="10" width="3" height="10" rx="1"/></svg>
+        Timeline
+      </button>
       <div class="mob-menu-group-label">Tools</div>
       <button class="mob-menu-btn" id="mob-settings" title="Open settings — tooltips, search debounce, large-file warning and export chunking">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -1786,14 +2115,15 @@ body {
       <div class="mob-menu-theme-row">
         <span class="mob-menu-theme-label">Theme:</span>
         <div class="mob-theme-dots">
-          <div class="theme-dot t-system" data-theme="system" title="System theme — follows your OS light/dark setting (default)"></div>
-          <div class="theme-dot t-light" data-theme="light" title="Light theme — soft light gray with dark text"></div>
-          <div class="theme-dot t-dark" data-theme="dark" title="Dark theme — deep dark backgrounds with teal accents"></div>
-          <div class="theme-dot t-blue" data-theme="blue" title="Blue theme — deep navy with blue accents"></div>
-          <div class="theme-dot t-green" data-theme="green" title="Green theme — forest green with bright green accents"></div>
-          <div class="theme-dot t-purple" data-theme="purple" title="Purple theme — deep purple with lavender accents"></div>
-          <div class="theme-dot t-xp" data-theme="xp" title="Windows XP theme — Luna blue taskbar, silver windows, green Start button"></div>
-          <div class="theme-dot t-custom" data-theme="custom" title="Custom theme — open the color picker panel" id="mob-btn-custom-theme"></div>
+          <button type="button" class="theme-dot t-system" data-theme="system" title="System theme — follows your OS light/dark setting (default)" aria-label="System theme" aria-pressed="false"></button>
+          <button type="button" class="theme-dot t-light" data-theme="light" title="Light theme — soft light gray with dark text" aria-label="Light theme" aria-pressed="false"></button>
+          <button type="button" class="theme-dot t-dark" data-theme="dark" title="Dark theme — deep dark backgrounds with teal accents" aria-label="Dark theme" aria-pressed="false"></button>
+          <button type="button" class="theme-dot t-blue" data-theme="blue" title="Blue theme — deep navy with blue accents" aria-label="Blue theme" aria-pressed="false"></button>
+          <button type="button" class="theme-dot t-green" data-theme="green" title="Green theme — forest green with bright green accents" aria-label="Green theme" aria-pressed="false"></button>
+          <button type="button" class="theme-dot t-purple" data-theme="purple" title="Purple theme — deep purple with lavender accents" aria-label="Purple theme" aria-pressed="false"></button>
+          <button type="button" class="theme-dot t-xp" data-theme="xp" title="Windows XP Luna theme — glossy blue gradient title bar, raised silver buttons, green Start-style primary button" aria-label="Windows XP Luna theme" aria-pressed="false"></button>
+          <button type="button" class="theme-dot t-xp-classic" data-theme="xp-classic" title="Windows 2000 / XP Classic theme — traditional gray panels, flat controls, square beveled buttons" aria-label="Windows 2000 / XP Classic theme" aria-pressed="false"></button>
+          <button type="button" class="theme-dot t-custom" data-theme="custom" title="Custom theme — open the color picker panel" aria-label="Custom theme colors" aria-pressed="false" id="mob-btn-custom-theme"></button>
         </div>
       </div>
     </div>
@@ -1871,6 +2201,7 @@ body {
 
     <!-- GRAPH AREA -->
     <div id="graph-area">
+     <div id="graph-canvas-wrap">
       <div id="role-filters" title="Graph role filters — click a letter to show or hide that role type">
         <button class="role-filter-btn" data-grole="user" title="Show or hide User nodes in the graph"><span class="rf-letter">U</span><span class="role-filter-count">0</span></button>
         <button class="role-filter-btn" data-grole="assistant" title="Show or hide Assistant nodes in the graph"><span class="rf-letter">A</span><span class="role-filter-count">0</span></button>
@@ -1934,6 +2265,10 @@ body {
         <button class="graph-ctrl-btn" id="btn-export-graph" title="Export graph as image">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         </button>
+        <div style="width:100%;height:1px;background:var(--border-color);margin:2px 0;"></div>
+        <button class="graph-ctrl-btn" id="btn-timeline" title="Show or hide the Timeline Explorer — when messages happened, how big they were, and where they sit in the graph" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="12" width="3" height="8" rx="1"/><rect x="10" y="7" width="3" height="13" rx="1"/><rect x="15" y="10" width="3" height="10" rx="1"/></svg>
+        </button>
       </div>
       <div id="minimap" title="Minimap — drag to pan the graph, click to jump, Ctrl/⌘+drag to move the map itself">
         <canvas id="minimap-canvas"></canvas>
@@ -1941,6 +2276,125 @@ body {
         <div id="minimap-label">Map</div>
         <div id="minimap-drag-hint">drag · ctrl=move</div>
       </div>
+     </div>
+
+     <!-- TIMELINE EXPLORER DOCK -->
+     <div id="timeline-dock" data-mode="off" aria-label="Timeline Explorer">
+       <div id="timeline-resize" title="Drag up or down to resize the Timeline Explorer dock"></div>
+       <div id="timeline-header">
+         <span class="tl-brand" title="Timeline Explorer — when messages happened, how big they were, and where they sit in the graph">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="20" x2="21" y2="20"/><rect x="5" y="12" width="3" height="8" rx="1"/><rect x="10" y="7" width="3" height="13" rx="1"/><rect x="15" y="10" width="3" height="10" rx="1"/></svg>
+           Timeline Explorer
+         </span>
+         <span id="timeline-subtitle" title="What the timeline is currently showing"></span>
+         <div class="tl-seg" role="group" aria-label="Timeline view">
+           <button type="button" class="tl-seg-btn active" data-tlview="time" title="Time-accurate view — each message sits at its real timestamp; marker height shows its size">Time</button>
+           <button type="button" class="tl-seg-btn" data-tlview="size" title="Message-size ribbon — each message is a block whose width shows how many bytes it contains">Size</button>
+         </div>
+         <select id="timeline-scope" title="Show the activity of this conversation only, or of every loaded conversation">
+           <option value="conv">This conversation</option>
+           <option value="all">All conversations</option>
+         </select>
+         <div class="tl-seg" role="group" aria-label="Timeline layout">
+           <button type="button" class="tl-seg-btn active" id="tl-mode-dock" title="Dock the timeline beneath the graph">Dock</button>
+           <button type="button" class="tl-seg-btn" id="tl-mode-expanded" title="Expand the timeline and temporarily shrink the graph">Expand</button>
+           <button type="button" class="tl-seg-btn" id="tl-mode-off" title="Hide the timeline and show the graph on its own">Hide</button>
+         </div>
+         <button type="button" class="tl-icon-btn" id="timeline-settings-btn" title="Timeline settings — calendar display, ribbon scale, size measurement, session gap and time zone" aria-expanded="false" aria-controls="timeline-settings-panel">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+         </button>
+       </div>
+       <div id="timeline-body">
+         <div id="timeline-calendar-col">
+           <div class="tl-cal-head">
+             <button type="button" class="tl-icon-btn" id="tl-cal-prev" title="Show the previous month">‹</button>
+             <span id="tl-cal-month" title="Month currently shown in the activity calendar"></span>
+             <button type="button" class="tl-icon-btn" id="tl-cal-next" title="Show the next month">›</button>
+             <button type="button" class="tl-clear-btn" id="tl-cal-today" title="Jump the calendar to the month containing today">Today</button>
+             <button type="button" class="tl-clear-btn" id="tl-cal-all" title="Clear the selected day and show every day in the chart">All days</button>
+           </div>
+           <div id="timeline-calendar" role="grid" aria-label="Activity calendar — bubble size and badge show how much happened on each day"></div>
+           <div id="timeline-cal-legend" title="How to read the calendar"></div>
+         </div>
+         <div id="timeline-chart-col">
+           <div class="tl-chart-head">
+             <span id="timeline-chart-title" title="What the chart is showing"></span>
+             <span id="timeline-chart-meta"></span>
+             <span class="tl-spacer"></span>
+             <button type="button" class="tl-clear-btn" id="tl-zoom-reset" title="Reset the time zoom back to the whole day">Full day</button>
+           </div>
+           <div id="timeline-chart" tabindex="0" title="Timeline chart — click a message marker to select it in the graph; drag the playhead to scrub; scroll to zoom">
+             <div id="timeline-chart-empty"></div>
+           </div>
+           <div id="timeline-overview" title="Time overview — drag the highlighted window to pan through the day, or drag its edges to change the zoom">
+             <div id="timeline-overview-window"></div>
+             <div id="tl-ov-handle-l" title="Drag the left edge of the time window to resize"></div>
+             <div id="tl-ov-handle-r" title="Drag the right edge of the time window to resize"></div>
+           </div>
+           <div id="timeline-sessions" title="Activity sessions — groups of messages separated by a gap longer than the session threshold"></div>
+         </div>
+       </div>
+       <div id="timeline-inspector">
+         <span id="tl-insp-role" class="tl-insp-role"></span>
+         <span id="tl-insp-time"></span>
+         <span id="tl-insp-text-size"></span>
+         <span id="tl-insp-json-size"></span>
+         <span id="tl-insp-branch"></span>
+         <span id="tl-insp-hint">Click a marker to jump to that message in the graph</span>
+       </div>
+       <div id="timeline-settings-panel" hidden>
+         <div class="tl-set-row">
+           <label for="tl-set-calendar">Calendar activity display</label>
+           <select id="tl-set-calendar" title="Choose whether calendar bubbles show size, message count, or both">
+             <option value="both">Bubble size + message count</option>
+             <option value="size">Bubble size only</option>
+             <option value="count">Message count only</option>
+           </select>
+         </div>
+         <div class="tl-set-row">
+           <label for="tl-set-ribbon">Ribbon scale</label>
+           <select id="tl-set-ribbon" title="Linear keeps block widths proportional to bytes; logarithmic makes small messages easier to see when a few huge responses dominate">
+             <option value="linear">Linear</option>
+             <option value="log">Logarithmic</option>
+           </select>
+         </div>
+         <div class="tl-set-row">
+           <label for="tl-set-measure">Measure message size by</label>
+           <select id="tl-set-measure" title="Choose between the message text's UTF-8 bytes and its full serialized JSON size">
+             <option value="text">UTF-8 text bytes</option>
+             <option value="json">Serialized JSON bytes</option>
+           </select>
+         </div>
+         <div class="tl-set-row">
+           <label for="tl-set-gap">New activity session after</label>
+           <select id="tl-set-gap" title="A gap longer than this starts a new activity session">
+             <option value="15">15 minutes</option>
+             <option value="30">30 minutes</option>
+             <option value="60">1 hour</option>
+             <option value="180">3 hours</option>
+           </select>
+         </div>
+         <div class="tl-set-row">
+           <label for="tl-set-tz">Time zone</label>
+           <select id="tl-set-tz" title="Show timestamps and calendar days in your local time or in UTC">
+             <option value="local">Local time</option>
+             <option value="utc">UTC</option>
+           </select>
+         </div>
+         <label class="tl-set-check" title="When a timeline marker is clicked, also select and centre that message in the graph">
+           <input type="checkbox" id="tl-set-follow-timeline" title="Timeline selections follow into the graph" checked>
+           <span>Timeline selections follow into graph</span>
+         </label>
+         <label class="tl-set-check" title="When a graph node is selected, highlight it in the timeline and switch to its day">
+           <input type="checkbox" id="tl-set-follow-graph" title="Graph selections highlight the matching timeline marker" checked>
+           <span>Graph selections highlight timeline</span>
+         </label>
+         <label class="tl-set-check" title="Include system and tool messages in the calendar, chart and size totals">
+           <input type="checkbox" id="tl-set-include-system" title="Include system and tool messages in the timeline">
+           <span>Include system and tool messages</span>
+         </label>
+       </div>
+     </div>
     </div>
 
     <!-- RESIZE HANDLE RIGHT -->
@@ -2392,7 +2846,7 @@ body {
 <div class="modal-backdrop" id="modal-help">
   <div class="modal-box" style="max-width:900px;width:94vw;height:82vh;">
     <div class="modal-header">
-      <h2>ChatGPT JSON Tree Viewer v8.2.0 - Help</h2>
+      <h2>ChatGPT JSON Tree Viewer v8.3.0 - Help</h2>
       <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-help')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;overflow:hidden;">
@@ -2472,22 +2926,45 @@ const state = {
   recentNodes: [],         // [{ convId, nodeId, ts }] newest first
   searchRoleFilters: new Set(['user','assistant','system','other']),
   graphRoleFilters: { user: true, assistant: true, system: true, other: true },
+  // Timeline Explorer (v8.3.0)
+  timeline: {
+    mode: 'dock',          // 'dock' | 'expanded' | 'off'
+    view: 'time',          // 'time' | 'size'
+    scope: 'conv',         // 'conv' | 'all'
+    day: null,             // selected 'YYYY-MM-DD', null = every day
+    month: null,           // calendar month 'YYYY-MM'
+    calendarDisplay: 'both', // 'both' | 'size' | 'count'
+    ribbonScale: 'linear', // 'linear' | 'log'
+    measure: 'text',       // 'text' | 'json'
+    followTimeline: true,
+    followGraph: true,
+    includeSystem: false,
+    sessionGap: 30,        // minutes
+    timezone: 'local',     // 'local' | 'utc'
+    height: 300,
+    zoom: null,            // { start, end } in hours (0..24) or null = full day
+  },
+  timelineIndex: new Map(), // convId -> compact timestamp/size index
 };
 
 // Load persisted theme/settings
 // Default theme is "system" (follows the OS light/dark setting) unless the user picked one.
 const savedTheme = localStorage.getItem('mv-theme') || 'system';
 document.body.setAttribute('data-theme', savedTheme);
-if (savedTheme === 'custom') {
-  document.getElementById('btn-custom-theme')?.classList.add('active');
-} else {
-  document.querySelector(`.theme-dot[data-theme="${savedTheme}"]`)?.classList.add('active');
-}
-document.querySelectorAll('.theme-dot:not(.t-custom)').forEach(d => d.classList.toggle('active', d.dataset.theme === savedTheme));
+// syncThemeDots() is declared later in this script; function declarations are
+// hoisted, so it is safe to call here and keeps both pickers in agreement.
+syncThemeDots(savedTheme);
 try {
   const s = JSON.parse(localStorage.getItem('mv-settings') || '{}');
   Object.assign(state.settings, s);
 } catch(e) {}
+
+// Timeline settings persist separately from the general settings.
+try {
+  const tl = JSON.parse(localStorage.getItem('mv-timeline-settings') || '{}');
+  Object.assign(state.timeline, tl);
+} catch(e) {}
+state.timeline.mode = 'off'; // start collapsed; the graph button opens it
 
 // Stars and recent visits are restored at the end of the script, after all
 // storage helpers are defined and the DOM is ready.
@@ -3519,7 +3996,7 @@ function buildSessionData() {
   return {
     _type: SESSION_FILE_TYPE,
     _version: 1,
-    app: 'ChatGPT JSON Tree Viewer v8.2.0',
+    app: 'ChatGPT JSON Tree Viewer v8.3.0',
     savedAt: new Date().toISOString(),
     activeConvId: state.activeConvId,
     starred,
@@ -3708,6 +4185,21 @@ function getActiveConv() {
   return state.conversations.find(c => c.id === state.activeConvId);
 }
 
+// The graph lives inside #graph-canvas-wrap so the Timeline Explorer dock can
+// sit below it. Everything that needs the visible graph box measures the SVG
+// (or the wrapper), never #graph-area — which now also includes the dock.
+function getGraphViewportEl() {
+  return document.getElementById('graph-canvas-wrap') || document.getElementById('graph-area');
+}
+
+function getGraphViewportSize() {
+  const svg = document.getElementById('graph-svg');
+  const wrap = getGraphViewportEl();
+  const W = svg?.clientWidth || wrap?.offsetWidth || 0;
+  const H = svg?.clientHeight || wrap?.offsetHeight || 0;
+  return { W, H };
+}
+
 function getNodeRole(node) {
   const role = node?.message?.author?.role || 'unknown';
   const text = (node?.message?.content?.text || '').trim();
@@ -3805,8 +4297,7 @@ function renderGraph(conv) {
   const treeData = buildTreeData(conv);
   if (!treeData) { updateMinimap(); return; }
 
-  const W = document.getElementById('graph-area').offsetWidth;
-  const H = document.getElementById('graph-area').offsetHeight;
+  const { W, H } = getGraphViewportSize();
 
   const hierarchy = d3.hierarchy(treeData);
   const nodeCount = hierarchy.descendants().length;
@@ -4030,8 +4521,7 @@ function collectSubtree(nodeId) {
 }
 
 function fitGraph() {
-  const area = document.getElementById('graph-area');
-  const W = area.offsetWidth, H = area.offsetHeight;
+  const { W, H } = getGraphViewportSize();
   // The graph lives in a panel that can be hidden (mobile layout, collapsed
   // view). Fitting while it has no size would produce a NaN zoom transform, so
   // wait until it is visible — the mobile switcher calls fitGraph() again.
@@ -4078,6 +4568,8 @@ function selectNode(nodeId) {
   updateBranchIndex();
   updateStarButton();
   recordVisit(state.activeConvId, nodeId);
+  // Keep the Timeline Explorer marker / inspector in sync (v8.3.0).
+  timelineSyncSelection(nodeId);
 }
 
 function getAncestors(nodeId) {
@@ -4697,8 +5189,7 @@ function scrollToNode(nodeId, zoomIn = false) {
   if (!g || !zoom) return;
   const pos = state.nodePositions.get(nodeId);
   if (!pos) return;
-  const area = document.getElementById('graph-area');
-  const W = area.offsetWidth, H = area.offsetHeight;
+  const { W, H } = getGraphViewportSize();
   // Nothing to centre on while the graph panel is hidden (mobile layout).
   if (!W || !H) return;
   const targetScale = zoomIn ? Math.max(state.transform.k, 1.4) : state.transform.k;
@@ -5705,6 +6196,7 @@ function loadConversation(convId, preserveSearch = false, preferredNodeId = null
   updateTopbarTitle(conv?.title || conv?.data?.title || null);
   renderConvList();
   renderGraph(conv);
+  timelineOnConversationChange(conv);
   tagLinks();
   setTimeout(() => { updateMinimap(); if (preserveSearch) updateNodeHighlights(); }, 100);
 
@@ -5971,8 +6463,7 @@ function updateMinimapViewport() {
   const offY = mm._mmOffY;
   if (!scale) return;
 
-  const area = document.getElementById('graph-area');
-  const W = area.offsetWidth, H = area.offsetHeight;
+  const { W, H } = getGraphViewportSize();
   const t = state.transform;
 
   // Viewport rect in graph coords
@@ -6158,7 +6649,7 @@ function updateTopbarTitle(title) {
   if (title) {
     document.title = title + ' — ChatGPT JSON Tree Viewer';
   } else {
-    document.title = 'ChatGPT JSON Tree Viewer v8.2.0';
+    document.title = 'ChatGPT JSON Tree Viewer v8.3.0';
   }
 }
 
@@ -6675,7 +7166,7 @@ function buildSettings() {
 // Help content
 const helpTopics = [
   { id: 'overview', label: '🗂 Overview', content: `
-    <h2>ChatGPT JSON Tree Viewer v8.2.0</h2>
+    <h2>ChatGPT JSON Tree Viewer v8.3.0</h2>
     <p>A client-side conversation tree visualizer for AI chat exports. Load JSON files from any major AI platform and explore the branching structure of your conversations as an interactive node graph. <strong>All processing happens entirely in your browser</strong> — no data is ever sent to a server.</p>
     <h3>Supported Formats</h3>
     <table>
@@ -7078,6 +7569,63 @@ const helpTopics = [
       <li>Roles are <strong>user</strong> / <strong>assistant</strong>; tool calls are appended as code blocks when the option is enabled.</li>
     </ul>
   `},
+  { id: 'timeline', label: '📅 Timeline Explorer', content: `
+    <h2>Timeline Explorer</h2>
+    <p>The Timeline Explorer is a dock beneath the graph that answers three different questions about a conversation: <strong>when</strong> messages happened, <strong>how big</strong> they were, and <strong>where</strong> they sit in the branching tree. Open it with the bar-chart button at the bottom of the graph controls, or from the mobile menu. It starts hidden so the graph keeps its full size until you ask for it.</p>
+    <h3>Layout modes</h3>
+    <ul>
+      <li><strong>Dock</strong> — the default: a resizable strip under the graph. Drag the divider at the top of the dock to change its height.</li>
+      <li><strong>Expand</strong> — gives the timeline most of the workspace and shrinks the graph.</li>
+      <li><strong>Hide</strong> — removes the dock completely and returns the graph to its full size.</li>
+    </ul>
+    <p>The timeline's own controls — calendar, chart, inspector, session chips and settings — adopt the selected <strong>Windows XP</strong> or <strong>Windows 2000 / XP Classic</strong> theme, so the newest parts of the app match the rest of the interface.</p>
+    <h3>Activity calendar</h3>
+    <ul>
+      <li>Each day is a cell. A larger teal bubble means more messages; the number in the corner is the exact count. Use the gear menu to show <strong>bubbles only</strong>, <strong>counts only</strong>, or <strong>both</strong>.</li>
+      <li>Switch the scope selector between <strong>This conversation</strong> and <strong>All conversations</strong>. In All mode the calendar aggregates every loaded conversation and the day tooltip also reports how many conversations were active.</li>
+      <li>Click a day to filter the chart to that date. <strong>Today</strong> jumps the calendar to the current month; <strong>All days</strong> clears the filter (and switches to the Size ribbon, where an all-days view makes sense).</li>
+      <li>Days without a usable timestamp are never invented. Messages that lack timestamps are counted as <strong>undated</strong> and reported in the chart footer.</li>
+    </ul>
+    <h3>Time view</h3>
+    <p>Messages are placed at their real clock time on a 24-hour strip. <strong>Horizontal position is when the message happened; marker height is how large it was.</strong> A long message is not drawn as a long duration — the app does not invent response times it does not have.</p>
+    <ul>
+      <li><strong>Scroll</strong> over the chart to zoom from the whole day down to a single minute, anchored at the pointer; the axis shows seconds at high zoom levels; <strong>Full day</strong> resets the zoom.</li>
+      <li><strong>Drag empty chart space</strong> horizontally to pan the visible time window left or right through the day; <strong>double-click</strong> empty chart space to reset the zoom to the full day.</li>
+      <li><strong>Drag the yellow playhead</strong> to scrub through messages; the inspector follows the nearest message immediately, and the graph centres on it when you release.</li>
+      <li><strong>Click a marker</strong> to select that message in the graph and centre it.</li>
+      <li><strong>Left / Right arrow keys</strong> move through the visible messages when the chart has focus.</li>
+      <li>Soft teal bands mark <strong>activity sessions</strong> — runs of messages separated by less than the session gap.</li>
+    </ul>
+    <p>When the chart is zoomed out, messages sent within moments of each other stack into small clusters shown with a count badge; the cluster resolves into individual markers as you zoom in.</p>
+    <p>The thin strip directly under the chart is a <strong>time overview</strong>: the highlighted rectangle is the window you are viewing. Drag it to pan through the day, or drag its left/right edges to resize the zoom.</p>
+    <h3>Size ribbon</h3>
+    <p>The ribbon renders inside its own horizontally scrollable viewport with minimum clickable block widths, so conversations with thousands of messages stay navigable. Switch between <strong>Linear</strong> (true proportions) and <strong>Logarithmic</strong> (small messages stay visible when a few huge responses dominate) in the settings.</p>
+    <ul>
+      <li><strong>Left / Right arrow keys</strong> move the selection block through the ribbon when it has focus.</li>
+    </ul>
+    <h3>Message sizes</h3>
+    <p>The inspector reports two different measurements, because they are not the same thing:</p>
+    <ul>
+      <li><strong>text</strong> — the UTF-8 byte length of the message body, measured with <code>TextEncoder</code></li>
+      <li><strong>json</strong> — the byte length of the full serialized node, including metadata, author, content type and parent/child IDs</li>
+    </ul>
+    <p>An image reference in an export is not the image file itself, so attachment bytes are not included in either number.</p>
+    <h3>Linking timeline and graph</h3>
+    <ul>
+      <li><strong>Timeline selections follow into graph</strong> — clicking a marker selects and centres that message. Turn this off if you only want to inspect sizes without moving the graph.</li>
+      <li><strong>Graph selections highlight timeline</strong> — selecting a graph node switches the calendar to that message's day and highlights its marker. When the timeline is zoomed, the viewport pans just enough to reveal the selected message, without resetting your zoom level.</li>
+    </ul>
+    <h3>Settings</h3>
+    <ul>
+      <li><strong>Calendar activity display</strong> — bubble size, message count, or both</li>
+      <li><strong>Ribbon scale</strong> — linear or logarithmic</li>
+      <li><strong>Measure message size by</strong> — UTF-8 text bytes or serialized JSON bytes</li>
+      <li><strong>New activity session after</strong> — 15 minutes, 30 minutes, 1 hour or 3 hours of inactivity</li>
+      <li><strong>Time zone</strong> — local time or UTC, applied to both the calendar days and the chart times</li>
+      <li><strong>Include system and tool messages</strong> — off by default, because system prompts and tool output usually swamp the picture</li>
+    </ul>
+    <div class="tip"><strong>Tip:</strong> Large exports stay responsive because each conversation is reduced to a compact index of timestamp, role and byte size once when it is first measured. Dragging, zooming and switching views reuse that index instead of re-reading the conversation JSON.</div>
+  `},
   { id: 'themes', label: '🎨 Themes', content: `
     <h2>Themes</h2>
     <p>Click any of the colored dots in the top-right corner of the toolbar to switch themes instantly. The preference is saved to <code>localStorage</code> automatically.</p>
@@ -7090,8 +7638,17 @@ const helpTopics = [
       <tr><td>Dark navy</td><td><strong>Blue</strong></td><td>Deep navy blue with blue accent</td></tr>
       <tr><td>Dark green</td><td><strong>Green</strong></td><td>Forest green with bright green accents</td></tr>
       <tr><td>Dark purple</td><td><strong>Purple</strong></td><td>Deep purple with lavender accents</td></tr>
-      <tr><td>Blue / green</td><td><strong>Windows XP</strong></td><td>Luna-inspired preset: silver window chrome, blue accents and green highlights</td></tr>
+      <tr><td>Blue / green / glossy</td><td><strong>Windows XP Luna</strong></td><td>The glossy blue treatment: Tahoma typography, glossy gradient title bar, soft beveled raised buttons, cream panels, slightly rounded tabs, XP-style dialogs and sunken edit fields. The primary action is a normal blue command button, not a green Start button.</td></tr>
+      <tr><td>Blue / green / plain</td><td><strong>Windows 2000 / XP Classic</strong></td><td>Traditional square gray panels, flat controls, square beveled buttons, navy-blue title bar, restrained bevels and softened charcoal text</td></tr>
     </table>
+    <p>Theme dots are real buttons: click them, or use <kbd>Tab</kbd> to reach them and <kbd>Enter</kbd> / <kbd>Space</kbd> to choose one. The active dot carries <code>aria-pressed="true"</code> for screen readers, and the desktop and mobile pickers always agree on which theme is selected.</p>
+    <h3>Windows XP — two flavours</h3>
+    <p>The Windows XP family now has two separate application themes, so you can choose between the glossy <strong>Windows XP Luna</strong> look and the deliberately plain <strong>Windows 2000 / XP Classic</strong> look:</p>
+    <ul>
+      <li><strong>XP Luna</strong> (<code>xp</code>) — the upgraded theme: light panels, blue gradient title bar, raised glossy controls, green Start-style primary button, classic tabs and dotted focus outlines. An existing saved <code>xp</code> preference now shows this upgraded look.</li>
+      <li><strong>XP Classic</strong> (<code>xp-classic</code>) — the traditional style: flat gray controls, hard edges, minimal gradients, square beveled buttons and plain panels.</li>
+    </ul>
+    <p>The <strong>Custom</strong> colour panel presets include both: <strong>Windows XP</strong> applies the Luna colours, and the new <strong>Windows XP Classic</strong> preset applies the classic colours.</p>
     <h3>Custom Theme</h3>
     <p>The <strong>rainbow ✦ dot</strong> at the end of the row opens the custom theme panel, where you can set every color individually with a color picker:</p>
     <ul>
@@ -7102,7 +7659,7 @@ const helpTopics = [
     </ul>
     <p>All changes are <strong>live</strong> — the entire UI updates as you drag the color picker.</p>
     <h3>Quick Presets</h3>
-    <p>Inside the custom panel, the six preset buttons (Dark, Light, Blue, Green, Purple, Windows XP) apply that theme's colors as a starting point. Adjust from there to create your own look.</p>
+    <p>Inside the custom panel, the seven preset buttons (Dark, Light, Blue, Green, Purple, Windows XP Luna, Windows XP Classic) apply that theme's colors as a starting point. Adjust from there to create your own look.</p>
     <h3>Reset</h3>
     <p>The <strong>↺ Reset to current theme defaults</strong> button at the bottom of the panel restores all custom colors to the defaults of the theme that was active before you opened the panel (System resolves to the Light or Dark palette, whichever matches your OS).</p>
     <div class="tip"><strong>Tip:</strong> Custom colors are saved automatically and restored on every visit — even across sessions.</div>
@@ -7112,7 +7669,7 @@ const helpTopics = [
     <h3>Three-Panel Layout</h3>
     <ul>
       <li><strong>Left sidebar</strong> — search bar + conversations list. Min width 160px, max 400px</li>
-      <li><strong>Center graph area</strong> — the interactive D3 tree visualization with grid background</li>
+      <li><strong>Center graph area</strong> — the interactive D3 tree visualization with grid background. The <strong>Timeline Explorer</strong> dock (v8.3.0) slides in below it when opened from the graph controls; the graph canvas shrinks rather than being covered.</li>
       <li><strong>Right panel</strong> — Selected Node, Branch and Recent tabs</li>
     </ul>
     <h3>Resizing Panels</h3>
@@ -7697,7 +8254,13 @@ function buildHelp() {
     searchCount.textContent = total ? `${total} match${total !== 1 ? 'es' : ''} in ${results.length} topic${results.length !== 1 ? 's' : ''}` : 'No results';
 
     if (results.length === 0) {
-      resultsDiv.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:20px;text-align:center">No results for "<strong>${q}</strong>"</div>`;
+      // Treat the search text as plain text, never as HTML.
+      const message = document.createElement('div');
+      message.style.cssText = 'color:var(--text-muted);font-size:13px;padding:20px;text-align:center';
+      const queryText = document.createElement('strong');
+      queryText.textContent = q;
+      message.append('No results for "', queryText, '"');
+      resultsDiv.replaceChildren(message);
       return;
     }
 
@@ -7971,7 +8534,8 @@ const THEME_PRESETS = {
   blue:   { '--custom-bg-primary':'#060d1a','--custom-bg-secondary':'#0a1525','--custom-bg-panel':'#08111f','--custom-text-primary':'#d0e8ff','--custom-text-secondary':'#7090b8','--custom-accent':'#00aaff','--custom-accent-dim':'#0088cc','--custom-border':'#1a3050','--custom-node-user-border':'#60a5fa','--custom-node-assistant-border':'#4ade80','--custom-node-system-border':'#6b7280','--custom-node-other-border':'#c084fc' },
   green:  { '--custom-bg-primary':'#061008','--custom-bg-secondary':'#0a1a0c','--custom-bg-panel':'#081208','--custom-text-primary':'#d0ffd8','--custom-text-secondary':'#70b880','--custom-accent':'#00ff88','--custom-accent-dim':'#00cc66','--custom-border':'#1a3820','--custom-node-user-border':'#60a5fa','--custom-node-assistant-border':'#4ade80','--custom-node-system-border':'#6b7280','--custom-node-other-border':'#c084fc' },
   purple: { '--custom-bg-primary':'#0d080f','--custom-bg-secondary':'#130c1a','--custom-bg-panel':'#100a14','--custom-text-primary':'#ead0ff','--custom-text-secondary':'#9070b8','--custom-accent':'#cc88ff','--custom-accent-dim':'#aa66dd','--custom-border':'#2a1840','--custom-node-user-border':'#60a5fa','--custom-node-assistant-border':'#4ade80','--custom-node-system-border':'#6b7280','--custom-node-other-border':'#c084fc' },
-  xp:     { '--custom-bg-primary':'#ece9d8','--custom-bg-secondary':'#d4d0c8','--custom-bg-panel':'#f1eee3','--custom-text-primary':'#000000','--custom-text-secondary':'#333333','--custom-accent':'#0a53d0','--custom-accent-dim':'#0842a8','--custom-border':'#919b9c','--custom-node-user-border':'#0058e6','--custom-node-assistant-border':'#2f7d2f','--custom-node-system-border':'#5f6b74','--custom-node-other-border':'#7a3fbf' },
+  xp:     { '--custom-bg-primary':'#ffffff','--custom-bg-secondary':'#ece9d8','--custom-bg-panel':'#f5f4eb','--custom-text-primary':'#111111','--custom-text-secondary':'#303c4a','--custom-accent':'#075ac9','--custom-accent-dim':'#03479e','--custom-border':'#a8b5c8','--custom-node-user-border':'#0058e6','--custom-node-assistant-border':'#2f7d2f','--custom-node-system-border':'#5f6b74','--custom-node-other-border':'#7a3fbf' },
+  'xp-classic': { '--custom-bg-primary':'#ece9d8','--custom-bg-secondary':'#d4d0c8','--custom-bg-panel':'#f1eee3','--custom-text-primary':'#000000','--custom-text-secondary':'#333333','--custom-accent':'#0a53d0','--custom-accent-dim':'#0842a8','--custom-border':'#919b9c','--custom-node-user-border':'#0058e6','--custom-node-assistant-border':'#2f7d2f','--custom-node-system-border':'#5f6b74','--custom-node-other-border':'#7a3fbf' },
 };
 
 // Resolve a theme name to the custom-color preset it should start from.
@@ -8037,44 +8601,76 @@ function loadCustomTheme() {
   return false;
 }
 
-// Named theme dots
-document.querySelectorAll('.theme-dot:not(.t-custom)').forEach(dot => {
+// ============================================================
+// THEME SELECTION — one shared system for desktop and mobile
+// ============================================================
+// Every theme dot in both pickers carries data-theme, so all indicators can
+// be updated from a single place. Buttons are real <button> elements, so
+// keyboard focus and aria-pressed work without extra handlers.
+function syncThemeDots(theme) {
+  document.querySelectorAll('.theme-dot').forEach(dot => {
+    const active = dot.dataset.theme === theme;
+    dot.classList.toggle('active', active);
+    dot.setAttribute('aria-pressed', String(active));
+  });
+}
+
+function selectTheme(theme) {
+  document.body.setAttribute('data-theme', theme);
+  localStorage.setItem('mv-theme', theme);
+  localStorage.setItem('mv-theme-before-custom', theme); // remembered for custom reset
+  syncThemeDots(theme);
+  document.getElementById('custom-theme-panel')?.classList.remove('open');
+  // Timeline colours are read from the active theme's CSS variables.
+  if (state.timeline && state.timeline.mode !== 'off') {
+    setTimeout(() => timelineRender(), 0);
+  }
+}
+
+// Named themes — desktop and mobile pickers share the same handler.
+document.querySelectorAll('#theme-picker .theme-dot:not(.t-custom)').forEach(dot => {
   dot.addEventListener('click', () => {
-    const theme = dot.dataset.theme;
-    document.body.setAttribute('data-theme', theme);
-    document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d === dot));
-    localStorage.setItem('mv-theme', theme);
-    localStorage.setItem('mv-theme-before-custom', theme); // remember for custom reset
-    document.getElementById('custom-theme-panel').classList.remove('open');
+    selectTheme(dot.dataset.theme);
   });
 });
 
-// Custom theme dot — toggle panel
-document.getElementById('btn-custom-theme').addEventListener('click', e => {
-  e.stopPropagation();
+// Custom theme: the existing colour editor is moved into whichever picker
+// opened it, so there is only ever one set of colour inputs.
+function toggleCustomTheme(mobile = false) {
   const panel = document.getElementById('custom-theme-panel');
-  const isOpen = panel.classList.toggle('open');
-  if (isOpen) {
-    // Switch to custom theme
-    document.body.setAttribute('data-theme', 'custom');
-    document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.id === 'btn-custom-theme'));
-    localStorage.setItem('mv-theme', 'custom');
-    // Load saved custom, or default to whatever theme was active before
-    if (!loadCustomTheme()) {
-      const activeName = localStorage.getItem('mv-theme-before-custom') ||
-        ['system','dark','light','blue','green','purple','xp'].find(t =>
-          document.querySelector(`.theme-dot[data-theme="${t}"]`)?.classList.contains('active')
-        ) || 'system';
-      const base = presetForTheme(activeName);
-      applyCustomVars(base); syncCustomInputs(base); saveCustomTheme(base);
-    }
+  const host = document.getElementById(mobile ? 'mob-menu-inner' : 'theme-picker');
+  if (!panel || !host) return;
+
+  if (panel.parentElement !== host) {
+    panel.classList.remove('open');
+    host.appendChild(panel);
   }
+
+  const isOpen = panel.classList.toggle('open');
+  if (!isOpen) return;
+
+  document.body.setAttribute('data-theme', 'custom');
+  localStorage.setItem('mv-theme', 'custom');
+  syncThemeDots('custom');
+
+  if (!loadCustomTheme()) {
+    const previous = localStorage.getItem('mv-theme-before-custom') || 'system';
+    const base = presetForTheme(previous);
+    applyCustomVars(base);
+    syncCustomInputs(base);
+    saveCustomTheme(base);
+  }
+}
+
+document.getElementById('btn-custom-theme')?.addEventListener('click', e => {
+  e.stopPropagation();
+  toggleCustomTheme(false);
 });
 
-// Close panel on outside click
+// Close the panel when clicking anywhere outside either picker.
 document.addEventListener('click', e => {
-  if (!e.target.closest('#theme-picker')) {
-    document.getElementById('custom-theme-panel').classList.remove('open');
+  if (!e.target.closest('#theme-picker, #mob-menu-inner')) {
+    document.getElementById('custom-theme-panel')?.classList.remove('open');
   }
 });
 
@@ -8112,11 +8708,11 @@ document.getElementById('ctp-reset-btn').addEventListener('click', () => {
   syncCustomInputs(preset);
   saveCustomTheme(preset);
 });
-// On load: restore custom theme if it was active
+// On load: restore the saved custom palette if the custom theme was active.
 (function() {
   const saved = localStorage.getItem('mv-theme');
   if (saved === 'custom') {
-    document.getElementById('btn-custom-theme').classList.add('active');
+    syncThemeDots('custom');
     loadCustomTheme();
   }
 })();
@@ -8660,6 +9256,345 @@ function exportPDF(forceBranch) {
   .msg-body td, .msg-body th { border: 1pt solid #ccc; padding: 4pt 8pt; }
   .msg-body th { background: #f0f0f0; font-weight: bold; }
   #measure { position: absolute; left: -9999px; top: 0; width: 7.1in; visibility: hidden; }
+/* ========================================================================
+   ChatGPT JSON Tree Viewer v8.3.0 — Windows application GUI refinement
+   Paste INSIDE the existing <style> element, near its END, before the closing style tag.
+   CSS only: no new markup, JavaScript, fonts, libraries or network requests.
+
+   xp          = Windows XP Luna (glossy blue, softly rounded controls)
+   xp-classic  = Windows 2000 / Windows XP Classic (square, gray, beveled)
+
+   This changes APPLICATION CHROME only, not the conversation graph engine.
+   ======================================================================== */
+
+/* Two distinct system palettes and shared control tokens. */
+[data-theme="xp"] {
+  --font-ui: Tahoma, Verdana, sans-serif;
+  --bg-primary: #ffffff;
+  --bg-secondary: #ece9d8;
+  --bg-tertiary: #f8f7f1;
+  --bg-panel: #f3f1e7;
+  --bg-hover: #e2ecff;
+  --bg-active: #d7e6fd;
+  --border-color: #a6b3c7;
+  --border-light: #7f9db9;
+  --text-primary: #202020;
+  --text-secondary: #424242;
+  --text-muted: #626973;
+  --accent-teal: #0759c6;
+  --accent-teal-dim: #03449a;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --scrollbar-width: 14px;
+  --scrollbar-color: #9dbce4;
+  --win-face: #ece9d8;
+  --win-border: #7f9db9;
+  --win-text: #202020;
+  --win-raise: linear-gradient(180deg, #ffffff 0%, #f3f6fd 42%, #d6e0f0 100%);
+  --win-hover: linear-gradient(180deg, #ffffff 0%, #e6f1ff 43%, #c4dafa 100%);
+  --win-pressed: linear-gradient(180deg, #c5d8f2, #edf4ff);
+  --win-title: linear-gradient(180deg, #70b7ff 0%, #388de7 10%, #1766d9 46%, #0752c1 88%, #034296 100%);
+  --win-focus: #245fbc;
+}
+
+[data-theme="xp-classic"] {
+  --font-ui: Tahoma, "MS Sans Serif", sans-serif;
+  --bg-primary: #ffffff;
+  --bg-secondary: #d4d0c8;
+  --bg-tertiary: #eae7df;
+  --bg-panel: #d4d0c8;
+  --bg-hover: #e8e7e2;
+  --bg-active: #c4d5ee;
+  --border-color: #888888;
+  --border-light: #777777;
+  --text-primary: #242424;
+  --text-secondary: #444444;
+  --text-muted: #606060;
+  --accent-teal: #154eaa;
+  --accent-teal-dim: #0b387d;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --scrollbar-width: 15px;
+  --scrollbar-color: #c8c4bc;
+  --win-face: #d4d0c8;
+  --win-border: #808080;
+  --win-text: #242424;
+  --win-raise: #d4d0c8;
+  --win-hover: #e0ded7;
+  --win-pressed: #bcb8b0;
+  --win-title: linear-gradient(90deg, #0a246a 0%, #3876b5 100%);
+  --win-focus: #0a246a;
+}
+
+/* Common application typography, panels, dividers. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) {
+  color: var(--win-text);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  button, input, select, textarea
+) { font-family: var(--font-ui); }
+
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  #sidebar-left, #panel-right, #timeline-dock
+) { background: var(--win-face); }
+
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  #sidebar-left, #panel-right, #timeline-calendar-col,
+  #timeline-header, #timeline-inspector, .content-toolbar,
+  #panel-tabs
+) { border-color: var(--win-border); }
+
+/* Blue application-bar treatment; do not add an OS taskbar or Start menu. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) #topbar {
+  background: var(--win-title);
+  border-bottom: 1px solid #093d86;
+  box-shadow: inset 0 1px rgba(255,255,255,.28);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) #logo {
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0,0,0,.4);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .logo-version {
+  color: #ffffff;
+  background: rgba(0,0,0,.2);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) #topbar-conv-title:not(:empty) {
+  background: #fff;
+  color: #202020;
+  border: 1px solid var(--win-border);
+  border-radius: 2px;
+  text-shadow: none;
+}
+
+/* Actual raised UI controls, including controls inside Timeline Explorer. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  .topbar-btn, .reset-opt, .tools-opt, .action-btn,
+  .view-mode-btn, .sort-dir-btn, .files-mini-btn,
+  .graph-ctrl-btn, .ctp-preset, .ctp-reset,
+  .tl-seg-btn, .tl-icon-btn, .tl-clear-btn,
+  .tl-session-chip, .mob-menu-btn
+) {
+  color: var(--win-text);
+  background: var(--win-raise);
+  border: 1px solid var(--win-border);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 1px 1px rgba(255,255,255,.85),
+              inset -1px -1px rgba(63,74,92,.17);
+  text-shadow: none;
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  .topbar-btn, .reset-opt, .tools-opt, .action-btn,
+  .view-mode-btn, .sort-dir-btn, .files-mini-btn,
+  .graph-ctrl-btn, .ctp-preset, .ctp-reset,
+  .tl-seg-btn, .tl-icon-btn, .tl-clear-btn,
+  .tl-session-chip, .mob-menu-btn
+):hover { background: var(--win-hover); color: var(--win-text); }
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  .topbar-btn, .reset-opt, .tools-opt, .action-btn,
+  .view-mode-btn, .sort-dir-btn, .files-mini-btn,
+  .graph-ctrl-btn, .ctp-preset, .ctp-reset,
+  .tl-seg-btn, .tl-icon-btn, .tl-clear-btn,
+  .tl-session-chip, .mob-menu-btn
+):active {
+  background: var(--win-pressed);
+  box-shadow: inset 1px 1px #707070, inset -1px -1px #ffffff;
+  transform: translate(1px, 1px);
+}
+
+/* Keep selected controls obviously selected without black-on-blue labels. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  .tl-seg-btn.active, .search-scope-btn.active
+) {
+  color: #ffffff;
+  background: #1559b7;
+  border-color: #0c448f;
+  box-shadow: inset 1px 1px rgba(0,0,0,.22);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  .view-mode-btn.active, .graph-ctrl-btn.active,
+  .action-btn.active
+) { background: var(--bg-active); color: var(--accent-teal); }
+
+/* Classic Windows 2000 buttons use pronounced 3D light/shadow edges. */
+[data-theme="xp-classic"] :is(
+  .topbar-btn, .action-btn, .view-mode-btn,
+  .sort-dir-btn, .graph-ctrl-btn, .tl-seg-btn,
+  .tl-icon-btn, .tl-clear-btn, .tl-session-chip
+) {
+  border-color: #808080;
+  box-shadow: inset 1px 1px #ffffff,
+              inset -1px -1px #404040;
+}
+
+/* Leave the primary action highlighted, but make it a normal application
+   command button, not a fake green Windows Start button. */
+[data-theme="xp"] .topbar-btn.primary {
+  color: #142d51;
+  background: linear-gradient(#ffffff, #d9e9ff);
+  border: 1px solid #3165a5;
+}
+[data-theme="xp"] .topbar-btn.primary:hover { background: #e6f1ff; }
+[data-theme="xp-classic"] .topbar-btn.primary {
+  color: #202020;
+  background: #d4d0c8;
+  border: 2px solid #505050;
+}
+
+/* Native-feeling tabs instead of flat modern underlines. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) #panel-tabs {
+  background: var(--win-face);
+  border-bottom: 1px solid var(--win-border);
+  gap: 2px;
+  padding: 5px 5px 0;
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .panel-tab {
+  padding: 6px 10px;
+  background: var(--win-raise);
+  color: var(--win-text);
+  border: 1px solid var(--win-border);
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .panel-tab.active {
+  background: var(--bg-primary);
+  color: var(--win-text);
+  border-bottom: 1px solid var(--bg-primary);
+  margin-bottom: -1px;
+  font-weight: 700;
+}
+
+/* White sunken edit fields + dropdowns. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  input[type="text"], input[type="search"], input[type="number"],
+  textarea, select
+) {
+  background: #ffffff;
+  color: #242424;
+  border: 1px solid var(--win-border);
+  border-radius: 0;
+  box-shadow: inset 1px 1px rgba(50,50,50,.18);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  input[type="text"], input[type="search"], input[type="number"],
+  textarea, select
+):focus-visible {
+  outline: 1px solid var(--win-focus);
+  outline-offset: 1px;
+}
+
+/* Menus: flat sheets with subtle old-school shadows, not floating pills. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  .tools-dropdown, .reset-dropdown, #context-menu,
+  #custom-theme-panel, #timeline-settings-panel,
+  #mob-menu-inner
+) {
+  background: var(--win-face);
+  color: var(--win-text);
+  border: 1px solid var(--win-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 2px 2px 0 rgba(0,0,0,.23);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  .tools-opt, .reset-opt, .ctx-item
+) { border-radius: 0; }
+:is([data-theme="xp"], [data-theme="xp-classic"]) .ctx-item:hover {
+  background: #245ed0;
+  color: #ffffff;
+}
+
+/* Old-style dialog frame with a real application title bar. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) .modal-backdrop {
+  backdrop-filter: none;
+  background: rgba(0,0,0,.35);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .modal-box {
+  background: var(--win-face);
+  border: 2px solid var(--win-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 4px 5px 0 rgba(0,0,0,.25);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .modal-header {
+  background: var(--win-title);
+  color: #ffffff;
+  padding: 7px 10px;
+  border-bottom: 1px solid #173e7d;
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .modal-header h2 {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-shadow: 0 1px rgba(0,0,0,.3);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .modal-close {
+  border-radius: 2px;
+  background: #d4d0c8;
+  color: #222222;
+  border: 1px solid #666666;
+  width: 23px;
+  height: 23px;
+  font-size: 16px;
+}
+[data-theme="xp"] .modal-close {
+  background: linear-gradient(#ff9879, #d93d22);
+  border-color: #a82e1a;
+  color: #ffffff;
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .help-content {
+  background: #ffffff;
+}
+
+/* Timeline + calendar: continue the Windows application look. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) #timeline-header {
+  background: var(--win-face);
+  box-shadow: inset 0 1px rgba(255,255,255,.7);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) #timeline-chart {
+  background: #ffffff;
+  border: 1px solid var(--win-border);
+  border-radius: 0;
+  box-shadow: inset 1px 1px rgba(0,0,0,.12);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .tl-cal-day {
+  border-radius: 0;
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .tl-cal-day.has-activity .tl-cal-bubble {
+  box-shadow: none;
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .tl-cal-day.selected {
+  color: #173a78;
+  background: #d6e4fb;
+  border-color: #447db5;
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) #timeline-inspector {
+  background: var(--win-face);
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) .tl-session-chip {
+  border-radius: var(--radius-sm);
+}
+
+/* Brighter old-school selection state for menus, lists and Help. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) :is(
+  .conv-item.active, .branch-msg-item.selected,
+  .help-topic-btn.active
+) { background: #d2e2fa; color: #1d3560; border-color: #4f80bb; }
+
+/* Focus remains visible on both themes, including Timeline controls. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) button:focus-visible {
+  outline: 1px dotted #151515;
+  outline-offset: 2px;
+}
+
+/* Wider, less pill-like scrollbars where WebKit styling is supported. */
+:is([data-theme="xp"], [data-theme="xp-classic"]) *::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-color);
+  border: 1px solid var(--win-border);
+  border-radius: 1px;
+}
+:is([data-theme="xp"], [data-theme="xp-classic"]) *::-webkit-scrollbar-track {
+  background: var(--win-face);
+}
 </style>
 </head>
 <body>
@@ -9182,7 +10117,7 @@ function exportGraphRaster(fmt) {
   const status = document.getElementById('graph-export-status');
   status.style.display = '';
   status.textContent = 'Capturing graph…';
-  const graphArea = document.getElementById('graph-area');
+  const graphArea = getGraphViewportEl();
   html2canvas(graphArea, {
     backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-graph').trim() || '#1a1a2e',
     scale: 2,
@@ -9701,10 +10636,10 @@ document.getElementById('btn-toggle-minimap').addEventListener('click', () => {
     const mmY = clientY - rect.top;
     const gx = (mmX - mm._mmOffX) / mm._mmScale;
     const gy = (mmY - mm._mmOffY) / mm._mmScale;
-    const area = document.getElementById('graph-area');
+    const { W, H } = getGraphViewportSize();
     const k = state.transform.k;
     const t = d3.zoomIdentity
-      .translate(area.offsetWidth / 2 - k * gx, area.offsetHeight / 2 - k * gy)
+      .translate(W / 2 - k * gx, H / 2 - k * gy)
       .scale(k);
     // No transition: the minimap must follow the pointer in real time.
     d3.select('#graph-svg').call(zoom.transform, t);
@@ -9720,7 +10655,7 @@ document.getElementById('btn-toggle-minimap').addEventListener('click', () => {
 
     if (mode === 'move') {
       mm.classList.add('dragging');
-      const area = document.getElementById('graph-area');
+      const area = getGraphViewportEl();
       const areaRect = area.getBoundingClientRect();
       const mmRect = mm.getBoundingClientRect();
       startLeft = mmRect.left - areaRect.left;
@@ -9735,7 +10670,7 @@ document.getElementById('btn-toggle-minimap').addEventListener('click', () => {
       if (!moved && Math.abs(dx) + Math.abs(dy) > 3) moved = true;
 
       if (mode === 'move') {
-        const area = document.getElementById('graph-area');
+        const area = getGraphViewportEl();
         const areaRect = area.getBoundingClientRect();
         const newLeft = Math.max(8, Math.min(areaRect.width - mm.offsetWidth - 8, startLeft + dx));
         const newBottom = Math.max(8, Math.min(areaRect.height - mm.offsetHeight - 8, startBottom - dy));
@@ -9804,7 +10739,31 @@ syncSearchRoleButtons();
 // MAINTAINER NOTES block at the top of this file.
 const changelog = [
   {
-    version: 'v8.2.0', date: '2026-10-28', latest: true,
+    version: 'v8.3.0', date: '2026-11-02', latest: true,
+    items: [
+      { type: 'new', text: '<strong>Timeline Explorer</strong> - a collapsible dock under the graph with three synchronized views. The <strong>activity calendar</strong> shows which days were busy using both bubble size and message counts. The <strong>Time</strong> view places every message at its real timestamp on a 24-hour strip, with marker height showing message size. The <strong>Size</strong> view turns the same messages into a ribbon whose block widths are proportional to their byte size. Click any marker or block to select that message in the graph, or click a graph node to highlight it in the timeline.' },
+      { type: 'new', text: '<strong>Message size inspector</strong> - the timeline footer reports the selected message\'s role, timestamp, branch level, child count, and both its <strong>UTF-8 text size</strong> and its <strong>serialized JSON size</strong> (B / KiB / MiB / GiB / TiB). Sizes are measured with <code>TextEncoder</code>, so they are accurate for non-ASCII text.' },
+      { type: 'new', text: '<strong>Activity sessions</strong> - messages are grouped into sessions separated by an inactivity gap (15 minutes to 3 hours, configurable). Session chips under the chart show the start time, message count and total size, and clicking one zooms the timeline to that time range.' },
+      { type: 'new', text: '<strong>Timeline settings</strong> - a gear menu controls calendar display (bubbles, counts or both), linear or logarithmic ribbon scale, text-byte vs JSON-byte measurement, local time vs UTC, whether system/tool messages are included, and whether timeline and graph selections follow each other. Drag the divider above the dock to resize it, or use <strong>Dock</strong> / <strong>Expand</strong> / <strong>Hide</strong>. Scroll the chart to zoom into a smaller time range; <strong>Full day</strong> resets it.' },
+      { type: 'new', text: '<strong>Windows XP Luna styling</strong> - the XP theme now goes beyond colours: a blue gradient title bar, raised Windows-style buttons, a green Luna primary button, classic panel tabs and dotted focus outlines. Everything is scoped to <code>[data-theme="xp"]</code>, so the other themes are unchanged.' },
+      { type: 'fix', text: '<strong>Google Fonts now load</strong> - the <code>@import</code> sat below ordinary CSS rules, where browsers ignore it. It now sits at the very top of the stylesheet and the duplicate was removed, so DM Sans, Literata and JetBrains Mono load as intended.' },
+      { type: 'fix', text: '<strong>Help search is safe</strong> - the "No results" message builds a text node instead of inserting the search query into <code>innerHTML</code>, so typed HTML is displayed as plain text rather than executed.' },
+      { type: 'fix', text: '<strong>One theme system for desktop and mobile</strong> - theme dots now share a single selection function, so both pickers always highlight the same theme. The mobile custom-colour dot opens the real colour editor inside the hamburger menu instead of switching to an unconfigured custom palette.' },
+      { type: 'change', text: '<strong>Theme dots are keyboard-accessible buttons</strong> - the pickers are real <code>&lt;button&gt;</code> elements with <code>aria-pressed</code> state, focus rings and accessible labels, so they work with Tab, Enter and Space as well as the mouse.' },
+      { type: 'new', text: '<strong>Windows XP split into two themes</strong> - the existing XP look is now <strong>Windows 2000 / XP Classic</strong> (<code>xp-classic</code>) and a new <strong>Windows XP Luna</strong> (<code>xp</code>) takes over the glossy blue treatment (gradient title bar, raised controls, green primary button, classic tabs and dotted focus outlines). The theme picker has a new Luna / Classic pair of dots in both desktop and mobile pickers, and the Custom theme presets cover both flavours. An existing saved <code>xp</code> preference now resolves to the upgraded Luna look; switch to <code>xp-classic</code> for the plain classic style.' },
+      { type: 'new', text: '<strong>Timeline Explorer navigation is now fully draggable</strong> - dragging empty chart space pans the visible time window, dragging the yellow playhead scrubs messages, double-click empty chart space resets the zoom to the full day, and the mouse wheel zooms around the pointer (down to a one-minute window).' },
+      { type: 'new', text: '<strong>Overview navigator</strong> - a tiny 24-hour overview strip now sits directly under the timeline chart with a draggable highlighted window. Drag the window to pan, drag its edges to resize the zoom.' },
+      { type: 'new', text: '<strong>Message-size ribbon is now scrollable</strong> - the ribbon lives in its own horizontally scrollable viewport with minimum clickable block widths while keeping relative size proportions.' },
+      { type: 'fix', text: '<strong>Dense messages no longer overlap</strong> - nearby messages in the time view are stacked into clusters that display a count, expanding automatically as you zoom in.' },
+      { type: 'fix', text: '<strong>Zoom now goes down to one minute</strong> - the time chart accepts finer zoom levels and shows seconds on the axis at high zoom depths.' },
+      { type: 'fix', text: '<strong>Graph selection pans the timeline viewport</strong> - selecting a graph node now pans the zoomed timeline window just enough to reveal that message, without resetting the user\'s zoom level.' },
+      { type: 'new', text: '<strong>Windows application GUI refinement</strong> - the XP themes now use Tahoma typography, beveled raised buttons, classic scrollbars, native tabs, sunken edit fields and old-style dialogs, bringing the application chrome closer to real Windows software from 2002-2005.' },
+      { type: 'fix', text: '<strong>Windows 2000 / XP Classic text softened</strong> - primary text moved from pure black to dark charcoal with softer secondary and muted grays, keeping the classic high-contrast look while reducing harshness.' },
+      { type: 'new', text: '<strong>Timeline Explorer follows the Windows theme</strong> - the timeline chart, calendar, inspector and menus now adopt the selected Windows theme instead of keeping modern styling.' },
+    ]
+  },
+  {
+    version: 'v8.2.0', date: '2026-10-28', latest: false,
     items: [
       { type: 'new', text: '<strong>Import a session from the Recent tab</strong> - the Recent tab toolbar now has an <strong>import</strong> button next to Save and Clear. It opens the same session picker as <strong>Tools → Load Session</strong>, so you can restore stars and visit history without leaving the panel. Importing still asks whether to merge with or replace your current history.' },
       { type: 'change', text: '<strong>Session buttons grouped together</strong> - Save, import and Clear now sit together in the Recent tab toolbar, so the panel can export, restore and reset history without opening Tools or Settings.' },
@@ -10137,7 +11096,1143 @@ const changelog = [
 ];
 
 
-console.log('ChatGPT JSON Tree Viewer v8.2.0 loaded. Drop a JSON file to get started.');
+// ============================================================
+// TIMELINE EXPLORER (v8.3.0)
+// ============================================================
+// Three synchronized pieces:
+//   1. Activity calendar  — which days were busy (bubble size + count)
+//   2. Chart              — time-accurate markers or a message-size ribbon
+//   3. Graph selection    — clicking a marker selects the same node
+// Everything is calculated from one compact per-conversation index
+// (timestamp, role, byte size) so dragging and switching views stay cheap.
+
+const TL_NS = 'http://www.w3.org/2000/svg';
+const _tlEncoder = new TextEncoder();
+const _tlJsonBytesCache = new WeakMap();
+let _tlRenderFrame = null;
+let _tlScrubDrag = null;
+
+function tlEl(tag, attrs) {
+  const el = document.createElementNS(TL_NS, tag);
+  if (attrs) Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  return el;
+}
+
+function tlDateParts(ms) {
+  const d = new Date(ms);
+  if (state.timeline.timezone === 'utc') {
+    return { y: d.getUTCFullYear(), mo: d.getUTCMonth(), d: d.getUTCDate(), h: d.getUTCHours(), mi: d.getUTCMinutes(), s: d.getUTCSeconds(), dow: d.getUTCDay() };
+  }
+  return { y: d.getFullYear(), mo: d.getMonth(), d: d.getDate(), h: d.getHours(), mi: d.getMinutes(), s: d.getSeconds(), dow: d.getDay() };
+}
+
+function tlDayKey(ms) {
+  const p = tlDateParts(ms);
+  return `${p.y}-${String(p.mo + 1).padStart(2, '0')}-${String(p.d).padStart(2, '0')}`;
+}
+
+function tlMonthKey(ms) {
+  const p = tlDateParts(ms);
+  return `${p.y}-${String(p.mo + 1).padStart(2, '0')}`;
+}
+
+function tlHourFraction(ms) {
+  const p = tlDateParts(ms);
+  return p.h + p.mi / 60 + p.s / 3600;
+}
+
+function tlFormatTime(ms) {
+  const p = tlDateParts(ms);
+  return `${String(p.h).padStart(2, '0')}:${String(p.mi).padStart(2, '0')}:${String(p.s).padStart(2, '0')}`;
+}
+
+function tlFormatShortTime(ms) {
+  const p = tlDateParts(ms);
+  const h12 = p.h % 12 || 12;
+  return `${h12}:${String(p.mi).padStart(2, '0')} ${p.h < 12 ? 'AM' : 'PM'}`;
+}
+
+function tlFormatDayLabel(dayKey) {
+  if (!dayKey) return '';
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function tlMonthLabel(monthKey) {
+  if (!monthKey) return '';
+  const [y, m] = monthKey.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+}
+
+function formatMessageSize(bytes) {
+  const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB'];
+  if (!Number.isFinite(bytes) || bytes < 0) return 'Unknown';
+  let i = 0;
+  while (bytes >= 1024 && i < units.length - 1) {
+    bytes /= 1024;
+    i++;
+  }
+  const digits = i === 0 ? 0 : bytes >= 100 ? 0 : bytes >= 10 ? 1 : 2;
+  return `${bytes.toFixed(digits)} ${units[i]}`;
+}
+
+function tlTextBytes(node) {
+  return _tlEncoder.encode(getNodeText(node) || '').byteLength;
+}
+
+function tlJsonBytes(node) {
+  if (_tlJsonBytesCache.has(node)) return _tlJsonBytesCache.get(node);
+  let size = 0;
+  try { size = _tlEncoder.encode(JSON.stringify(node)).byteLength; } catch { size = 0; }
+  _tlJsonBytesCache.set(node, size);
+  return size;
+}
+
+function tlEntryBytes(entry) {
+  return state.timeline.measure === 'json' ? tlJsonBytes(entry.node) : entry.textBytes;
+}
+
+function tlEntryIncluded(entry) {
+  if (state.timeline.includeSystem) return true;
+  return entry.bucket !== 'system' && entry.bucket !== 'other';
+}
+
+// Build the compact index once per conversation (rebuilt if the node count changes).
+function timelineBuildIndex(conv) {
+  const entries = [];
+  const mapping = conv?.data?.mapping || {};
+  Object.entries(mapping).forEach(([key, node]) => {
+    if (!node || !node.message) return;
+    const role = getNodeRole(node);
+    entries.push({
+      convId: conv.id,
+      nodeId: node.id || key,
+      node,
+      role,
+      bucket: roleBucket(role),
+      ts: toMillis(node.message.create_time) || 0,
+      textBytes: tlTextBytes(node),
+    });
+  });
+  entries.sort((a, b) => (a.ts || Infinity) - (b.ts || Infinity));
+  const index = { entries, count: entries.length };
+  state.timelineIndex.set(conv.id, index);
+  return index;
+}
+
+function timelineGetIndex(conv) {
+  if (!conv) return { entries: [], count: 0 };
+  const cached = state.timelineIndex.get(conv.id);
+  const count = Object.values(conv.data.mapping || {}).filter(n => n && n.message).length;
+  if (cached && cached.count === count) return cached;
+  return timelineBuildIndex(conv);
+}
+
+function timelineActiveEntries() {
+  const tl = state.timeline;
+  let entries = [];
+  if (tl.scope === 'all') {
+    state.conversations.forEach(c => { entries.push(...timelineGetIndex(c).entries); });
+    // Each conversation index is sorted on its own; "All conversations" needs
+    // one chronological run so the size ribbon reads in real time order.
+    entries.sort((a, b) => (a.ts || Infinity) - (b.ts || Infinity));
+  } else {
+    entries = timelineGetIndex(getActiveConv()).entries.slice();
+  }
+  return entries.filter(tlEntryIncluded);
+}
+
+function timelineFindEntry(nodeId) {
+  if (!nodeId) return null;
+  const tl = state.timeline;
+  if (tl.scope === 'all') {
+    for (const c of state.conversations) {
+      const hit = timelineGetIndex(c).entries.find(e => e.nodeId === nodeId && e.convId === c.id);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  const conv = getActiveConv();
+  if (!conv) return null;
+  return timelineGetIndex(conv).entries.find(e => e.nodeId === nodeId) || null;
+}
+
+function timelineSaveSettings() {
+  try {
+    const { zoom, playhead, day, month, mode, ...persisted } = state.timeline;
+    localStorage.setItem('mv-timeline-settings', JSON.stringify(persisted));
+  } catch {}
+}
+
+function timelineScheduleRender() {
+  if (_tlRenderFrame) return;
+  _tlRenderFrame = requestAnimationFrame(() => {
+    _tlRenderFrame = null;
+    timelineRender();
+  });
+}
+
+// Called by loadConversation() whenever the active conversation changes.
+function timelineOnConversationChange(conv) {
+  state.timeline.zoom = null;
+  state.timeline.playhead = null;
+  state.timeline.day = null;
+  state.timeline.month = null;
+  if (state.timeline.mode === 'off') return;
+  timelineEnsureContext();
+  timelineRender();
+}
+
+function timelineEnsureContext(entries) {
+  const tl = state.timeline;
+  entries = entries || timelineActiveEntries();
+  const dated = entries.filter(e => e.ts);
+  if (!tl.month) {
+    const base = tl.day || (dated.length ? tlDayKey(dated[dated.length - 1].ts) : tlDayKey(Date.now()));
+    tl.month = base.slice(0, 7);
+  }
+  if (tl.view === 'time' && !tl.day && dated.length) {
+    tl.day = tlDayKey(dated[dated.length - 1].ts);
+  }
+  if (tl.view === 'time' && tl.day) tl.month = tl.day.slice(0, 7);
+  return entries;
+}
+
+function timelineSetMode(mode) {
+  const tl = state.timeline;
+  tl.mode = mode;
+  const dock = document.getElementById('timeline-dock');
+  if (!dock) return;
+  dock.dataset.mode = mode;
+  dock.style.height = mode === 'dock' ? `${tl.height}px` : '';
+  const btn = document.getElementById('btn-timeline');
+  if (btn) {
+    btn.classList.toggle('active', mode !== 'off');
+    btn.setAttribute('aria-pressed', String(mode !== 'off'));
+  }
+  document.getElementById('tl-mode-dock')?.classList.toggle('active', mode === 'dock');
+  document.getElementById('tl-mode-expanded')?.classList.toggle('active', mode === 'expanded');
+  document.getElementById('tl-mode-off')?.classList.toggle('active', mode === 'off');
+  if (mode !== 'off') {
+    timelineEnsureContext();
+    timelineRender();
+  }
+  // The graph viewport just changed size.
+  requestAnimationFrame(() => {
+    updateMinimap();
+    updateMinimapViewport();
+  });
+  timelineSaveSettings();
+}
+
+function timelineRender() {
+  const tl = state.timeline;
+  if (tl.mode === 'off') return;
+  const entries = timelineActiveEntries();
+  timelineEnsureContext(entries);
+
+  // Header state
+  document.querySelectorAll('[data-tlview]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tlview === tl.view);
+  });
+  const scopeSel = document.getElementById('timeline-scope');
+  if (scopeSel) scopeSel.value = tl.scope;
+  const subtitle = document.getElementById('timeline-subtitle');
+  if (subtitle) {
+    const conv = getActiveConv();
+    subtitle.textContent = tl.scope === 'all'
+      ? `${state.conversations.length} conversation${state.conversations.length !== 1 ? 's' : ''} · ${entries.length} messages`
+      : `${conv?.title || 'No conversation'} · ${entries.length} messages`;
+  }
+
+  timelineSyncSettingsInputs();
+  timelineRenderCalendar(entries);
+  timelineRenderChart(entries);
+  timelineRenderInspector(timelineFindEntry(state.selectedNodeId));
+  timelineRenderOverview();
+}
+
+function timelineSyncSettingsInputs() {
+  const tl = state.timeline;
+  const set = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
+  const check = (id, value) => { const el = document.getElementById(id); if (el) el.checked = !!value; };
+  set('tl-set-calendar', tl.calendarDisplay);
+  set('tl-set-ribbon', tl.ribbonScale);
+  set('tl-set-measure', tl.measure);
+  set('tl-set-gap', String(tl.sessionGap));
+  set('tl-set-tz', tl.timezone);
+  check('tl-set-follow-timeline', tl.followTimeline);
+  check('tl-set-follow-graph', tl.followGraph);
+  check('tl-set-include-system', tl.includeSystem);
+}
+
+// ---------- Calendar ----------
+function timelineRenderCalendar(entries) {
+  const tl = state.timeline;
+  const grid = document.getElementById('timeline-calendar');
+  if (!grid) return;
+  // A month is normally supplied by timelineEnsureContext(); fall back to the
+  // current month so the prev/next buttons can never dereference null.
+  const monthKey = tl.month || tlMonthKey(Date.now());
+  const monthEl = document.getElementById('tl-cal-month');
+  if (monthEl) monthEl.textContent = tlMonthLabel(monthKey);
+
+  // Aggregate per day: messages, conversations and total bytes.
+  const dayStats = new Map();
+  entries.forEach(e => {
+    if (!e.ts) return;
+    const key = tlDayKey(e.ts);
+    if (!dayStats.has(key)) dayStats.set(key, { count: 0, bytes: 0, convs: new Set() });
+    const s = dayStats.get(key);
+    s.count++;
+    s.bytes += tlEntryBytes(e);
+    s.convs.add(e.convId);
+  });
+  const maxCount = Math.max(1, ...Array.from(dayStats.values()).map(s => s.count));
+
+  const [year, monthNum] = monthKey.split('-').map(Number);
+  const utc = tl.timezone === 'utc';
+  // Build the grid from calendar arithmetic rather than by adding 86,400,000 ms,
+  // so a DST change in local time cannot skip or repeat a day.
+  const first = utc ? new Date(Date.UTC(year, monthNum - 1, 1)) : new Date(year, monthNum - 1, 1);
+  const firstDow = tlDateParts(first.getTime()).dow;
+  const todayKey = tlDayKey(Date.now());
+
+  grid.replaceChildren();
+  ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(wd => {
+    const h = document.createElement('div');
+    h.className = 'tl-cal-wd';
+    h.textContent = wd;
+    grid.appendChild(h);
+  });
+
+  for (let i = 0; i < 42; i++) {
+    const d = utc
+      ? new Date(Date.UTC(year, monthNum - 1, 1 - firstDow + i))
+      : new Date(year, monthNum - 1, 1 - firstDow + i);
+    const p = tlDateParts(d.getTime());
+    const key = `${p.y}-${String(p.mo + 1).padStart(2, '0')}-${String(p.d).padStart(2, '0')}`;
+    const outside = p.mo !== monthNum - 1;
+    const stats = dayStats.get(key);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tl-cal-day' + (outside ? ' outside' : '') + (key === todayKey ? ' today' : '') +
+      (key === tl.day ? ' selected' : '') + (stats ? ' has-activity' : '');
+    btn.dataset.day = key;
+    btn.setAttribute('role', 'gridcell');
+
+    const num = document.createElement('span');
+    num.className = 'tl-cal-num';
+    num.textContent = p.d;
+    btn.appendChild(num);
+
+    if (stats) {
+      const ratio = stats.count / maxCount;
+      const size = 5 + Math.round(20 * Math.sqrt(ratio));
+      const bubble = document.createElement('span');
+      bubble.className = 'tl-cal-bubble';
+      if (tl.calendarDisplay === 'count') bubble.style.display = 'none';
+      else { bubble.style.width = size + 'px'; bubble.style.height = size + 'px'; }
+      btn.appendChild(bubble);
+
+      if (tl.calendarDisplay !== 'size') {
+        const badge = document.createElement('span');
+        badge.className = 'tl-cal-count';
+        badge.textContent = stats.count > 999 ? '999+' : String(stats.count);
+        btn.appendChild(badge);
+      }
+      const convPart = tl.scope === 'all' ? ` · ${stats.convs.size} conversation${stats.convs.size !== 1 ? 's' : ''}` : '';
+      btn.title = `${tlFormatDayLabel(key)} — ${stats.count} message${stats.count !== 1 ? 's' : ''}${convPart} · ${formatMessageSize(stats.bytes)}`;
+      btn.setAttribute('aria-label', btn.title);
+    } else {
+      btn.title = `${tlFormatDayLabel(key)} — no activity`;
+      btn.setAttribute('aria-label', btn.title);
+    }
+
+    btn.addEventListener('click', () => {
+      state.timeline.day = key;
+      state.timeline.month = key.slice(0, 7);
+      state.timeline.zoom = null;
+      state.timeline.playhead = null;
+      timelineRender();
+    });
+    grid.appendChild(btn);
+  }
+
+  const legend = document.getElementById('timeline-cal-legend');
+  if (legend) {
+    const modeLabel = tl.calendarDisplay === 'size' ? 'Bubble size = messages'
+      : tl.calendarDisplay === 'count' ? 'Number = messages'
+      : 'Bubble size + number = messages';
+    legend.textContent = `${modeLabel}. Click a day to filter the chart.`;
+  }
+}
+
+// ---------- Chart ----------
+function timelineRenderChart(entries) {
+  const chart = document.getElementById('timeline-chart');
+  const empty = document.getElementById('timeline-chart-empty');
+  if (!chart) return;
+  chart.querySelectorAll('svg').forEach(s => s.remove());
+  const oldRibbonScroll = document.getElementById('timeline-ribbon-scroll');
+  if (oldRibbonScroll) oldRibbonScroll.remove();
+
+  const tl = state.timeline;
+  const dated = entries.filter(e => e.ts);
+  const undated = entries.filter(e => !e.ts);
+  let visible;
+
+  if (tl.view === 'time') {
+    visible = tl.day ? dated.filter(e => tlDayKey(e.ts) === tl.day) : dated;
+  } else {
+    visible = tl.day ? dated.filter(e => tlDayKey(e.ts) === tl.day) : entries.slice();
+  }
+
+  const title = document.getElementById('timeline-chart-title');
+  const meta = document.getElementById('timeline-chart-meta');
+  const totalBytes = visible.reduce((sum, e) => sum + tlEntryBytes(e), 0);
+
+  if (!visible.length) {
+    if (empty) {
+      empty.style.display = 'flex';
+      empty.textContent = tl.view === 'time'
+        ? (tl.day ? `No messages on ${tlFormatDayLabel(tl.day)}.` : 'No dated messages to show. Import a conversation with timestamps.')
+        : 'No messages to measure.';
+    }
+    if (title) title.textContent = tl.view === 'time' ? 'Daily activity' : 'Message-size ribbon';
+    if (meta) meta.textContent = undated.length ? `${undated.length} undated` : '';
+    timelineRenderSessions([]);
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  const roleColorMap = (() => {
+    const cs = getComputedStyle(document.body);
+    const fallback = { user: '#60a5fa', assistant: '#4ade80', system: '#9ca3af', other: '#c084fc' };
+    const pick = (varName, key) => cs.getPropertyValue(varName).trim() || fallback[key];
+    return {
+      user: pick('--accent-blue', 'user'),
+      assistant: pick('--accent-green', 'assistant'),
+      system: pick('--text-muted', 'system'),
+      other: pick('--accent-purple', 'other'),
+    };
+  })();
+  const roleColor = role => roleColorMap[role] || roleColorMap.other;
+
+  const rect = chart.getBoundingClientRect();
+  const W = Math.max(120, rect.width);
+  const H = Math.max(60, rect.height);
+  const svg = tlEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img' });
+  svg.setAttribute('aria-label', tl.view === 'time' ? 'Time-accurate message timeline' : 'Message-size ribbon');
+
+  if (tl.view === 'time') {
+    const domain = timelineCurrentDomain();
+    const span = domain.end - domain.start;
+    const padTop = 16;
+    const baseline = H - 14;
+    const maxH = Math.max(10, baseline - padTop);
+    const maxBytes = Math.max(1, ...visible.map(tlEntryBytes));
+
+    // Hour gridlines + labels
+    const step = span <= 2 ? 0.25 : span <= 6 ? 0.5 : span <= 12 ? 1 : 2;
+    for (let h = Math.ceil(domain.start / step) * step; h <= domain.end + 0.0001; h += step) {
+      const x = ((h - domain.start) / span) * W;
+      svg.appendChild(tlEl('line', { x1: x, y1: padTop - 6, x2: x, y2: baseline, class: 'tl-hour-line' }));
+      const label = tlEl('text', { x: Math.min(W - 24, Math.max(2, x + 2)), y: H - 3, class: 'tl-hour-label' });
+      label.textContent = `${String(Math.floor(h)).padStart(2, '0')}:${String(Math.round((h % 1) * 60)).padStart(2, '0')}`;
+      svg.appendChild(label);
+    }
+
+    // Activity sessions as soft background bands
+    const sessions = timelineBuildSessions(visible);
+    sessions.forEach(session => {
+      const x1 = ((tlHourFraction(session.first.ts) - domain.start) / span) * W;
+      const x2 = ((tlHourFraction(session.last.ts) - domain.start) / span) * W;
+      if (x2 >= 0 && x1 <= W) {
+        svg.appendChild(tlEl('rect', {
+          x: Math.max(0, x1), y: padTop - 6,
+          width: Math.max(3, Math.min(W, x2) - Math.max(0, x1)),
+          height: baseline - padTop + 6,
+          class: 'tl-session-band'
+        }));
+      }
+    });
+
+    // Message markers — nearby messages are stacked into clusters when the
+    // view is zoomed out, drawn individually when zoomed in.
+    const markerH = e => 5 + Math.round((maxH - 5) * Math.sqrt(tlEntryBytes(e) / maxBytes));
+    const clusterGap = span <= 2 ? 0.05 : span <= 6 ? 0.25 : span <= 12 ? 0.5 : 1;
+    const clusters = [];
+    let cluster = null;
+    visible.forEach(e => {
+      const hour = tlHourFraction(e.ts);
+      if (cluster && hour - cluster.lastH <= clusterGap) {
+        cluster.last = e;
+        cluster.lastH = hour;
+        cluster.count += 1;
+        cluster.maxH = Math.max(cluster.maxH, markerH(e));
+      } else {
+        if (cluster) clusters.push(cluster);
+        cluster = { entries: [e], first: e, last: e, firstH: hour, lastH: hour, count: 1, maxH: markerH(e) };
+      }
+    });
+    if (cluster) clusters.push(cluster);
+
+    clusters.forEach(c => {
+      const e = c.first;
+      const hour = c.firstH;
+      const x = ((hour - domain.start) / span) * W;
+      const w = c.count > 1 ? Math.max(3, ((c.lastH - c.firstH) / span) * W) : (span <= 2 ? 7 : span <= 6 ? 5 : 3);
+      const h = c.maxH;
+      const r = tlEl('rect', {
+        x: Math.max(0, x - w / 2), y: baseline - h, width: w, height: h,
+        rx: 1.5, fill: roleColor(c.first.bucket),
+        class: 'tl-marker' + (c.first.nodeId === state.selectedNodeId ? ' selected' : ''),
+        'data-node-id': c.first.nodeId,
+        'data-conv-id': c.first.convId,
+      });
+      if (c.count > 1) {
+        const label = tlEl('text', { x: Math.max(0, x + w / 2), y: baseline - h - 7, class: 'tl-marker-count' });
+        label.textContent = String(c.count);
+        svg.appendChild(label);
+      }
+      const t = document.createElementNS(TL_NS, 'title');
+      t.textContent = `${e.role} · ${tlFormatDayLabel(tlDayKey(e.ts))} ${tlFormatTime(e.ts)} · ${formatMessageSize(bytes)}\n${(getNodeText(e.node) || '').slice(0, 120)}`;
+      r.appendChild(t);
+      r.addEventListener('click', ev => {
+        ev.stopPropagation();
+        timelineSelectEntry(e);
+      });
+      svg.appendChild(r);
+    });
+
+    // Playhead (scrubber)
+    if (typeof tl.playhead === 'number') {
+      const x = ((tl.playhead - domain.start) / span) * W;
+      if (x >= 0 && x <= W) {
+        svg.appendChild(tlEl('line', { x1: x, y1: padTop - 8, x2: x, y2: baseline + 4, class: 'tl-playhead' }));
+        svg.appendChild(tlEl('rect', { x: x - 4, y: padTop - 13, width: 8, height: 5, rx: 1, class: 'tl-playhead-handle' }));
+      }
+    }
+
+    if (title) title.textContent = `Daily activity — ${tlFormatDayLabel(tl.day)}`;
+    if (meta) {
+      const sessionText = sessions.length ? ` · ${sessions.length} session${sessions.length !== 1 ? 's' : ''}` : '';
+      const undatedText = undated.length ? ` · ${undated.length} undated` : '';
+      meta.textContent = `${visible.length} messages · ${formatMessageSize(totalBytes)}${sessionText}${undatedText}`;
+    }
+    timelineRenderSessions(sessions);
+  } else {
+    // Message-size ribbon
+    const padTop = 12;
+    const baseline = H - 16;
+    const blockH = Math.max(18, baseline - padTop);
+    const bytesList = visible.map(tlEntryBytes);
+    const useLog = tl.ribbonScale === 'log';
+    const weights = bytesList.map(b => useLog ? Math.log10(b + 10) : Math.max(1, b));
+    const totalWeight = weights.reduce((a, b) => a + b, 0) || 1;
+    let widths = weights.map(w => Math.max(2, (w / totalWeight) * W));
+    let sum = widths.reduce((a, b) => a + b, 0);
+    if (sum > W) { widths = widths.map(w => w * (W / sum)); sum = W; }
+
+    let x = 0;
+    visible.forEach((e, i) => {
+      const w = widths[i];
+      const r = tlEl('rect', {
+        x, y: padTop, width: Math.max(0.5, w - 0.5), height: blockH,
+        rx: w > 3 ? 1 : 0, fill: roleColor(e.bucket),
+        class: 'tl-ribbon-block' + (e.nodeId === state.selectedNodeId ? ' selected' : ''),
+        'data-node-id': e.nodeId,
+        'data-conv-id': e.convId,
+      });
+      const t = document.createElementNS(TL_NS, 'title');
+      t.textContent = `${e.role} · ${e.ts ? tlFormatDayLabel(tlDayKey(e.ts)) + ' ' + tlFormatTime(e.ts) : 'Undated'} · ${formatMessageSize(tlEntryBytes(e))}\n${(getNodeText(e.node) || '').slice(0, 120)}`;
+      r.appendChild(t);
+      r.addEventListener('click', ev => {
+        ev.stopPropagation();
+        timelineSelectEntry(e);
+      });
+      svg.appendChild(r);
+      x += w;
+    });
+
+    const caption = tlEl('text', { x: 2, y: H - 4, class: 'tl-axis-caption' });
+    caption.textContent = `${useLog ? 'Logarithmic' : 'Linear'} width = ${tl.measure === 'json' ? 'serialized JSON bytes' : 'UTF-8 text bytes'} · ${visible.length} messages`;
+    svg.appendChild(caption);
+
+    if (title) title.textContent = tl.day ? `Message-size ribbon — ${tlFormatDayLabel(tl.day)}` : 'Message-size ribbon — all days';
+    if (meta) {
+      const undatedText = undated.length ? ` · ${undated.length} undated` : '';
+      meta.textContent = `${visible.length} messages · ${formatMessageSize(totalBytes)}${undatedText}`;
+    }
+    timelineRenderSessions([]);
+  }
+
+  if (tl.view === 'size') {
+    // The size ribbon gets its own horizontally scrollable viewport.
+    const scroll = document.createElement('div');
+    scroll.id = 'timeline-ribbon-scroll';
+    scroll.style.cssText = 'position:absolute;inset:0;overflow-x:auto;overflow-y:hidden;';
+    scroll.appendChild(svg);
+    chart.appendChild(scroll);
+  } else {
+    chart.appendChild(svg);
+  }
+}
+
+function timelineCurrentDomain() {
+  const tl = state.timeline;
+  if (tl.zoom && tl.zoom.end > tl.zoom.start) return { start: tl.zoom.start, end: tl.zoom.end };
+  return { start: 0, end: 24 };
+}
+
+function timelineBuildSessions(entries) {
+  const gapMs = Math.max(1, state.timeline.sessionGap) * 60000;
+  const dated = entries.filter(e => e.ts).sort((a, b) => a.ts - b.ts);
+  const sessions = [];
+  let current = null;
+  dated.forEach(e => {
+    if (!current || e.ts - current.last.ts > gapMs) {
+      current = { first: e, last: e, entries: [e] };
+      sessions.push(current);
+    } else {
+      current.last = e;
+      current.entries.push(e);
+    }
+  });
+  return sessions;
+}
+
+function timelineRenderSessions(sessions) {
+  const wrap = document.getElementById('timeline-sessions');
+  if (!wrap) return;
+  wrap.replaceChildren();
+  if (state.timeline.view !== 'time') { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  if (!sessions.length) {
+    const hint = document.createElement('span');
+    hint.style.cssText = 'font-size:10px;color:var(--text-muted);padding:2px 4px';
+    hint.textContent = state.timeline.day ? 'No activity sessions on this day.' : 'No activity sessions to show.';
+    wrap.appendChild(hint);
+    return;
+  }
+  sessions.forEach(session => {
+    const bytes = session.entries.reduce((sum, e) => sum + tlEntryBytes(e), 0);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tl-session-chip';
+    btn.title = `Zoom the timeline to this session — ${session.entries.length} messages, ${formatMessageSize(bytes)}, ${tlFormatShortTime(session.first.ts)} to ${tlFormatShortTime(session.last.ts)}`;
+    const time = document.createElement('span');
+    time.className = 'tl-session-time';
+    time.textContent = tlFormatShortTime(session.first.ts);
+    btn.append(time, ` · ${session.entries.length} msg${session.entries.length !== 1 ? 's' : ''} · ${formatMessageSize(bytes)}`);
+    btn.addEventListener('click', () => {
+      const start = Math.max(0, tlHourFraction(session.first.ts) - 0.25);
+      const end = Math.min(24, tlHourFraction(session.last.ts) + 0.25);
+      state.timeline.zoom = { start, end: Math.max(start + 0.25, end) };
+      timelineRender();
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function timelineRenderOverview() {
+  const ov = document.getElementById('timeline-overview');
+  const win = document.getElementById('timeline-overview-window');
+  if (!ov || !win) return;
+  if (state.timeline.view !== 'time') { ov.style.display = 'none'; return; }
+  ov.style.display = '';
+  const tl = state.timeline;
+  const domain = timelineCurrentDomain();
+  const span = domain.end - domain.start;
+  const rect = ov.getBoundingClientRect();
+  const W = Math.max(60, rect.width);
+  const H = Math.max(20, rect.height);
+  const pct = h => (h / 24) * 100;
+  win.style.left = pct(tl.zoom ? tl.zoom.start : 0) + '%';
+  win.style.width = Math.max(0, pct(tl.zoom ? tl.zoom.end : 24) - pct(tl.zoom ? tl.zoom.start : 0)) + '%';
+}
+
+// ---------- Selection / inspector ----------
+function timelineSelectEntry(entry) {
+  if (!entry) return;
+  state.timeline.playhead = entry.ts ? tlHourFraction(entry.ts) : state.timeline.playhead;
+  if (!state.timeline.followTimeline) {
+    timelineHighlightEntry(entry);
+    timelineRenderInspector(entry);
+    return;
+  }
+  if (entry.convId !== state.activeConvId) {
+    loadConversation(entry.convId, false, entry.nodeId);
+  } else {
+    selectNode(entry.nodeId);
+    scrollToNode(entry.nodeId);
+  }
+}
+
+function timelineHighlightEntry(entry) {
+  document.querySelectorAll('#timeline-chart .tl-marker, #timeline-chart .tl-ribbon-block').forEach(el => {
+    const same = !!entry && el.getAttribute('data-node-id') === entry.nodeId && el.getAttribute('data-conv-id') === entry.convId;
+    el.classList.toggle('selected', same);
+  });
+}
+
+// Called from selectNode() — keeps the timeline in step with graph selection.
+function timelineSyncSelection(nodeId) {
+  const tl = state.timeline;
+  if (tl.mode === 'off') return;
+  // "Graph selections highlight timeline" is off: leave the timeline alone.
+  if (!tl.followGraph) return;
+  const entry = timelineFindEntry(nodeId);
+  if (!entry) {
+    timelineRenderInspector(null);
+    return;
+  }
+  if (entry.ts) {
+    const day = tlDayKey(entry.ts);
+    const hour = tlHourFraction(entry.ts);
+    if (tl.day !== day) {
+      tl.day = day;
+      tl.month = day.slice(0, 7);
+      tl.zoom = null;
+      tl.playhead = hour;
+      timelineRender();
+      return;
+    }
+    // If a zoom window is active and does not contain the selection, pan the
+    // window just enough to reveal the selected marker — without resetting the
+    // user's zoom level.
+    if (tl.zoom) {
+      const span = tl.zoom.end - tl.zoom.start;
+      if (hour < tl.zoom.start - 0.001 || hour > tl.zoom.end + 0.001) {
+        const start = Math.max(0, Math.min(24 - span, hour - span / 2));
+        tl.zoom = { start, end: start + span };
+        tl.playhead = hour;
+        timelineRender();
+        return;
+      }
+    }
+  }
+  tl.playhead = entry.ts ? tlHourFraction(entry.ts) : tl.playhead;
+  timelineHighlightEntry(entry);
+  timelineRenderInspector(entry);
+  timelineMovePlayhead();
+}
+
+function timelineRenderInspector(entry) {
+  const roleEl = document.getElementById('tl-insp-role');
+  const timeEl = document.getElementById('tl-insp-time');
+  const textEl = document.getElementById('tl-insp-text-size');
+  const jsonEl = document.getElementById('tl-insp-json-size');
+  const branchEl = document.getElementById('tl-insp-branch');
+  const hint = document.getElementById('tl-insp-hint');
+  if (!roleEl) return;
+  if (!entry) {
+    roleEl.textContent = '';
+    roleEl.className = 'tl-insp-role';
+    if (timeEl) timeEl.textContent = '';
+    if (textEl) textEl.textContent = '';
+    if (jsonEl) jsonEl.textContent = '';
+    if (branchEl) branchEl.textContent = '';
+    if (hint) hint.style.display = '';
+    return;
+  }
+  roleEl.textContent = entry.role;
+  roleEl.className = 'tl-insp-role ' + (entry.bucket || 'other');
+  if (timeEl) timeEl.textContent = entry.ts ? `${tlFormatDayLabel(tlDayKey(entry.ts))} ${tlFormatTime(entry.ts)}` : 'Undated';
+  if (textEl) textEl.textContent = `text ${formatMessageSize(entry.textBytes)}`;
+  if (jsonEl) jsonEl.textContent = `json ${formatMessageSize(tlJsonBytes(entry.node))}`;
+  if (branchEl) {
+    const children = entry.node.children?.length || 0;
+    const entryConv = state.conversations.find(c => c.id === entry.convId) || getActiveConv();
+    const depth = entryConv ? getNodeLocation(entryConv, entry.nodeId).depth : 0;
+    branchEl.textContent = `level ${depth} · ${children} child${children !== 1 ? 'ren' : ''}`;
+  }
+  if (hint) hint.style.display = 'none';
+}
+
+function timelineMovePlayhead() {
+  const tl = state.timeline;
+  const chart = document.getElementById('timeline-chart');
+  const svg = chart?.querySelector('svg');
+  if (!svg || tl.view !== 'time' || typeof tl.playhead !== 'number') return;
+  const domain = timelineCurrentDomain();
+  const span = domain.end - domain.start;
+  const rect = chart.getBoundingClientRect();
+  const W = Math.max(120, rect.width);
+  const H = Math.max(60, rect.height);
+  const baseline = H - 14;
+  const x = ((tl.playhead - domain.start) / span) * W;
+  let line = svg.querySelector('.tl-playhead');
+  let handle = svg.querySelector('.tl-playhead-handle');
+  if (x < 0 || x > W) {
+    line?.remove(); handle?.remove();
+    return;
+  }
+  if (!line) {
+    line = tlEl('line', { class: 'tl-playhead' });
+    svg.appendChild(line);
+  }
+  if (!handle) {
+    handle = tlEl('rect', { class: 'tl-playhead-handle', rx: 1 });
+    svg.appendChild(handle);
+  }
+  line.setAttribute('x1', x); line.setAttribute('x2', x);
+  line.setAttribute('y1', 8); line.setAttribute('y2', baseline + 4);
+  handle.setAttribute('x', x - 4); handle.setAttribute('y', 3);
+  handle.setAttribute('width', 8); handle.setAttribute('height', 5);
+}
+
+// Scrub the playhead: highlight the nearest message; commit on release.
+function timelineScrubTo(hour, commit) {
+  const tl = state.timeline;
+  if (tl.view !== 'time' || !tl.day) return;
+  const visible = timelineActiveEntries().filter(e => e.ts && tlDayKey(e.ts) === tl.day);
+  if (!visible.length) return;
+  tl.playhead = Math.max(0, Math.min(24, hour));
+  let nearest = visible[0];
+  let best = Infinity;
+  visible.forEach(e => {
+    const d = Math.abs(tlHourFraction(e.ts) - tl.playhead);
+    if (d < best) { best = d; nearest = e; }
+  });
+  timelineMovePlayhead();
+  timelineHighlightEntry(nearest);
+  timelineRenderInspector(nearest);
+  if (commit && tl.followTimeline) {
+    if (nearest.convId !== state.activeConvId) loadConversation(nearest.convId, false, nearest.nodeId);
+    else { selectNode(nearest.nodeId); scrollToNode(nearest.nodeId); }
+  }
+}
+
+// ---------- Wire up controls ----------
+document.querySelectorAll('[data-tlview]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.timeline.view = btn.dataset.tlview;
+    state.timeline.zoom = null;
+    state.timeline.playhead = null;
+    timelineEnsureContext();
+    timelineRender();
+    timelineSaveSettings();
+  });
+});
+
+document.getElementById('timeline-scope')?.addEventListener('change', e => {
+  state.timeline.scope = e.target.value;
+  state.timeline.day = null;
+  state.timeline.month = null;
+  state.timeline.zoom = null;
+  state.timeline.playhead = null;
+  timelineEnsureContext();
+  timelineRender();
+  timelineSaveSettings();
+});
+
+document.getElementById('tl-mode-dock')?.addEventListener('click', () => timelineSetMode('dock'));
+document.getElementById('tl-mode-expanded')?.addEventListener('click', () => timelineSetMode('expanded'));
+document.getElementById('tl-mode-off')?.addEventListener('click', () => timelineSetMode('off'));
+document.getElementById('btn-timeline')?.addEventListener('click', () => {
+  timelineSetMode(state.timeline.mode === 'off' ? 'dock' : 'off');
+});
+
+document.getElementById('tl-cal-prev')?.addEventListener('click', () => {
+  const [y, m] = (state.timeline.month || tlMonthKey(Date.now())).split('-').map(Number);
+  const d = new Date(y, m - 2, 1);
+  state.timeline.month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  timelineRenderCalendar(timelineActiveEntries());
+});
+document.getElementById('tl-cal-next')?.addEventListener('click', () => {
+  const [y, m] = (state.timeline.month || tlMonthKey(Date.now())).split('-').map(Number);
+  const d = new Date(y, m, 1);
+  state.timeline.month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  timelineRenderCalendar(timelineActiveEntries());
+});
+document.getElementById('tl-cal-today')?.addEventListener('click', () => {
+  state.timeline.month = tlMonthKey(Date.now());
+  timelineRenderCalendar(timelineActiveEntries());
+});
+document.getElementById('tl-cal-all')?.addEventListener('click', () => {
+  state.timeline.day = null;
+  state.timeline.zoom = null;
+  state.timeline.playhead = null;
+  // "All days" is only meaningful for the size ribbon; switch there so the
+  // chart does not silently pick a single day again.
+  state.timeline.view = 'size';
+  document.querySelectorAll('[data-tlview]').forEach(b => b.classList.toggle('active', b.dataset.tlview === 'size'));
+  timelineRender();
+});
+
+document.getElementById('tl-zoom-reset')?.addEventListener('click', () => {
+  state.timeline.zoom = null;
+  timelineRender();
+});
+
+// Settings panel
+const tlSettingsBtn = document.getElementById('timeline-settings-btn');
+const tlSettingsPanel = document.getElementById('timeline-settings-panel');
+tlSettingsBtn?.addEventListener('click', e => {
+  e.stopPropagation();
+  const open = tlSettingsPanel.hasAttribute('hidden');
+  if (open) tlSettingsPanel.removeAttribute('hidden');
+  else tlSettingsPanel.setAttribute('hidden', '');
+  tlSettingsBtn.setAttribute('aria-expanded', String(open));
+  tlSettingsBtn.classList.toggle('active', open);
+});
+document.addEventListener('click', e => {
+  if (!tlSettingsPanel || tlSettingsPanel.hasAttribute('hidden')) return;
+  if (e.target.closest('#timeline-settings-panel, #timeline-settings-btn')) return;
+  tlSettingsPanel.setAttribute('hidden', '');
+  tlSettingsBtn?.setAttribute('aria-expanded', 'false');
+  tlSettingsBtn?.classList.remove('active');
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && tlSettingsPanel && !tlSettingsPanel.hasAttribute('hidden')) {
+    tlSettingsPanel.setAttribute('hidden', '');
+    tlSettingsBtn?.setAttribute('aria-expanded', 'false');
+    tlSettingsBtn?.classList.remove('active');
+  }
+});
+
+const tlBindSetting = (id, key, transform = v => v, after) => {
+  document.getElementById(id)?.addEventListener('change', e => {
+    const value = transform(e.target.type === 'checkbox' ? e.target.checked : e.target.value);
+    state.timeline[key] = value;
+    timelineSaveSettings();
+    if (after) after();
+    timelineRender();
+  });
+};
+tlBindSetting('tl-set-calendar', 'calendarDisplay');
+tlBindSetting('tl-set-ribbon', 'ribbonScale');
+tlBindSetting('tl-set-measure', 'measure');
+tlBindSetting('tl-set-gap', 'sessionGap', v => Number(v) || 30);
+tlBindSetting('tl-set-tz', 'timezone', v => v, () => {
+  state.timeline.day = null;
+  state.timeline.month = null;
+  state.timeline.zoom = null;
+  timelineEnsureContext();
+});
+tlBindSetting('tl-set-follow-timeline', 'followTimeline', v => !!v);
+tlBindSetting('tl-set-follow-graph', 'followGraph', v => !!v);
+tlBindSetting('tl-set-include-system', 'includeSystem', v => !!v, () => {
+  state.timeline.day = null;
+  state.timeline.zoom = null;
+  timelineEnsureContext();
+});
+
+// Drag the divider to resize the dock.
+(function() {
+  const dock = document.getElementById('timeline-dock');
+  const handle = document.getElementById('timeline-resize');
+  if (!dock || !handle) return;
+  let dragging = false, startY = 0, startH = 0;
+  handle.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    dragging = true;
+    startY = e.clientY;
+    startH = dock.getBoundingClientRect().height;
+    handle.classList.add('dragging');
+    handle.setPointerCapture(e.pointerId);
+    // Resizing implies a custom dock height.
+    state.timeline.mode = 'dock';
+    dock.dataset.mode = 'dock';
+    document.getElementById('tl-mode-dock')?.classList.add('active');
+    document.getElementById('tl-mode-expanded')?.classList.remove('active');
+  });
+  handle.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const maxH = Math.round(window.innerHeight * 0.72);
+    const h = Math.max(150, Math.min(maxH, startH - (e.clientY - startY)));
+    state.timeline.height = h;
+    dock.style.height = h + 'px';
+    timelineScheduleRender();
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    timelineSaveSettings();
+    updateMinimap();
+    updateMinimapViewport();
+    timelineScheduleRender();
+  };
+  handle.addEventListener('pointerup', end);
+  handle.addEventListener('pointercancel', end);
+})();
+
+// Chart pointer interactions: click markers (handled per marker), drag the
+// yellow playhead to scrub, drag empty space to pan, wheel to zoom around the
+// pointer (down to a one-minute window), double-click empty space to reset.
+(function() {
+  const chart = document.getElementById('timeline-chart');
+  if (!chart) return;
+
+  chart.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    if (state.timeline.view !== 'time' || !state.timeline.day) return;
+    const handle = e.target && e.target.closest ? e.target.closest('.tl-playhead-handle') : null;
+    const rect = chart.getBoundingClientRect();
+    const domain = timelineCurrentDomain();
+    const span = domain.end - domain.start;
+    const hour = domain.start + ((e.clientX - rect.left) / rect.width) * span;
+    if (handle) {
+      // Dragging the yellow playhead scrubs through messages; release commits.
+      _tlScrubDrag = { pointerId: e.pointerId, mode: 'scrub', startClientX: e.clientX, startHour: hour, lastClientX: e.clientX };
+      chart.setPointerCapture(e.pointerId);
+      return;
+    }
+    if (e.target && e.target.closest && e.target.closest('.tl-marker')) return; // markers handle clicks themselves
+    // Dragging empty chart space pans the visible time window.
+    _tlScrubDrag = { pointerId: e.pointerId, mode: 'pan', startClientX: e.clientX, startHour: hour, lastClientX: e.clientX };
+    chart.setPointerCapture(e.pointerId);
+  });
+  chart.addEventListener('pointermove', e => {
+    if (!_tlScrubDrag) return;
+    _tlScrubDrag.lastClientX = e.clientX;
+    const rect = chart.getBoundingClientRect();
+    const domain = timelineCurrentDomain();
+    const span = domain.end - domain.start;
+    const hour = domain.start + ((e.clientX - rect.left) / rect.width) * span;
+    if (_tlScrubDrag.mode === 'scrub') {
+      timelineScrubTo(hour, false);
+    } else {
+      const hours = (e.clientX - _tlScrubDrag.startClientX) / rect.width * span;
+      const start = Math.max(0, Math.min(24 - span, _tlScrubDrag.startHour + hours));
+      state.timeline.zoom = { start, end: start + span };
+      timelineRender();
+    }
+  });
+  const endDrag = e => {
+    if (!_tlScrubDrag) return;
+    const drag = _tlScrubDrag;
+    _tlScrubDrag = null;
+    if (drag.mode === 'scrub') {
+      const rect = chart.getBoundingClientRect();
+      const domain = timelineCurrentDomain();
+      const span = domain.end - domain.start;
+      const hour = domain.start + ((drag.lastClientX - rect.left) / rect.width) * span;
+      timelineScrubTo(hour, true);
+    }
+  };
+  chart.addEventListener('pointerup', endDrag);
+  chart.addEventListener('pointercancel', () => { _tlScrubDrag = null; });
+
+  chart.addEventListener('wheel', e => {
+    if (state.timeline.view !== 'time') return;
+    e.preventDefault();
+    const rect = chart.getBoundingClientRect();
+    const domain = timelineCurrentDomain();
+    const span = domain.end - domain.start;
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const anchor = domain.start + ratio * span;
+    const factor = e.deltaY > 0 ? 1.25 : 0.8;
+    const newSpan = Math.max(1 / 60, Math.min(24, span * factor));
+    let start = anchor - ratio * newSpan;
+    let end = start + newSpan;
+    if (start < 0) { start = 0; end = newSpan; }
+    if (end > 24) { end = 24; start = 24 - newSpan; }
+    state.timeline.zoom = (start <= 0.001 && end >= 23.999) ? null : { start, end };
+    timelineRender();
+  }, { passive: false });
+
+  // Keyboard: left/right move through the visible messages; in the size
+  // ribbon they move the selection block by block.
+  chart.addEventListener('keydown', e => {
+    const tl = state.timeline;
+    const isTime = tl.view === 'time';
+    if (!isTime && tl.view !== 'size') return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    const visible = isTime
+      ? (tl.day ? timelineActiveEntries().filter(x => x.ts && tlDayKey(x.ts) === tl.day) : timelineActiveEntries().filter(x => x.ts))
+      : timelineActiveEntries();
+    if (!visible.length) return;
+    e.preventDefault();
+    const current = timelineFindEntry(state.selectedNodeId);
+    let idx = current ? visible.findIndex(x => x.nodeId === current.nodeId && x.convId === current.convId) : -1;
+    idx = e.key === 'ArrowRight' ? Math.min(visible.length - 1, idx + 1) : Math.max(0, idx <= 0 ? 0 : idx - 1);
+    if (idx >= 0) timelineSelectEntry(visible[idx]);
+    chart.focus();
+  });
+  chart.addEventListener('dblclick', e => {
+    const hit = e.target && e.target.closest ? e.target.closest('.tl-marker, .tl-playhead-handle') : null;
+    if (hit) return;
+    state.timeline.zoom = null;
+    state.timeline.playhead = null;
+    timelineRender();
+  });
+})();
+
+  // Time overview: drag the highlighted window to pan, drag the edges to resize.
+  (function() {
+    const ov = document.getElementById('timeline-overview');
+    if (!ov) return;
+    let ovDrag = null;
+    const hourFromClientX = e => {
+      const r = ov.getBoundingClientRect();
+      const domain = timelineCurrentDomain();
+      const span = domain.end - domain.start;
+      return domain.start + ((e.clientX - r.left) / r.width) * span;
+    };
+    ov.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      if (state.timeline.view !== 'time') return;
+      const handle = e.target && e.target.closest ? e.target.closest('#tl-ov-handle-l, #tl-ov-handle-r') : null;
+      const startHour = hourFromClientX(e);
+      ovDrag = {
+        mode: handle ? 'resize' : 'pan',
+        handle: handle ? (handle.id === 'tl-ov-handle-l' ? 'l' : 'r') : null,
+        pointerId: e.pointerId,
+        startClientX: e.clientX,
+        startHour,
+      };
+      ov.setPointerCapture(e.pointerId);
+    });
+    ov.addEventListener('pointermove', e => {
+      if (!ovDrag) return;
+      const r = ov.getBoundingClientRect();
+      const domain = timelineCurrentDomain();
+      const span = domain.end - domain.start;
+      if (ovDrag.mode === 'resize') {
+        const hour = domain.start + ((e.clientX - r.left) / r.width) * span;
+        const tl = state.timeline;
+        const zoom = tl.zoom || { start: 0, end: 24 };
+        const minSpan = 1 / 60;
+        if (ovDrag.handle === 'l') tl.zoom = { start: Math.max(0, Math.min(zoom.end - minSpan, hour)), end: zoom.end };
+        else tl.zoom = { start: zoom.start, end: Math.min(24, Math.max(zoom.start + minSpan, hour)) };
+        timelineRender();
+      } else {
+        const hours = (e.clientX - ovDrag.startClientX) / r.width * span;
+        const start = Math.max(0, Math.min(24 - span, ovDrag.startHour + hours));
+        state.timeline.zoom = { start, end: start + span };
+        timelineRender();
+      }
+    });
+    const endOv = () => { ovDrag = null; };
+    ov.addEventListener('pointerup', endOv);
+    ov.addEventListener('pointercancel', () => { ovDrag = null; });
+  })();
+
+// Re-render on layout changes (panel resize, window resize, dock resize).
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(() => {
+    if (state.timeline.mode !== 'off') timelineScheduleRender();
+  });
+  const chartCol = document.getElementById('timeline-chart-col');
+  if (chartCol) ro.observe(chartCol);
+}
+window.addEventListener('resize', () => {
+  if (state.timeline.mode !== 'off') timelineScheduleRender();
+});
+
+// Start collapsed: the graph stays exactly as it was until the Timeline
+// button in the graph controls (or the mobile menu) is used.
+timelineSetMode('off');
+
+console.log('ChatGPT JSON Tree Viewer v8.3.0 loaded. Drop a JSON file to get started.');
+
+
 
 // ============================================================
 // MOBILE HAMBURGER MENU
@@ -10173,14 +12268,23 @@ function closeMobMenu() {
   wire('mob-convert-db', 'btn-convert-db');
   wire('mob-help', 'btn-help');
 
-  // Wire mob theme dots to the same theme-switching logic
+  // Timeline: switch to the graph panel first, then make sure the dock is open.
+  document.getElementById('mob-timeline')?.addEventListener('click', () => {
+    closeMobMenu();
+    document.querySelector('.mob-nav-btn[data-mob-panel="graph-area"]')?.click();
+    if (state.timeline.mode === 'off') timelineSetMode('dock');
+  });
+
+  // Mobile theme dots use the same shared selection logic as the desktop row.
   document.querySelectorAll('#mob-menu .theme-dot').forEach(dot => {
-    dot.addEventListener('click', () => {
-      // Mirror what the desktop theme dots do
+    dot.addEventListener('click', e => {
+      e.stopPropagation();
       const theme = dot.dataset.theme;
-      document.body.setAttribute('data-theme', theme);
-      localStorage.setItem('mv-theme', theme);
-      document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === theme));
+      if (theme === 'custom') {
+        toggleCustomTheme(true);
+        return;
+      }
+      selectTheme(theme);
       closeMobMenu();
     });
   });

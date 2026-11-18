@@ -84,9 +84,10 @@
   --------------------------------------------------------------------------
   USER PREFERENCE (per rule 6 — filled in by the user; default is (a) if blank)
     - Ask each time / proceed automatically / custom:
-      (a) KEEP ASKING  <== ACTIVE CHOICE, set 2026-10-19. Run the checklist on
-          every edit, but pause and confirm with the user each time. Do not
-          switch to (b) or (c) unless the user asks for it.
+      (b) PROCEED AUTOMATICALLY  <== ACTIVE CHOICE, set 2026-11-18 by user.
+          Apply the whole maintainer checklist on each edit without asking for
+          confirmation; report the completed items in the final summary.
+          Do not switch to (a) or (c) unless the user asks for it.
   --------------------------------------------------------------------------
 
   Keep the file self-contained: no build step, no external assets other than the
@@ -108,7 +109,7 @@
      The file splitter builds its Worker from a Blob URL (worker-src blob:).
      The Google Fonts @import in the <style> block needs style-src + font-src. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data: https:; connect-src 'self' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob:; frame-src 'self' blob: data:; child-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>ChatGPT JSON Tree Viewer v8.5.0</title>
+<title>ChatGPT JSON Tree Viewer v8.8.0</title>
 <!-- Third-party libraries, integrity-pinned (SRI sha384). If a CDN ever serves a
      different file than the hash below, the browser refuses to run it. Hashes are
      the cdnjs-published values; re-check them if you ever bump a library version.
@@ -943,6 +944,25 @@ body {
 .role-assistant { background: rgba(34,197,94,0.2); color: #4ade80; }
 .role-system { background: rgba(107,114,128,0.2); color: #9ca3af; }
 .role-other { background: rgba(168,85,247,0.2); color: #c084fc; }
+/* Secondary semantic badges for ChatGPT thinking, tool activity and final replies. */
+/* Each exported record type gets its own tint; live values are set from KIND_COLORS. */
+.node-role-badge[class*="kind-"] { color: var(--kind-color, var(--text-primary)); border-color: var(--kind-color, var(--border-color)); box-shadow: inset 0 0 0 1px var(--kind-color, var(--border-color)); }
+.kind-choice-row { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin:7px 0; }
+.kind-choice { font:600 10px var(--font-ui); padding:4px 8px; cursor:pointer; border:1px solid var(--kind-color,#64748b); border-radius:999px; background:var(--bg-tertiary); color:var(--kind-color,var(--text-secondary)); }
+.kind-choice[aria-pressed="false"] { opacity:.4; text-decoration:line-through; border-style:dashed; }
+.kind-choice:hover { opacity:1; background:var(--bg-hover); }
+/* The All shortcut is an action, not a hidden individual message type. */
+.kind-choice-all[aria-pressed="false"] { opacity:1; text-decoration:none; border-style:dashed; }
+.kind-choice-all[aria-pressed="true"] { background:var(--bg-active); color:var(--accent-teal); }
+.kind-preset { cursor:pointer; font:600 11px var(--font-ui); padding:4px 9px; border:1px solid var(--border-light); border-radius:6px; color:var(--text-secondary); background:var(--bg-tertiary); }
+.kind-preset:hover { color:var(--text-primary); border-color:var(--accent-teal); }
+.kind-filter-details { margin-top:5px; border-top:1px solid var(--border-color); padding-top:5px; }
+.kind-filter-details summary { font-size:11px; font-weight:600; color:var(--text-secondary); cursor:pointer; }
+.kind-default-select { background:var(--bg-tertiary); color:var(--text-primary); border:1px solid var(--border-color); border-radius:5px; padding:5px 7px; font-size:12px; }
+.record-raw { font:12px/1.65 var(--font-mono); white-space:pre-wrap; overflow-wrap:anywhere; color:var(--text-secondary); margin:0; }
+
+.kind-progress { box-shadow: inset 0 0 0 1px #38bdf8; }
+
 .node-id-display { font-size: 10px; font-family: var(--font-mono); color: var(--text-muted); margin-left: auto; }
 
 /* Empty right panel */
@@ -1426,6 +1446,38 @@ g.node.is-selected .node-selection-indicator { display: inline; }
 }
 #role-filter-all { width: 34px; height: 22px; border-radius: 99px; font-size: 9px; }
 
+/* Message-type filters directly on the graph (shared with Settings/Branch). */
+#graph-kind-filters {
+  position:absolute; top:12px; right:12px; z-index:25;
+  display:none; flex-direction:column; align-items:flex-end;
+  max-width:calc(100% - 82px); pointer-events:auto;
+}
+#graph-kind-toggle {
+  display:flex; align-items:center; gap:7px;
+  padding:6px 10px; border:1px solid var(--border-light);
+  border-radius:var(--radius-md); background:var(--bg-secondary);
+  color:var(--text-primary); box-shadow:0 3px 12px rgba(0,0,0,.2);
+  font:600 11px var(--font-ui); white-space:nowrap; cursor:pointer;
+}
+#graph-kind-toggle:hover, #graph-kind-toggle[aria-expanded="true"] {
+  background:var(--bg-hover); border-color:var(--accent-teal);
+}
+#graph-kind-toggle.has-hidden { border-color:var(--accent-yellow); }
+#graph-kind-count { font:600 10px var(--font-mono); color:var(--accent-teal); }
+#graph-kind-toggle.has-hidden #graph-kind-count { color:var(--accent-yellow); }
+#graph-kind-menu {
+  box-sizing:border-box; width:322px; max-width:100%;
+  max-height:min(64vh, 520px); overflow-y:auto; overscroll-behavior:contain;
+  margin-top:6px; padding:12px; border-radius:var(--radius-md);
+  background:var(--bg-secondary); border:1px solid var(--border-light);
+  box-shadow:0 8px 30px rgba(0,0,0,.38);
+}
+#graph-kind-menu[hidden] { display:none; }
+.graph-kind-heading { font:700 12px var(--font-ui); color:var(--text-primary); }
+.graph-kind-footnote { font:11px/1.4 var(--font-ui); color:var(--text-muted); margin-top:8px; }
+#graph-kind-menu .kind-choice { font-size:11px; padding:5px 9px; }
+.kind-preset[aria-pressed="true"] { background:var(--bg-active); border-color:var(--accent-teal); color:var(--text-primary); }
+
 /* Star badges on graph nodes */
 .node-star {
   font-size: 12px; fill: var(--accent-yellow);
@@ -1653,6 +1705,9 @@ g.node.is-selected .node-selection-indicator { display: inline; }
   /* Graph controls: bigger tap targets */
   .graph-ctrl-btn { width: 40px; height: 40px; font-size: 18px; }
   #graph-controls { bottom: 12px; left: 12px; gap: 6px; }
+  #graph-kind-filters { top:10px; right:10px; max-width:calc(100% - 76px); }
+  #graph-kind-menu { max-height:58vh; }
+  #graph-kind-menu .kind-choice { min-height:32px; }
 
   /* Hide minimap on mobile (too small to be useful) */
   #minimap { display: none !important; }
@@ -1686,7 +1741,7 @@ g.node.is-selected .node-selection-indicator { display: inline; }
         <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/>
       </svg>
       ChatGPT JSON Tree Viewer
-      <span class="logo-version">v8.5.0</span>
+      <span class="logo-version">v8.8.0</span>
     </div>
     <button class="topbar-btn primary" onclick="document.getElementById('file-input').click()" title="Load conversation files — JSON, Markdown/Text, or an opencode .db (you can also drag files onto the graph)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -1956,6 +2011,22 @@ g.node.is-selected .node-selection-indicator { display: inline; }
         <button class="role-filter-btn" data-grole="other" title="Show or hide Other nodes in the graph"><span class="rf-letter">?</span><span class="role-filter-count">0</span></button>
         <button class="role-filter-btn" id="role-filter-all" title="Toggle every role type at once — hides them all when everything is shown">All</button>
       </div>
+      <!-- Graph message-type filters: shared with Branch and Settings. -->
+      <div id="graph-kind-filters">
+        <button type="button" id="graph-kind-toggle" aria-controls="graph-kind-menu" aria-expanded="false" title="Open message-type filters for the graph, Branch tab and search">
+          <span>Types</span> <span id="graph-kind-count">15/15</span> <span aria-hidden="true">▾</span>
+        </button>
+        <div id="graph-kind-menu" role="group" aria-label="Graph message type filters" hidden>
+          <div class="graph-kind-heading">Show message types</div>
+          <div class="kind-choice-row" role="group" aria-label="Graph message type presets">
+            <button type="button" class="kind-preset" data-kind-preset="all" title="Show every record type in the graph, Branch tab and search">All types</button>
+            <button type="button" class="kind-preset" data-kind-preset="replies" title="Show user prompts, final answers and older unmarked assistant replies">Replies</button>
+            <button type="button" class="kind-preset" data-kind-preset="final" title="Show only explicitly marked final answers">Final only</button>
+          </div>
+          <div class="kind-choice-row" id="graph-kind-choices" role="group" aria-label="Individual graph message type filters"></div>
+          <div class="graph-kind-footnote">Also updates Settings, Branch and search. Hidden messages are not deleted.</div>
+        </div>
+      </div>
       <div id="drop-overlay" title="Release the mouse button to load the file(s)">Drop JSON, Markdown or ZIP here</div>
       <div id="empty-state">
         <h2>No conversation loaded</h2>
@@ -2050,12 +2121,13 @@ g.node.is-selected .node-selection-indicator { display: inline; }
               </div>
             </div>
             <div class="content-toolbar">
-              <button class="view-mode-btn active" data-mode="rendered" title="View the message as formatted rich text">Rendered</button>
+              <button class="view-mode-btn active" data-mode="auto" title="Choose the best view per record: commands and tool output as literal source, normal replies as formatted Markdown">Auto</button>
+              <button class="view-mode-btn" data-mode="rendered" title="View the message as formatted rich text">Rendered</button>
               <button class="view-mode-btn" data-mode="markdown" title="View the raw Markdown source of the message">Markdown</button>
               <button class="view-mode-btn" data-mode="html" title="View the rendered HTML source of the message">HTML</button>
               <button class="view-mode-btn" data-mode="json" title="View the raw JSON of the selected node">JSON</button>
               <div class="toolbar-sep"></div>
-              <button class="action-btn" id="btn-copy" title="Copy this message in the active view mode (Rendered / Markdown / HTML / JSON)">
+              <button class="action-btn" id="btn-copy" title="Copy this message in the active view mode (Auto / Rendered / Markdown / HTML / JSON)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               </button>
               <button class="action-btn" id="btn-export" title="Download this message as a file (.md / .html / .json depending on the view mode)">
@@ -2089,7 +2161,8 @@ g.node.is-selected .node-selection-indicator { display: inline; }
           </div>
           <div id="branch-view" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
             <div class="content-toolbar">
-              <button class="view-mode-btn active" data-branch-mode="rendered" title="View the branch as formatted rich text">Rendered</button>
+              <button class="view-mode-btn active" data-branch-mode="auto" title="Automatically show commands and tool output as literal text, but render normal messages">Auto</button>
+              <button class="view-mode-btn" data-branch-mode="rendered" title="View the branch as formatted rich text">Rendered</button>
               <button class="view-mode-btn" data-branch-mode="markdown" title="View the branch as raw Markdown">Markdown</button>
               <button class="view-mode-btn" data-branch-mode="html" title="View the branch as rendered HTML source">HTML</button>
               <button class="view-mode-btn" data-branch-mode="json" title="View the branch as raw JSON">JSON</button>
@@ -2129,7 +2202,17 @@ g.node.is-selected .node-selection-indicator { display: inline; }
                 <button class="branch-role-btn active" data-role="other" title="Show or hide messages with unknown roles in this branch">Other</button>
                 <button class="branch-role-btn active" data-role="all" id="branch-role-all" style="margin-left:4px;border-style:dashed" title="Enable every role at once">All</button>
               </div>
-              <div class="branch-filter-search-row">
+                <div class="kind-choice-row" role="group" aria-label="Message type presets">
+                <span class="branch-filter-label">Types:</span>
+                <button type="button" class="kind-preset" data-kind-preset="all" title="Show all message types in the branch and map">All types</button>
+                <button type="button" class="kind-preset" data-kind-preset="replies" title="Only show user messages, final answers, and older assistant replies">Replies</button>
+                <button type="button" class="kind-preset" data-kind-preset="final" title="Only show explicitly marked final answers; older unmarked assistant replies will be hidden">Final only</button>
+              </div>
+              <details class="kind-filter-details" id="branch-kind-details" open>
+                <summary title="Expand or collapse individual message type filters">Customize message types <span id="kind-visible-count"></span></summary>
+                <div class="kind-choice-row" id="branch-kind-choices" role="group" aria-label="Individual message type filters"></div>
+              </details>
+            <div class="branch-filter-search-row">
                 <div class="branch-filter-search-wrap">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   <input type="text" id="branch-search-input" placeholder="Search in branch…" title="Highlight search terms inside the branch and count matches">
@@ -2494,7 +2577,7 @@ g.node.is-selected .node-selection-indicator { display: inline; }
 <div class="modal-backdrop" id="modal-help">
   <div class="modal-box" style="max-width:900px;width:94vw;height:82vh;">
     <div class="modal-header">
-      <h2>ChatGPT JSON Tree Viewer v8.5.0 - Help</h2>
+      <h2>ChatGPT JSON Tree Viewer v8.8.0 - Help</h2>
       <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-help')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;overflow:hidden;">
@@ -2552,7 +2635,7 @@ const state = {
   resultSortDir: 'desc',    // asc|desc
   searchMatches: new Map(), // convId -> Set of nodeIds
   searchCollapsedConvs: new Set(), // convIds collapsed in grouped results
-  viewMode: 'rendered',    // rendered|markdown|html|json
+  viewMode: 'auto',        // auto|rendered|markdown|html|json
   showMeta: false,
   settings: {
     showSystem: true,
@@ -2567,6 +2650,8 @@ const state = {
     recentNodesMax: 25,         // maximum recent visits to keep
     rememberHistory: true,      // auto-save stars + visits in localStorage
     loadExternalImages: false,  // privacy by default: do not load images from message URLs
+    hiddenMessageKinds: [],     // global message-type visibility across graph, branch and search
+    defaultViewMode: 'auto',    // automatic literal source for technical records, rendered prose otherwise
   },
   transform: d3.zoomIdentity,
   nodePositions: new Map(), // nodeId -> {x, y}
@@ -2591,6 +2676,12 @@ try {
   const s = JSON.parse(localStorage.getItem('mv-settings') || '{}');
   Object.assign(state.settings, s);
 } catch(e) {}
+// Validate persisted values; old settings have no message-type preferences.
+if (!Array.isArray(state.settings.hiddenMessageKinds)) state.settings.hiddenMessageKinds = [];
+state.settings.hiddenMessageKinds = [...new Set(state.settings.hiddenMessageKinds.filter(v => typeof v === 'string'))];
+if (!['auto','rendered','markdown'].includes(state.settings.defaultViewMode)) state.settings.defaultViewMode = 'auto';
+state.viewMode = state.settings.defaultViewMode;
+state.branchViewMode = state.settings.defaultViewMode;
 
 // On first launch of the privacy-choice experience, do not inherit a previous
 // opt-in silently. The user chooses explicitly before message images may load.
@@ -2822,6 +2913,18 @@ function extractOpenAIText(msg) {
   }).join('\n');
   if (typeof c.text === 'string') return c.text;
   if (typeof c.content === 'string') return c.content; // reasoning_recap
+  // New ChatGPT exports place readable thinking summaries in a thoughts[] array.
+  // These are exported representations, not a guarantee of complete reasoning.
+  if (c.content_type === 'thoughts' && Array.isArray(c.thoughts)) {
+    return c.thoughts.map(t => {
+      if (typeof t === 'string') return t;
+      const heading = typeof t?.summary === 'string' ? t.summary.trim() : '';
+      const body = typeof t?.content === 'string' ? t.content.trim() : '';
+      return heading && body ? `**${heading}**\n\n${body}` : (body || heading);
+    }).filter(Boolean).join('\n\n') || '(No thinking summary included in this export)';
+  }
+  if (typeof c.summary === 'string' && c.summary) return c.summary;
+  if (typeof c.result === 'string' && c.result) return c.result;
   return JSON.stringify(c);
 }
 
@@ -3797,6 +3900,7 @@ function buildHistorySection(title, entries, isStarSection) {
     const { conv, node } = findNodeRecord(entry.convId, entry.nodeId);
     const convTitle = conv ? (conv.title || conv.data?.title || 'Untitled') : (entry.convId || 'Unknown conversation');
     const role = node ? getNodeRole(node) : 'unknown';
+    const kindLabel = node ? getNodeKind(node).label : 'Missing';
     const preview = node
       ? getNodeText(node).replace(/\s+/g, ' ').slice(0, 180)
       : 'Message not found — load the matching conversation file to restore it.';
@@ -3806,7 +3910,7 @@ function buildHistorySection(title, entries, isStarSection) {
     item.className = 'recent-item' + (conv && node ? '' : ' missing');
     item.innerHTML = `
       <div class="recent-item-top">
-        <span class="node-role-badge role-${roleBucket(role) === 'other' ? 'other' : role}" style="font-size:9px;padding:1px 6px">${escapeHtml(role)}</span>
+        <span class="node-role-badge role-${roleBucket(role) === 'other' ? 'other' : role}" style="font-size:9px;padding:1px 6px">${escapeHtml(kindLabel)}</span>
         <span class="recent-item-conv">${escapeHtml(convTitle)}</span>
         ${isStarSection ? '' : `<span class="recent-item-time">${formatHistoryTime(entry.ts)}</span>`}
       </div>
@@ -3814,7 +3918,7 @@ function buildHistorySection(title, entries, isStarSection) {
 
     if (conv && node) {
       const dateStr = formatNodeDate(node.message?.create_time);
-      item.title = `${role} · ${convTitle}${dateStr ? ' · ' + dateStr : ''}\nClick to jump to this message`;
+      item.title = `${kindLabel} · ${convTitle}${dateStr ? ' · ' + dateStr : ''}\nClick to jump to this message`;
       item.addEventListener('click', () => jumpToHistoryNode(entry.convId, entry.nodeId));
     } else {
       item.title = 'This conversation is not loaded. Open the matching conversations.json, then load the session again.';
@@ -3945,7 +4049,7 @@ function buildSessionData() {
   return {
     _type: SESSION_FILE_TYPE,
     _version: 1,
-    app: 'ChatGPT JSON Tree Viewer v8.5.0',
+    app: 'ChatGPT JSON Tree Viewer v8.8.0',
     savedAt: new Date().toISOString(),
     activeConvId: state.activeConvId,
     starred,
@@ -4054,6 +4158,12 @@ function applySessionData(payload, mode) {
 function updateRoleFilters(conv) {
   const bar = document.getElementById('role-filters');
   if (bar) bar.style.display = conv ? 'flex' : 'none';
+  const kindBar = document.getElementById('graph-kind-filters');
+  if (kindBar) {
+    kindBar.style.display = conv ? 'flex' : 'none';
+    if (!conv) closeGraphKindMenu();
+  }
+  refreshKindButtons();
   const counts = { user: 0, assistant: 0, system: 0, other: 0 };
   const otherRoles = {};
   if (conv) {
@@ -4137,8 +4247,13 @@ function getActiveConv() {
 function getNodeRole(node) {
   const role = node?.message?.author?.role || 'unknown';
   const text = (node?.message?.content?.text || '').trim();
-  // Explicit system role always wins
-  if (role === 'system') return 'system';
+  // Explicit tool/system roles always win, even when source text quotes
+  // a system marker; quoted data is not a system instruction.
+  if (role === 'tool' || role === 'system') return role;
+  // A shell/code payload may mention system markers while merely searching a file.
+  // Never reclassify such a tool call as a system message based on its text.
+  if (role === 'assistant' && (node?.message?.content?.content_type === 'code' ||
+      (node?.message?.recipient && node.message.recipient !== 'all'))) return role;
   // Catch known system patterns regardless of stated role
   // (OpenAI sometimes labels these as 'assistant')
   if (text.toLowerCase().includes('model_editable_context')) return 'system';
@@ -4146,10 +4261,176 @@ function getNodeRole(node) {
   if (/^\{"content_type"\s*:\s*"model_/.test(text)) return 'system';
   // Only apply empty/bracket heuristics to unknown/tool roles — not user or assistant
   // (empty assistant nodes are real OpenAI placeholders, not system nodes)
-  if (role === 'user' || role === 'assistant') return role;
+  if (role === 'user' || role === 'assistant' || role === 'tool') return role;
   if (!text) return 'system';
   if (/^\[[^\]]+\]$/.test(text)) return 'system';
   return role;
+}
+
+// Classify ChatGPT messages by their actual exported metadata, not merely
+// author.role. Preserve the base role for existing filters and color schemes.
+// There is no reliable per-message Work-mode flag; tools indicate activity,
+// not proof of which ChatGPT product mode the conversation used.
+function getNodeKind(node) {
+  const msg = node?.message || {};
+  const role = getNodeRole(node);
+  const ct = msg.content?.content_type || '';
+  const channel = msg.channel || '';
+  const recipient = msg.recipient || 'all';
+  const toolName = msg.author?.name || '';
+  if (role === 'user') return { kind: 'user', label: 'User', glyph: 'U' };
+  if (role === 'system') return { kind: 'system', label: 'System', glyph: 'S' };
+  if (role === 'tool') {
+    if (ct === 'system_error') return { kind: 'tool-error', label: 'Tool error', glyph: '!' };
+    if (ct === 'tether_browsing_display') return { kind: 'tool-status', label: 'Tool activity', glyph: 'O' };
+    if (/^(container\.exec|python|python_user_visible|bash|shell|terminal)$/i.test(toolName))
+      return { kind: 'command-output', label: 'Command output', glyph: 'O' };
+    return { kind: 'tool-output', label: 'Tool output', glyph: 'O' };
+  }
+  if (role === 'assistant') {
+    if (ct === 'thoughts') return { kind: 'thinking', label: 'Thinking', glyph: 'T' };
+    if (ct === 'reasoning_recap') return { kind: 'thinking-recap', label: 'Thinking recap', glyph: 'R' };
+    if (recipient !== 'all') {
+      if (/^(container\.exec|python|python_user_visible|bash|shell|terminal)$/i.test(recipient))
+        return { kind: 'command', label: 'Ran command', glyph: '>' };
+      return { kind: 'tool-call', label: 'Tool call', glyph: '>' };
+    }
+    if (channel === 'final' || msg.end_turn === true)
+      return { kind: 'final', label: 'Final answer', glyph: 'F' };
+    if (channel === 'commentary')
+      return { kind: 'progress', label: 'Progress update', glyph: 'P' };
+    if (ct && !['text','multimodal_text','markdown','code'].includes(ct))
+      return { kind: 'structured', label: 'Data record', glyph: 'D' };
+    if (ct === 'code') return { kind: 'command', label: 'Code record', glyph: '>' };
+    return { kind: 'assistant', label: 'Assistant', glyph: 'A' };
+  }
+  return { kind: 'other', label: role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Other', glyph: '?' };
+}
+
+// Distinguish record kinds without looking at private conversation text.
+// Each kind has a unique accent and a contrasting dark fill for legible graph glyphs.
+const KIND_DEFS = [
+  ['user','User','User prompt'], ['final','Final answer','Explicit final assistant reply'],
+  ['assistant','Assistant','Legacy or unmarked assistant reply'],
+  ['thinking','Thinking','Exported thinking summary'], ['thinking-recap','Thinking recap','Elapsed thinking time / recap'],
+  ['progress','Progress update','Assistant commentary or status update'],
+  ['command','Ran command','Code sent to a command or script runner'],
+  ['tool-call','Tool call','Call to a non-shell tool'],
+  ['command-output','Command output','Output from a command runner'],
+  ['tool-output','Tool output','Result returned by a tool'],
+  ['tool-status','Tool activity','Tool progress / browser activity'],
+  ['tool-error','Tool error','Error returned by a tool'],
+  ['structured','Data record','Unrecognized structured assistant content'],
+  ['system','System','System prompt or metadata'], ['other','Other','Other / unknown roles']
+];
+const KIND_COLORS = {
+  user:['#60a5fa','#1e3a8a'], final:['#4ade80','#166534'], assistant:['#86efac','#14532d'],
+  thinking:['#c084fc','#581c87'], 'thinking-recap':['#e879f9','#701a75'],
+  progress:['#fbbf24','#78350f'], command:['#fb923c','#7c2d12'],
+  'tool-call':['#f97316','#7c2d12'], 'command-output':['#22d3ee','#164e63'],
+  'tool-output':['#38bdf8','#0c4a6e'], 'tool-status':['#94a3b8','#334155'],
+  'tool-error':['#f87171','#7f1d1d'], structured:['#fda4af','#881337'],
+  system:['#9ca3af','#374151'], other:['#a78bfa','#4c1d95']
+};
+const KIND_IDS = KIND_DEFS.map(([id]) => id);
+function kindColor(node) { return KIND_COLORS[getNodeKind(node).kind] || KIND_COLORS.other; }
+function isKindVisible(node) { return !state.settings.hiddenMessageKinds.includes(getNodeKind(node).kind); }
+function effectiveMessageView(node, requested) {
+  if (requested !== 'auto') return requested;
+  const kind = getNodeKind(node).kind;
+  const ct = node?.message?.content?.content_type || '';
+  // Literal formatting is important for commands, structured data, logs and tool results.
+  return ['command','tool-call','command-output','tool-output','tool-status','tool-error','structured'].includes(kind)
+      || ['code','execution_output','system_error','tether_browsing_display'].includes(ct)
+    ? 'markdown' : 'rendered';
+}
+function closeGraphKindMenu() {
+  const menu = document.getElementById('graph-kind-menu');
+  const toggle = document.getElementById('graph-kind-toggle');
+  if (menu) menu.hidden = true;
+  if (toggle) toggle.setAttribute('aria-expanded', 'false');
+}
+function kindChoiceMarkup() {
+  // The All shortcut lives with the individual type chips in Settings, Branch
+  // "Customize message types", and the graph. It restores every type.
+  const allShortcut = '<button type="button" class="kind-choice kind-choice-all" data-kind-all="true" aria-pressed="true" title="Show all message types in the graph, Branch and search" style="--kind-color:var(--accent-teal)">All</button>';
+  return allShortcut + KIND_DEFS.map(([id,label,desc]) =>
+    `<button type="button" class="kind-choice" data-message-kind="${id}" title="Show or hide ${escapeHtml(desc)} in the map, branch and search" style="--kind-color:${KIND_COLORS[id][0]}">${escapeHtml(label)}</button>`
+  ).join('');
+}
+function refreshKindButtons() {
+  document.querySelectorAll('[data-message-kind]').forEach(btn => {
+    const on = !state.settings.hiddenMessageKinds.includes(btn.dataset.messageKind);
+    btn.setAttribute('aria-pressed', String(on));
+    btn.title = `${on ? 'Hide' : 'Show'} ${btn.textContent} messages in the map, branch and search`;
+  });
+  const shown = KIND_IDS.filter(id => !state.settings.hiddenMessageKinds.includes(id));
+  document.querySelectorAll('[data-kind-all]').forEach(btn => {
+    const allShown = shown.length === KIND_IDS.length;
+    btn.setAttribute('aria-pressed', String(allShown));
+    btn.title = allShown
+      ? 'All message types are visible. Click to restore all types.'
+      : 'Show all message types in the graph, Branch and search';
+  });
+  const count = document.getElementById('kind-visible-count');
+  if (count) count.textContent = `(${shown.length}/${KIND_IDS.length} on)`;
+  const graphCount = document.getElementById('graph-kind-count');
+  if (graphCount) graphCount.textContent = `${shown.length}/${KIND_IDS.length}`;
+  const graphToggle = document.getElementById('graph-kind-toggle');
+  if (graphToggle) {
+    graphToggle.classList.toggle('has-hidden', shown.length < KIND_IDS.length);
+    graphToggle.title = `Filter message types: ${shown.length} of ${KIND_IDS.length} shown. Opens the same filters used in Settings, Branch and search`;
+  }
+  document.querySelectorAll('[data-kind-preset]').forEach(btn => {
+    const preset = btn.dataset.kindPreset;
+    const ids = preset === 'all' ? KIND_IDS : preset === 'replies' ? ['user','final','assistant'] : ['final'];
+    btn.setAttribute('aria-pressed', String(shown.length === ids.length && ids.every(id => shown.includes(id))));
+  });
+}
+function changeKindVisibility(visibleIds) {
+  // Empty selections are allowed intentionally, but provide a clear explanation.
+  state.settings.hiddenMessageKinds = KIND_IDS.filter(id => !visibleIds.includes(id));
+  localStorage.setItem('mv-settings', JSON.stringify(state.settings));
+  refreshKindButtons();
+  const conv = getActiveConv();
+  if (conv) {
+    renderGraph(conv);
+    tagLinks();
+    // A preset such as Final only must not leave a hidden Thinking node in the
+    // details pane. Jump to the newest allowed record instead.
+    if (!state.selectedNodeId || !isNodeVisibleInGraph(conv.data.mapping[state.selectedNodeId])) {
+      const next = getNewestVisibleNodeId(conv);
+      if (next && isNodeVisibleInGraph(conv.data.mapping[next])) selectNode(next);
+      else {
+        state.selectedNodeId = null;
+        state._branchPath = null;
+        document.getElementById('node-view').style.display = 'none';
+        document.getElementById('node-empty').style.display = '';
+        document.getElementById('branch-view').style.display = 'none';
+        document.getElementById('branch-empty').style.display = '';
+      }
+    }
+    if (state.selectedNodeId && isNodeVisibleInGraph(conv.data.mapping[state.selectedNodeId]))
+      scrollToNode(state.selectedNodeId);
+  }
+  if (state._branchPath) { renderBranchContent(); updateBranchIndex(); }
+  if (state.searchQuery?.trim()) runSearch(state.searchQuery);
+}
+function toggleKind(id) {
+  if (!KIND_IDS.includes(id)) return;
+  const selected = KIND_IDS.filter(k => !state.settings.hiddenMessageKinds.includes(k));
+  changeKindVisibility(selected.includes(id) ? selected.filter(k => k !== id) : [...selected,id]);
+}
+function setKindPreset(preset) {
+  if (preset === 'all') changeKindVisibility(KIND_IDS);
+  else if (preset === 'final') changeKindVisibility(['final']);
+  else if (preset === 'replies') changeKindVisibility(['user','final','assistant']);
+}
+function attachKindHandlers(host) {
+  host.querySelectorAll('[data-message-kind]').forEach(btn => btn.addEventListener('click', () => toggleKind(btn.dataset.messageKind)));
+  host.querySelectorAll('[data-kind-all]').forEach(btn => btn.addEventListener('click', () => setKindPreset('all')));
+  host.querySelectorAll('[data-kind-preset]').forEach(btn => btn.addEventListener('click', () => setKindPreset(btn.dataset.kindPreset)));
+  refreshKindButtons();
 }
 
 function getNodeText(node) {
@@ -4192,7 +4473,8 @@ function buildTreeData(conv) {
     const hidden =
       (!state.settings.showSystem && role === 'system') ||
       (!state.settings.showOther && role !== 'user' && role !== 'assistant' && role !== 'system') ||
-      state.graphRoleFilters[roleBucket(role)] === false;
+      state.graphRoleFilters[roleBucket(role)] === false ||
+      (node.message && !isKindVisible(node));
 
     if (hidden) {
       // Return all children in place of this node
@@ -4314,11 +4596,10 @@ function renderGraph(conv) {
         .attr('class', 'node-circle node-shape')
         .attr('data-nodeid', d.data.id);
     } else {
-      const fillId = role === 'user' ? 'grad-user' : role === 'assistant' ? 'grad-assistant' : 'grad-other';
-      const borderColor = role === 'user' ? 'var(--node-user-border)' : role === 'assistant' ? 'var(--node-assistant-border)' : 'var(--node-other-border)';
+      const [borderColor, fillColor] = kindColor(d.data.data);
       g.append('circle')
         .attr('r', r)
-        .attr('fill', `url(#${fillId})`)
+        .attr('fill', fillColor)
         .attr('stroke', borderColor)
         .attr('stroke-width', 1.5)
         .attr('class', 'node-circle node-shape')
@@ -4337,13 +4618,14 @@ function renderGraph(conv) {
     }
 
     // Role icon label
-    const roleChar = role === 'user' ? 'U' : role === 'assistant' ? 'A' : role === 'system' ? 'S' : '?';
+    const roleChar = getNodeKind(d.data.data).glyph;
     g.append('text')
       .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
       .attr('font-size', '11').attr('font-weight', '700')
       .attr('fill', role === 'system' ? 'var(--text-muted)' : 'white')
       .attr('pointer-events', 'none')
       .text(roleChar);
+    g.append('title').text(getNodeKind(d.data.data).label + ' — ' + (d.data.text || '').slice(0, 160));
 
     // A permanent, unmistakable selected-node marker. It is hidden on other
     // nodes and does not catch touches/clicks (the node itself remains clickable).
@@ -4592,7 +4874,7 @@ function updateNodeHighlights() {
     nodeG.classed('is-selected', id === sel);
     circle.style.outline = '';
     circle.style.filter = '';
-    resetNodeStroke(d.data.role, circle);
+    resetNodeStroke(d.data.role, circle, d.data.data);
     nodeG.style('opacity', 1);
 
     if (sel) {
@@ -4630,11 +4912,10 @@ function updateNodeHighlights() {
   });
 }
 
-function resetNodeStroke(role, circle) {
-  if (role === 'user') { circle.setAttribute('stroke', 'var(--node-user-border)'); circle.setAttribute('stroke-width', '1.5'); }
-  else if (role === 'assistant') { circle.setAttribute('stroke', 'var(--node-assistant-border)'); circle.setAttribute('stroke-width', '1.5'); }
-  else if (role === 'system') { circle.setAttribute('stroke', 'var(--node-system-border)'); circle.setAttribute('stroke-width', '2'); }
-  else { circle.setAttribute('stroke', 'var(--node-other-border)'); circle.setAttribute('stroke-width', '1.5'); }
+function resetNodeStroke(role, circle, node) {
+  const color = kindColor(node)[0];
+  circle.setAttribute('stroke', color);
+  circle.setAttribute('stroke-width', role === 'system' ? '2' : '1.5');
 }
 
 function getSearchMatchIds() {
@@ -4665,8 +4946,11 @@ function showNodeContent(nodeId) {
 
   // Header
   const badge = document.getElementById('node-role-badge');
-  badge.textContent = role.charAt(0).toUpperCase() + role.slice(1);
-  badge.className = `node-role-badge role-${role === 'assistant' ? 'assistant' : role === 'user' ? 'user' : role === 'system' ? 'system' : 'other'}`;
+  const nodeKind = getNodeKind(node);
+  badge.textContent = nodeKind.label;
+  badge.title = `Exported message type: ${nodeKind.label} (base role: ${role})`;
+  badge.className = `node-role-badge role-${roleBucket(role)} kind-${nodeKind.kind}`;
+  badge.style.setProperty('--kind-color', kindColor(node)[0]);
   document.getElementById('node-id-display').textContent = nodeId.slice(0, 16) + (nodeId.length > 16 ? '…' : '');
   const model = node.message?.metadata?.model
     || node.message?.metadata?.model_slug
@@ -4717,6 +5001,10 @@ function showNodeContent(nodeId) {
   const metaItems = [];
   if (msg.create_time) metaItems.push({ k: 'time', v: new Date(msg.create_time > 1e10 ? msg.create_time : msg.create_time * 1000).toLocaleString() });
   if (msg.metadata?.model) metaItems.push({ k: 'model', v: msg.metadata.model });
+  if (msg.content?.content_type) metaItems.push({ k: 'content type', v: msg.content.content_type });
+  if (msg.channel) metaItems.push({ k: 'channel', v: msg.channel });
+  if (msg.recipient && msg.recipient !== 'all') metaItems.push({ k: 'recipient', v: msg.recipient });
+  if (msg.author?.name) metaItems.push({ k: 'tool', v: msg.author.name });
   if (node.parent) metaItems.push({ k: 'parent', v: node.parent.slice(0, 12) });
   if (node.children?.length) metaItems.push({ k: 'children', v: node.children.length });
   const metaRow = document.getElementById('meta-row');
@@ -4797,13 +5085,19 @@ function showNodeContent(nodeId) {
 }
 
 function applyViewMode() {
+  const conv = getActiveConv();
+  const node = conv?.data?.mapping?.[state.selectedNodeId];
+  const effective = effectiveMessageView(node, state.viewMode);
   ['rendered','markdown','html','json'].forEach(m => {
-    document.getElementById(`content-${m}`).style.display = m === state.viewMode ? '' : 'none';
+    document.getElementById(`content-${m}`).style.display = m === effective ? '' : 'none';
   });
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === state.viewMode));
+  const auto = document.querySelector('[data-mode="auto"]');
+  if (auto) auto.title = `Automatic view (${effective} for this message): technical records show literal text, normal replies are rendered`;
 }
 
 // Branch view mode state
-if (!state.branchViewMode) state.branchViewMode = 'rendered';
+if (!state.branchViewMode) state.branchViewMode = state.settings.defaultViewMode;
 if (!state.branchExtent) state.branchExtent = 'selected'; // selected | latest
 if (!state.branchVisibleRoles) state.branchVisibleRoles = new Set(['user','assistant','system','other']);
 if (!state.branchSearchScopes) state.branchSearchScopes = new Set(['user','assistant','system','other']);
@@ -4899,6 +5193,16 @@ function showBranchContent(nodeId) {
   refreshBranchPath();
 }
 
+function getVisibleBranchNodes() {
+  const path = state._branchPath || [];
+  const q = (state.branchSearchQuery || '').trim().toLowerCase();
+  return path.filter(n => {
+    const role = roleBucket(getNodeRole(n));
+    return isKindVisible(n) && state.branchVisibleRoles.has(role) &&
+      (!q || (state.branchSearchScopes.has(role) && getNodeText(n).toLowerCase().includes(q)));
+  });
+}
+
 function renderBranchContent() {
   const path = state._branchPath;
   if (!path) return;
@@ -4917,10 +5221,11 @@ function renderBranchContent() {
     branchContent.style.wordBreak = 'break-all';
     branchContent.style.color = 'var(--text-secondary)';
     // Apply role filter to JSON too
-    const filtered = path.filter(n => visibleRoles.has(getNodeRole(n)));
+    const filtered = path.filter(n => visibleRoles.has(roleBucket(getNodeRole(n))) && isKindVisible(n));
     branchContent.textContent = JSON.stringify(filtered.map(n => ({
       id: n.id,
       role: getNodeRole(n),
+      message_type: getNodeKind(n).label,
       content: getNodeText(n),
       create_time: n.message?.create_time,
       model: n.message?.metadata?.model,
@@ -4940,8 +5245,8 @@ function renderBranchContent() {
   path.forEach(node => {
     const role = getNodeRole(node);
     const text = getNodeText(node);
-    const roleVisible = visibleRoles.has(role);
-    const inSearchScope = searchScopes.has(role);
+    const roleVisible = visibleRoles.has(roleBucket(role)) && isKindVisible(node);
+    const inSearchScope = searchScopes.has(roleBucket(role));
     const hasSearchHit = q && inSearchScope && text.toLowerCase().includes(q);
 
     // Always render, hide via class
@@ -4949,13 +5254,8 @@ function renderBranchContent() {
     wrap.className = 'branch-msg-wrap';
     wrap.dataset.nodeId = node.id;
     if (node.id === state.selectedNodeId) wrap.classList.add('current-selection');
-    const roleBg = role === 'user'
-      ? 'background:rgba(59,130,246,0.07);border-left:3px solid rgba(96,165,250,0.5);'
-      : role === 'assistant'
-      ? 'background:rgba(34,197,94,0.07);border-left:3px solid rgba(74,222,128,0.5);'
-      : role === 'system'
-      ? 'background:rgba(107,114,128,0.07);border-left:3px solid rgba(156,163,175,0.4);'
-      : 'background:rgba(168,85,247,0.07);border-left:3px solid rgba(192,132,252,0.5);';
+    const typeTint = kindColor(node)[0];
+    const roleBg = `background:var(--bg-tertiary);border-left:3px solid ${typeTint};`;
     wrap.style.cssText = `padding:12px 14px;margin-bottom:4px;border-radius:var(--radius-md);position:relative;${roleBg}`;
 
     if (!roleVisible) { wrap.classList.add('hidden-role'); }
@@ -4965,7 +5265,7 @@ function renderBranchContent() {
 
     // Body content
     let body;
-    if (mode === 'rendered') {
+    if (effectiveMessageView(node, mode) === 'rendered') {
       const bodyEl = document.createElement('div');
       bodyEl.className = 'md-content';
       bodyEl.style.fontSize = '13px';
@@ -4976,7 +5276,7 @@ function renderBranchContent() {
     } else {
       const pre = document.createElement('pre');
       pre.style.cssText = 'font-family:var(--font-mono);font-size:12px;white-space:pre-wrap;word-break:break-all;color:var(--text-secondary);margin:0;';
-      if (mode === 'markdown') {
+      if (effectiveMessageView(node, mode) === 'markdown') {
         pre.textContent = text || '';
         if (q && hasSearchHit && state.highlightSearchTerms) highlightTextInElement(pre, q);
       } else if (mode === 'html') {
@@ -5004,9 +5304,12 @@ function renderBranchContent() {
     topRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
 
     const roleBadge = document.createElement('span');
-    roleBadge.className = `node-role-badge role-${roleClass}`;
+    const kind = getNodeKind(node);
+    roleBadge.className = `node-role-badge role-${roleClass} kind-${kind.kind}`;
+    roleBadge.style.setProperty('--kind-color', kindColor(node)[0]);
+    roleBadge.title = `${kind.label} (base role: ${role})`;
     roleBadge.style.fontSize = '10px';
-    roleBadge.textContent = role;
+    roleBadge.textContent = kind.label;
     topRow.appendChild(roleBadge);
 
     const depthBadge = document.createElement('span');
@@ -5061,7 +5364,7 @@ function renderBranchContent() {
     }
     wrap.appendChild(header);
     wrap.appendChild(body);
-    if (mode === 'rendered') addCodeCopyButtons(wrap);
+    if (effectiveMessageView(node, mode) === 'rendered') addCodeCopyButtons(wrap);
     branchContent.appendChild(wrap);
   });
 
@@ -5186,7 +5489,7 @@ function updateBranchIndex() {
   const list = document.getElementById('branch-list');
   const filter = document.getElementById('branch-index-search').value.toLowerCase();
   list.innerHTML = '';
-  path.filter(n => !filter || getNodeText(n).toLowerCase().includes(filter)).forEach(node => {
+  path.filter(n => isKindVisible(n) && state.branchVisibleRoles.has(roleBucket(getNodeRole(n))) && (!filter || getNodeText(n).toLowerCase().includes(filter))).forEach(node => {
     const role = getNodeRole(node);
     const text = getNodeText(node);
     const depth = depthOf.get(node.id);
@@ -5197,11 +5500,11 @@ function updateBranchIndex() {
     const item = document.createElement('div');
     item.className = `branch-msg-item${node.id === nodeId ? ' selected' : ''}`;
     item.dataset.nodeId = node.id;
-    item.title = `${role} message${levelLabel ? ' · level ' + levelLabel : ''}\nClick to select it in the graph and highlight it in the branch`;
-    const roleColor = role === 'user' ? 'var(--accent-blue)' : role === 'assistant' ? 'var(--accent-green)' : 'var(--text-muted)';
+    item.title = `${getNodeKind(node).label} message${levelLabel ? ' · level ' + levelLabel : ''}\nClick to select it in the graph and highlight it in the branch`;
+    const roleColor = kindColor(node)[0];
     item.innerHTML = `
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-        <span class="bm-role" style="color:${roleColor}">${escapeHtml(role)}</span>
+        <span class="bm-role" style="color:${roleColor}">${escapeHtml(getNodeKind(node).label)}</span>
         ${levelLabel ? `<span style="font-size:9px;font-family:var(--font-mono);color:var(--accent-teal);background:rgba(0,212,170,0.1);padding:1px 4px;border-radius:3px;margin-left:auto">${levelLabel}</span>` : ''}
       </div>
       <div class="bm-preview">${escapeHtml(text.slice(0, 80))}</div>
@@ -5387,7 +5690,7 @@ function runSearch(query) {
     const matches = new Set();
     Object.entries(conv.data.mapping).forEach(([id, node]) => {
       if (!node.message) return;
-      if (!state.searchRoleFilters.has(roleBucket(getNodeRole(node)))) return;
+      if (!state.searchRoleFilters.has(roleBucket(getNodeRole(node))) || !isKindVisible(node)) return;
       const text = getNodeText(node).toLowerCase();
       if (text.includes(q)) {
         matches.add(id);
@@ -5440,10 +5743,10 @@ function runSearch(query) {
         item.className = 'search-msg-item';
         const { depth, breadcrumb } = getNodeLocation(conv, nodeId);
         const dateStr = formatNodeDate(node.message?.create_time);
-        const roleColor = role === 'user' ? 'var(--accent-blue)' : role === 'assistant' ? 'var(--accent-green)' : role === 'system' ? 'var(--text-muted)' : 'var(--accent-purple)';
+        const roleColor = kindColor(node)[0];
         item.innerHTML = `
           <div class="search-msg-item-header">
-            <span class="search-msg-role" style="color:${roleColor}">${escapeHtml(role)}</span>
+            <span class="search-msg-role" style="color:${roleColor}">${escapeHtml(getNodeKind(node).label)}</span>
             <span class="search-msg-depth" title="Depth in thread">↳${depth}</span>
             ${dateStr ? `<span class="search-msg-date">${dateStr}</span>` : ''}
           </div>
@@ -5486,11 +5789,11 @@ function runSearch(query) {
       // Compute depth and breadcrumb
       const { depth, breadcrumb } = getNodeLocation(conv, nodeId);
       const dateStr = formatNodeDate(node.message?.create_time);
-      const roleColor = role === 'user' ? 'var(--accent-blue)' : role === 'assistant' ? 'var(--accent-green)' : role === 'system' ? 'var(--text-muted)' : 'var(--accent-purple)';
+      const roleColor = kindColor(node)[0];
 
       item.innerHTML = `
         <div class="search-msg-item-header">
-          <span class="search-msg-role" style="color:${roleColor}">${escapeHtml(role)}</span>
+          <span class="search-msg-role" style="color:${roleColor}">${escapeHtml(getNodeKind(node).label)}</span>
           <span class="search-msg-depth" title="Depth in thread">↳${depth}</span>
           ${dateStr ? `<span class="search-msg-date">${dateStr}</span>` : ''}
         </div>
@@ -5508,7 +5811,7 @@ function runSearch(query) {
   }
 
   if (!totalMatches) {
-    resultsList.innerHTML = `<div class="search-empty">No messages match this search with the selected roles.${state.searchRoleFilters.size < 4 ? '<br>Try enabling more role filters above.' : ''}</div>`;
+    resultsList.innerHTML = `<div class="search-empty">No messages match this search with the selected filters.${state.searchRoleFilters.size < 4 || state.settings.hiddenMessageKinds.length ? '<br>Try enabling more role or message-type filters.' : ''}</div>`;
   }
 
   panel.style.display = 'flex';
@@ -6365,7 +6668,7 @@ function isNodeVisibleInGraph(node) {
   const role = getNodeRole(node);
   if (!state.settings.showSystem && role === 'system') return false;
   if (!state.settings.showOther && role !== 'user' && role !== 'assistant' && role !== 'system') return false;
-  return state.graphRoleFilters[roleBucket(role)] !== false;
+  return state.graphRoleFilters[roleBucket(role)] !== false && isKindVisible(node);
 }
 
 function getNewestVisibleNodeId(conv) {
@@ -6378,6 +6681,9 @@ function getNewestVisibleNodeId(conv) {
     if (ms > bestTime) { bestTime = ms; bestId = n.id; }
   });
   if (bestId || lastId) return bestId || lastId;
+  // When message-type filtering is active, a hidden fallback would defeat
+  // presets like Final only on older conversations without explicit finals.
+  if (state.settings.hiddenMessageKinds.length) return null;
   return getLatestMessageNodeId(conv);
 }
 
@@ -6465,7 +6771,7 @@ function showTooltip(event, d) {
   tooltipTimer = setTimeout(() => {
     const role = d.data?.role || 'unknown';
     const text = d.data?.text || '';
-    document.getElementById('tt-role').textContent = role;
+    document.getElementById('tt-role').textContent = getNodeKind(d.data?.data).label;
     document.getElementById('tt-role').className = `tt-role ${role}`;
     document.getElementById('tt-preview').textContent = text.slice(0, 200) + (text.length > 200 ? '…' : '');
     const tt = document.getElementById('tooltip');
@@ -6743,7 +7049,7 @@ function updateTopbarTitle(title) {
   if (title) {
     document.title = title + ' — ChatGPT JSON Tree Viewer';
   } else {
-    document.title = 'ChatGPT JSON Tree Viewer v8.5.0';
+    document.title = 'ChatGPT JSON Tree Viewer v8.8.0';
   }
 }
 
@@ -7085,6 +7391,24 @@ function buildSettings() {
       </div>
     </div>
     <div class="setting-group">
+      <h3>Message types &amp; default display</h3>
+      <p class="setting-desc">These message-type choices apply to the graph, Branch tab, and message search. No messages are deleted; hidden records remain in the original JSON.</p>
+      <div class="kind-choice-row">
+        <button type="button" class="kind-preset" data-kind-preset="all" title="Show every message record type">All types</button>
+        <button type="button" class="kind-preset" data-kind-preset="replies" title="Show users, explicit final answers and legacy unmarked assistant replies">Replies</button>
+        <button type="button" class="kind-preset" data-kind-preset="final" title="Only show records explicitly identified as final answers">Final only</button>
+      </div>
+      <div class="kind-choice-row" id="settings-kind-choices" role="group" aria-label="Choose visible message types">${kindChoiceMarkup()}</div>
+      <div class="setting-row">
+        <div><div class="setting-label">Default message view</div><div class="setting-desc">Auto displays commands, logs, and tool results as literal Markdown source. Replies remain rendered. You can override either panel with its view buttons.</div></div>
+        <select class="kind-default-select" id="settings-default-view" title="Choose how messages open by default: Auto, Rendered, or Markdown source">
+          <option value="auto" ${state.settings.defaultViewMode === 'auto' ? 'selected' : ''}>Auto (recommended)</option>
+          <option value="rendered" ${state.settings.defaultViewMode === 'rendered' ? 'selected' : ''}>Rendered</option>
+          <option value="markdown" ${state.settings.defaultViewMode === 'markdown' ? 'selected' : ''}>Markdown source</option>
+        </select>
+      </div>
+    </div>
+    <div class="setting-group">
       <h3>Security &amp; Privacy</h3>
       <div class="setting-row">
         <div><div class="setting-label">Load external images in messages</div>
@@ -7180,6 +7504,17 @@ function buildSettings() {
       </div>
     </div>
   `;
+
+  attachKindHandlers(body);
+  body.querySelector('#settings-default-view')?.addEventListener('change', e => {
+    state.settings.defaultViewMode = e.target.value;
+    localStorage.setItem('mv-settings', JSON.stringify(state.settings));
+    state.viewMode = e.target.value;
+    state.branchViewMode = e.target.value;
+    document.querySelectorAll('[data-branch-mode]').forEach(b => b.classList.toggle('active', b.dataset.branchMode === state.branchViewMode));
+    applyViewMode();
+    if (state._branchPath) renderBranchContent();
+  });
 
   body.querySelectorAll('.toggle').forEach(t => {
     t.addEventListener('click', () => {
@@ -7303,8 +7638,15 @@ function buildSettings() {
 // Help content
 const helpTopics = [
   { id: 'overview', label: '🗂 Overview', content: `
-    <h2>ChatGPT JSON Tree Viewer v8.5.0</h2>
+    <h2>ChatGPT JSON Tree Viewer v8.8.0</h2>
     <p>A client-side conversation tree visualizer for AI chat exports. Load JSON files from any major AI platform and explore the branching structure of your conversations as an interactive node graph. <strong>Conversation files are processed in your browser</strong>; the viewer does not intentionally upload them. External libraries, fonts and message images may still make network requests. See <strong>Security &amp; Privacy</strong> for storage and network details.</p>
+    <h3>ChatGPT message types</h3>
+    <p>ChatGPT exports still use <code>mapping</code>, but newer records include <code>content.content_type</code>, <code>channel</code>, <code>recipient</code>, and the tool name in <code>author.name</code>. The graph center letters and message badges now identify <strong>Thinking</strong> (T), <strong>Thinking recap</strong> (R), <strong>Ran command</strong> (&gt;), <strong>Command output</strong> (O), <strong>Progress update</strong> (P) and <strong>Final answer</strong> (F) when those markers exist. Other tool calls and outputs have their own labels. Older exports without these markers still display as Assistant.</p>
+    <p><strong>Work mode:</strong> Tool calls and progress messages show activity, but exported records do not reliably identify the whole conversation as Work mode. The viewer does not guess. Original JSON is unchanged and available in the JSON view.</p>
+    <h3>Message-type filters and automatic source view</h3>
+    <p><strong>Tools → Settings → Message types &amp; default display</strong> lets you hide individual record types. The same choices are available directly on the <strong>graph's top-right Types menu</strong> and in the <strong>Branch → Types</strong> filter. <strong>All types</strong> shows every kind; <strong>Replies</strong> shows users, final answers and older unmarked assistant messages; <strong>Final only</strong> shows only explicitly final-marked replies. The individual type chips also begin with an <strong>All</strong> shortcut, including inside <strong>Branch → Customize message types</strong>; click it to restore every type. Filtering affects the graph, branch, search and branch copies/exports, but never deletes messages from the JSON. Filter choices persist in this browser.</p>
+    <p><strong>Auto view</strong> renders conversational text and thinking summaries normally, but shows command code, tool calls, logs and tool output as <em>literal Markdown/source text</em>. For example, a shell command beginning with <code>bash -lc</code> stays readable as code rather than being interpreted as Markdown. The Rendered, Markdown, HTML and JSON buttons still override Auto. The chosen default view is saved in Settings.</p>
+    <p>Colors distinguish categories: green for final answers, purple for thinking, amber for progress, orange for commands and cyan/blue for tool results. A bright pink ring still marks the selected graph node. Unknown records are labeled Data record or Assistant instead of being guessed as a final answer.</p>
     <h3>Supported Formats</h3>
     <table>
       <tr><th>Platform</th><th>Format Type</th><th>Detection Signal</th></tr>
@@ -7426,6 +7768,7 @@ const helpTopics = [
     </ul>
     <div class="tip"><strong>Tip:</strong> Use PNG/JPG to capture what you see on screen. Use SVG when you need the full graph or want to edit it further.</div>
     <h3>Node Types</h3>
+    <p>The familiar U/A/S/? letters identify broad roles. Newer ChatGPT exports also show <strong>record-kind letters and colors</strong>: green F for Final answer, purple T for Thinking, magenta R for Thinking recap, amber P for Progress update, orange &gt; for commands and cyan/blue O for tool results. The specific kind takes precedence over the older role color. Tooltips and message badges show the full label.</p>
     <table>
       <tr><th>Appearance</th><th>Role</th><th>Description</th></tr>
       <tr><td><strong style="color:#60a5fa">Blue circle (U)</strong></td><td>user</td><td>Human messages</td></tr>
@@ -7451,6 +7794,15 @@ const helpTopics = [
       <li><strong>All</strong> — toggles every role at once: when all roles are visible it hides them <em>all</em>; when any role is hidden it shows them all. The button dims while anything is hidden</li>
     </ul>
     <p>A filtered-out node is skipped and its children move up, so the remaining tree stays connected. These filters are independent of the <strong>Show System / Show Other</strong> settings.</p>
+    <h3>Message-Type Filters (top-right Types)</h3>
+    <p>After loading a conversation, click <strong>Types</strong> at the graph's top-right to open the same <strong>15 color-coded message-type filters</strong> found in Settings and the Branch tab. The number next to Types shows how many kinds are enabled, such as <strong>12/15</strong>. Its border changes when types are hidden.</p>
+    <ul>
+      <li><strong>All types</strong> — show every type; <strong>Replies</strong> — user messages, explicit final answers and older unmarked assistant replies; <strong>Final only</strong> — only records explicitly marked as a final reply</li>
+      <li><strong>Individual chips</strong> — toggle types such as Thinking, Thinking recap, Progress update, Ran command, Tool call and Command output independently; the first chip, <strong>All</strong>, restores every type</li>
+      <li><strong>Shared settings</strong> — a change here immediately updates Branch, Settings and message search; your choice is remembered in this browser, and no records are deleted</li>
+      <li><strong>Mobile</strong> — the Types menu works on the mobile Graph tab; tap Types again or outside the menu to close it</li>
+    </ul>
+    <p>The left-side U / A / S / ? buttons filter by broad <em>role</em>, while the Types menu filters by more specific <em>record kind</em>. Both filters apply, so restoring all message types does not undo hidden roles. If you can't find a node, check both controls.</p>
     <h3>Minimap</h3>
     <p>A small canvas overview appears in the bottom-right corner showing the full graph with a teal rectangle indicating the current viewport.</p>
     <ul>
@@ -7470,7 +7822,7 @@ const helpTopics = [
   { id: 'nodes-interaction', label: '✥ Node Interaction', content: `
     <h2>Interacting with Nodes</h2>
     <h3>Selecting a Node</h3>
-    <p>Click any node to select it. The right panel updates immediately with the node's content. The graph highlights the selected node's ancestors (blue) and descendants (green) while dimming everything else.</p>
+    <p>Click any node to select it. The right panel updates immediately with that message's content. A steady pink-and-white <strong>SELECTED</strong> ring marks the active node; its path from the beginning glows cyan, its path toward the latest reply glows lime, and unrelated branches are dimmed. You can use the graph's <strong>Types</strong> menu to hide Thinking, commands and other record kinds without deleting them.</p>
     <h3>Dragging Nodes</h3>
     <ul>
       <li><strong>Drag a node</strong> — moves it and its entire subtree together, preserving internal layout</li>
@@ -7492,7 +7844,7 @@ const helpTopics = [
     <p>Click any node in the graph to populate this panel. It shows the full content of that single message.</p>
     <h3>Header Bar</h3>
     <ul>
-      <li><strong>Role badge</strong> — color-coded: blue (User), green (Assistant), gray (System), purple (Other)</li>
+      <li><strong>Record-kind badge</strong> — identifies Final answer, Thinking, Progress update, Ran command, Command output and other categories where the export provides markers; colors match the graph filters</li>
       <li><strong>Model name</strong> — if available in the message metadata (e.g. <em>deepseek-chat</em>)</li>
       <li><strong>Node ID</strong> — truncated internal identifier (full ID shown in JSON view)</li>
       <li><strong>Location bar</strong> — shows <code>↳N</code> depth, <code>YYYY-MM-DD HH:MM</code> timestamp, conversation title, and a breadcrumb of ancestor role snippets (e.g. <em>user: first 24 chars… › assistant: …</em>)</li>
@@ -7500,6 +7852,7 @@ const helpTopics = [
     <h3>View Modes</h3>
     <table>
       <tr><th>Mode</th><th>What you see</th><th>Download format</th></tr>
+      <tr><td><strong>Auto (default)</strong></td><td>Renders ordinary conversation text; opens command calls, logs and tool output as literal source</td><td>Based on the underlying record</td></tr>
       <tr><td><strong>Rendered</strong></td><td>Markdown rendered to HTML with syntax-highlighted code blocks and copy buttons</td><td><code>.md</code></td></tr>
       <tr><td><strong>Markdown</strong></td><td>Raw Markdown source text</td><td><code>.md</code></td></tr>
       <tr><td><strong>HTML</strong></td><td>The rendered HTML source code</td><td><code>.html</code></td></tr>
@@ -7525,18 +7878,21 @@ const helpTopics = [
     <p><strong>To selected</strong> (default) ends the thread at the message you clicked. Choose <strong>To latest reply</strong> to keep going through that message's descendants to the most recent final message on that branch. If several alternative replies fork below it, the viewer follows the newest ending — it doesn't combine separate forks into a fake thread. If your selected message has no later replies, both options show the same path.</p>
     <p>The Branch Index, copy, export, pop-out and PDF features use the longer path when this option is selected. On the graph, the route leading to your selection is cyan, the route after it is lime, and other forks are quieter.</p>
     <h3>Message Cards</h3>
-    <p>Each message is displayed as a card with a role-colored background:</p>
+    <p>Each message is displayed as a card with a colored background. Basic role colors apply to older records; specific ChatGPT message kinds get their own accents:</p>
     <ul>
       <li><strong style="color:#60a5fa">Blue tint + left border</strong> — User message</li>
       <li><strong style="color:#4ade80">Green tint + left border</strong> — Assistant message</li>
       <li><strong style="color:#9ca3af">Gray tint + left border</strong> — System message</li>
-      <li><strong style="color:#c084fc">Purple tint + left border</strong> — Other/unknown role</li>
+      <li><strong style="color:#c084fc">Purple tint + left border</strong> — Thinking and other purple-coded records</li>
+      <li><strong style="color:#fb923c">Orange tint</strong> — Commands and tool calls</li>
+      <li><strong style="color:#22d3ee">Cyan / blue tint</strong> — Command output and other tool results</li>
+      <li><strong style="color:#fbbf24">Amber tint</strong> — Progress updates</li>
     </ul>
     <p>Each card header shows: role badge, <code>↳N</code> depth indicator, <code>YYYY-MM-DD HH:MM</code> timestamp, a breadcrumb of the 1–2 preceding messages, and a <strong>Copy</strong> button that appears on hover.</p>
     <h3>View Modes</h3>
-    <p>The same four modes as the Selected Node panel: Rendered / Markdown / HTML / JSON — applied to all messages in the branch simultaneously.</p>
+    <p>Five modes match the Selected Node panel: Auto / Rendered / Markdown / HTML / JSON. Auto chooses the format separately for each record in the branch.</p>
     <h3>Filter Bar (top to bottom)</h3>
-    <p>The filter bar has three rows in this order:</p>
+    <p>The filter area has four groups. Role and message-type filters work together, and hiding a type in Branch also hides it in the graph and search.</p>
     <h4>1. Show:</h4>
     <p>Color-coded toggle pills: <strong>User / Assistant / System / Other / All</strong></p>
     <ul>
@@ -7544,14 +7900,16 @@ const helpTopics = [
       <li><strong>All</strong> toggles all roles on or off at once</li>
       <li>Stats update to show e.g. <em>3/8 shown</em></li>
     </ul>
-    <h4>2. Search bar</h4>
+    <h4>2. Types and Customize message types</h4>
+    <p>Use <strong>All types</strong>, <strong>Replies</strong> or <strong>Final only</strong> for quick presets. Expand <strong>Customize message types</strong> to select individual colored kinds (including Thinking, Final answer, Ran command and Command output). The first chip inside this section is <strong>All</strong>, which restores all 15 kinds with one click. The count shows how many are enabled. These selections stay in sync with <strong>Graph → Types</strong> and <strong>Tools → Settings → Message types</strong>.</p>
+    <h4>3. Search bar</h4>
     <ul>
       <li>Type to filter messages in real time — non-matching messages are hidden completely</li>
       <li>Matches are highlighted in yellow within each visible card (if H is on)</li>
       <li>Match count shown to the right</li>
       <li>Resets automatically when you select a different node</li>
     </ul>
-    <h4>3. Only in:</h4>
+    <h4>4. Only in:</h4>
     <p>Controls <em>which roles are searched</em> when a search query is active:</p>
     <ul>
       <li>Deselect a role to exclude it from search results — those messages are also hidden while searching</li>
@@ -7583,6 +7941,8 @@ const helpTopics = [
     </ul>
     <h3>Role Filters</h3>
     <p>The <strong>Show:</strong> row above the results has <strong>User / Assistant / System / Other</strong> buttons plus <strong>All</strong>. Click a role to include or exclude it from the search; clicking <strong>All</strong> enables every role. At least one role always stays enabled, and the search re-runs immediately when you toggle one.</p>
+    <h3>Shared Message-Type Filters</h3>
+    <p>Search also respects the <strong>15 message-type choices</strong> configured through <strong>Graph → Types</strong>, <strong>Branch → Customize message types</strong> or <strong>Tools → Settings</strong>. For example, <strong>Final only</strong> excludes Thinking and command records from results. The <strong>All</strong> chip inside any individual type list restores every category. This changes only which results are shown; no imported text is deleted.</p>
     <h3>Search Results Panel</h3>
     <p>A results panel appears above the conversation list showing every matching message. It stays open whenever the search box has text and scrolls independently of the conversation list, so long result lists are never cut off. If the role filters exclude everything, the panel says so instead of disappearing. Each result card contains:</p>
     <ul>
@@ -7624,13 +7984,14 @@ const helpTopics = [
       <li><strong>Copy</strong> — copies all branch messages as plain text with <code>[ROLE]</code> headers and <code>---</code> separators</li>
       <li><strong>Export</strong> — format depends on active view mode:
         <ul>
-          <li><strong>Rendered</strong> → <code>.html</code> with full CSS styling, role-colored message blocks (matching the pop-out appearance)</li>
+          <li><strong>Auto</strong> → <code>.html</code> with normal replies rendered and commands/tool logs shown as literal source</li>
+          <li><strong>Rendered</strong> → <code>.html</code> with full CSS styling and record-type-colored message blocks</li>
           <li><strong>Markdown</strong> → <code>.md</code> with <code>**[ROLE]**</code> headers</li>
           <li><strong>HTML</strong> → <code>.html</code> with raw rendered HTML, no extra CSS</li>
           <li><strong>JSON</strong> → <code>.json</code> array of <code>{id, role, content, create_time, model}</code> objects</li>
         </ul>
       </li>
-      <li><strong>Pop-out</strong> — opens in a new tab with role-colored shading, timestamp headers, and a per-message Copy button that always matches the active view. The role / timestamp / Copy row sticks to the top of each message card while you scroll, then hands off to the next message; printing returns it to the normal flow. A settings bar at the top controls the popout theme (Main app / Light / Dark / System), the view mode (Rendered / Markdown / HTML / JSON — switchable in place, no need to re-open the popout), the rendered-mode copy style (full dropdown, or a single one-click Rendered / HTML / MD / JSON / Plain text button), timestamp visibility, and checkboxes for bulk-copying the selected messages</li>
+      <li><strong>Pop-out</strong> — opens in a new tab with role-colored shading, timestamp headers, and a per-message Copy button that always matches the active view. The role / timestamp / Copy row sticks to the top of each message card while you scroll, then hands off to the next message; printing returns it to the normal flow. A settings bar at the top controls the popout theme (Main app / Light / Dark / System), the view mode (Auto / Rendered / Markdown / HTML / JSON — switchable in place, no need to re-open the popout), the rendered-mode copy style (full dropdown, or a single one-click Rendered / HTML / MD / JSON / Plain text button), timestamp visibility, and checkboxes for bulk-copying the selected messages</li>
       <li><strong>GPT↓</strong> — downloads the current conversation as a single-item OpenAI <code>conversations.json</code> array</li>
     </ul>
     <h3>Project Export (Top Bar)</h3>
@@ -7666,6 +8027,11 @@ const helpTopics = [
     <ul>
       <li><strong>Show System Nodes</strong> — when off, gray dashed system prompt nodes are hidden from the graph entirely (their children are still rendered)</li>
       <li><strong>Show Other Nodes</strong> — when off, purple unknown-role nodes are hidden</li>
+    </ul>
+    <h3>Message types &amp; default display</h3>
+    <ul>
+      <li><strong>Message type filters</strong> — toggle individual record kinds; the choices are saved and shared by the map, Branch tab and message search. Graph Types, Branch and Settings offer <strong>All types / Replies / Final only</strong> presets. The individual chip list also includes a leading <strong>All</strong> shortcut to restore all 15 types. The graph button shows how many types are enabled; expand it to toggle colored types without leaving the map. Broad role filters (U/A/S/?) remain separate.</li>
+      <li><strong>Default message view</strong> — Auto (recommended) shows commands and tool output as literal text; regular replies as rendered Markdown. Use a view-mode button for a temporary override.</li>
     </ul>
     <h3>Security &amp; Privacy</h3>
     <ul>
@@ -8834,6 +9200,10 @@ document.querySelectorAll('.panel-tab').forEach(tab => {
   tab.addEventListener('click', () => activatePanelTab(tab.dataset.panel));
 });
 
+// Apply the saved default to both tab toolbars at startup.
+document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === state.viewMode));
+document.querySelectorAll('[data-branch-mode]').forEach(b => b.classList.toggle('active', b.dataset.branchMode === state.branchViewMode));
+
 // View mode buttons
 document.querySelectorAll('.view-mode-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -8883,6 +9253,7 @@ function getParentPalette() {
 }
 
 function popoutBodyFor(m, mode) {
+  if (mode === 'auto') mode = m.autoRaw ? 'markdown' : 'rendered';
   if (mode === 'rendered') return `<div class="msg-body">${m.html || ''}</div>`;
   const raw = mode === 'markdown' ? (m.md || '') : mode === 'html' ? (m.html || '') : (m.json || '');
   return `<pre class="msg-body">${escapeHtml(raw)}</pre>`;
@@ -8896,13 +9267,15 @@ function openPopoutPage(opt) {
   if (!w) return;
 
   const htmlParts = messages.map((m, i) => {
-    const s = POPOUT_ROLE_STYLES[m.role] || POPOUT_ROLE_STYLES.other;
+    const clr = KIND_COLORS[m.kind]?.[0];
+    const base = POPOUT_ROLE_STYLES[m.role] || POPOUT_ROLE_STYLES.other;
+    const s = clr ? { ...base, label:clr, border:clr } : base;
     const ts = m.ts ? `<span class="msg-date">${escapeHtml(m.ts)}</span>` : '';
     const chk = multi ? `<label class="chk-wrap" title="Select for bulk copy"><input type="checkbox" class="msg-check" data-i="${i}"></label>` : '';
     return `<div class="msg-wrap" data-i="${i}" style="background:${s.bg};border-left-color:${s.border};--role-tint:${s.bg}">
       <div class="msg-head">
         ${chk}
-        <span class="msg-role" style="color:${s.label}">${escapeHtml(m.role)}</span>
+        <span class="msg-role" style="color:${s.label}" title="${escapeHtml(m.label || m.role)}">${escapeHtml(m.label || m.role)}</span>
         ${ts}
         <span class="msg-copy"></span>
       </div>
@@ -8912,9 +9285,9 @@ function openPopoutPage(opt) {
 
   const payload = JSON.stringify({
     mode,
-    msgs: messages.map(m => ({ role: m.role, ts: m.ts || '', md: m.md || '', html: m.html || '', json: m.json || '' })),
-    fullMd: fullMd || messages.map(m => '[' + m.role.toUpperCase() + ']\n' + (m.md || '')).join('\n\n---\n\n'),
-    fullHtml: fullHtml || messages.map(m => '<!-- [' + m.role.toUpperCase() + '] -->\n' + (m.html || '')).join('\n\n'),
+    msgs: messages.map(m => ({ role: m.role, label: m.label || m.role, kind:m.kind || '', autoRaw:!!m.autoRaw, ts: m.ts || '', md: m.md || '', html: m.html || '', json: m.json || '' })),
+    fullMd: fullMd || messages.map(m => '[' + (m.label || m.role).toUpperCase() + ']\n' + (m.md || '')).join('\n\n---\n\n'),
+    fullHtml: fullHtml || messages.map(m => '<!-- [' + (m.label || m.role).toUpperCase() + '] -->\n' + (m.html || '')).join('\n\n'),
     fullJson: fullJson || messages.map(m => m.json || '').join('\n\n---\n\n'),
   }).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
   const themeScheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -8996,7 +9369,7 @@ function openPopoutPage(opt) {
   <div class="meta"><span id="meta-view">view: ${escapeHtml(mode)}</span>${meta ? ' · ' + escapeHtml(meta) : ''}</div>
   <div class="settings-bar">
     <label title="Popout color scheme — Main follows the app's current theme">Theme <select id="theme-sel"><option value="main">Main (app)</option><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></select></label>
-    <label title="Switch between Rendered, Markdown, HTML and JSON right here — no need to re-open the popout">View <select id="view-sel"><option value="rendered">Rendered</option><option value="markdown">Markdown</option><option value="html">HTML</option><option value="json">JSON</option></select></label>
+    <label title="Switch between Rendered, Markdown, HTML and JSON right here — no need to re-open the popout">View <select id="view-sel"><option value="auto">Auto</option><option value="rendered">Rendered</option><option value="markdown">Markdown</option><option value="html">HTML</option><option value="json">JSON</option></select></label>
     <label id="copy-sel-wrap" title="Choose how the per-message Copy buttons behave (applies in Rendered view)">Copy <select id="copy-sel"><option value="dropdown">Dropdown (all options)</option><option value="seen">Rendered only</option><option value="html">HTML only</option><option value="md">MD only</option><option value="json">JSON only</option><option value="text">Plain text only</option></select></label>
     <label title="Show or hide each message's timestamp"><input type="checkbox" id="ts-tgl" checked> Timestamps</label>
     ${multi ? `<label title="Show a checkbox on every message so you can copy several at once"><input type="checkbox" id="chk-tgl"> Select messages</label>` : ''}
@@ -9020,7 +9393,7 @@ function openPopoutPage(opt) {
       function save(k,v){try{localStorage.setItem(k,v)}catch(e){}}
       function load(k,d){try{var v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}}
       var viewMode=DATA.mode||'rendered';
-      var MODE_LABELS={rendered:'Rendered',markdown:'Markdown',html:'HTML',json:'JSON'};
+      var MODE_LABELS={auto:'Auto',rendered:'Rendered',markdown:'Markdown',html:'HTML',json:'JSON'};
       function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
       var themeSel=document.getElementById('theme-sel');
       function setTheme(t){document.documentElement.setAttribute('data-theme',t);save(THEME_KEY,t)}
@@ -9036,13 +9409,14 @@ function openPopoutPage(opt) {
       var chkTgl=document.getElementById('chk-tgl');
       var bulkBar=document.getElementById('bulk-bar');
       function msgBody(m){
-        if(viewMode==='rendered')return '<div class="msg-body">'+(m.html||'')+'</div>';
+        if(viewMode==='rendered'||(viewMode==='auto'&&!m.autoRaw))return '<div class="msg-body">'+(m.html||'')+'</div>';
+        if(viewMode==='auto')return '<pre class="msg-body">'+esc(m.md||'')+'</pre>';
         var raw=viewMode==='markdown'?(m.md||''):viewMode==='html'?(m.html||''):(m.json||'');
         return '<pre class="msg-body">'+esc(raw)+'</pre>';
       }
       function currentCopyKind(){
         if(viewMode==='rendered')return (copySel&&copySel.value!=='dropdown')?copySel.value:'seen';
-        return viewMode==='markdown'?'md':viewMode;
+        return viewMode==='markdown'?'md':(viewMode==='auto'?'text':viewMode);
       }
       function copyDone(btn){
         if(!btn||btn.tagName==='SELECT')return;
@@ -9062,7 +9436,7 @@ function openPopoutPage(opt) {
             navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([plain],{type:'text/plain'})})]).then(done).catch(function(){navigator.clipboard.writeText(plain).then(done)});
           }else{navigator.clipboard.writeText(plain).then(done)}
         }
-        if(kind==='seen'||kind==='rendered'){rich(m.html||'',txt)}
+        if(kind==='seen'||kind==='rendered'){rich(viewMode==='auto'&&m.autoRaw?'<pre>'+esc(m.md||'')+'</pre>':(m.html||''),txt)}
         else if(kind==='html'){navigator.clipboard.writeText(m.html||'').then(done)}
         else if(kind==='md'){navigator.clipboard.writeText(m.md||txt).then(done)}
         else if(kind==='json'){navigator.clipboard.writeText(m.json||'').then(done)}
@@ -9071,7 +9445,7 @@ function openPopoutPage(opt) {
       function renderCopyControls(){
         document.querySelectorAll('.msg-wrap').forEach(function(wrap,i){
           var slot=wrap.querySelector('.msg-copy');if(!slot)return;slot.innerHTML='';
-          if(viewMode!=='rendered'){
+          if(viewMode!=='rendered'&&viewMode!=='auto'){
             var cb=document.createElement('button');
             cb.className='copy-btn';
             cb.textContent='Copy';
@@ -9079,6 +9453,10 @@ function openPopoutPage(opt) {
             cb.onclick=function(){copyMsg(i,viewMode==='markdown'?'md':viewMode,cb)};
             slot.appendChild(cb);
             return;
+          }
+          if(viewMode==='auto'&&DATA.msgs[i]?.autoRaw){
+            var b=document.createElement('button');b.className='copy-btn';b.textContent='Copy source';
+            b.title='Copy this command or tool output as literal text';b.onclick=function(){copyMsg(i,'md',b)};slot.appendChild(b);return;
           }
           if(!copySel)return;
           var mode=copySel.value;
@@ -9103,7 +9481,7 @@ function openPopoutPage(opt) {
           var slot=wrap.querySelector('.msg-slot');
           if(slot)slot.innerHTML=msgBody(DATA.msgs[i]||{});
         });
-        if(copySelWrap)copySelWrap.style.display=viewMode==='rendered'?'':'none';
+        if(copySelWrap)copySelWrap.style.display=viewMode==='rendered'||viewMode==='auto'?'':'none';
         var mv=document.getElementById('meta-view');if(mv)mv.textContent='view: '+viewMode;
         var ca=document.getElementById('copy-all');
         if(ca){ca.textContent='Copy all ('+MODE_LABELS[viewMode]+')';ca.title='Copy the whole popout as '+MODE_LABELS[viewMode]}
@@ -9164,14 +9542,14 @@ function openPopoutPage(opt) {
         };
       }
       function topCopyKind(){
-        return viewMode==='rendered'?'seen':(viewMode==='markdown'?'md':viewMode);
+        return viewMode==='rendered'||viewMode==='auto'?'seen':(viewMode==='markdown'?'md':viewMode);
       }
       function copyTop(){
         var kind=topCopyKind();
         var btn=document.getElementById('copy-all');
         function done(){copyDone(btn)}
         if(kind==='seen'){
-          var html=DATA.msgs.map(function(m){return '<div style="margin:0 0 14px;border-left:3px solid #aaa;padding-left:10px">'+(m.html||'')+'</div>'}).join('');
+          var html=DATA.msgs.map(function(m){var body=viewMode==='auto'&&m.autoRaw?'<pre>'+esc(m.md||'')+'</pre>':(m.html||'');return '<div style="margin:0 0 14px;border-left:3px solid #aaa;padding-left:10px">'+body+'</div>'}).join('');
           var tmp=document.createElement('div');tmp.innerHTML=html;
           var plain=tmp.textContent;
           if(window.ClipboardItem&&navigator.clipboard.write){
@@ -9197,7 +9575,7 @@ document.getElementById('btn-popout').addEventListener('click', () => {
   const node = conv?.data?.mapping?.[nodeId];
   const text = node ? getNodeText(node) : '';
   const role = node ? getNodeRole(node) : 'other';
-  const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Message';
+  const roleLabel = node ? getNodeKind(node).label : 'Message';
   const ts = node?.message?.create_time ? formatNodeDate(node.message.create_time) : '';
   const rawModel = node?.message?.metadata?.model;
   const model = typeof rawModel === 'string' ? rawModel : '';
@@ -9213,7 +9591,7 @@ document.getElementById('btn-popout').addEventListener('click', () => {
     mode,
     multi: false,
     asTab: true,
-    messages: [{ role, ts, md: text || '', html: renderedHtml, json }],
+    messages: [{ role, kind:node ? getNodeKind(node).kind : 'other', autoRaw:node ? effectiveMessageView(node,'auto') === 'markdown' : false, label: roleLabel, ts, md: text || '', html: renderedHtml, json }],
     fullMd: text || '',
     fullHtml: renderedHtml,
     fullJson: json,
@@ -9232,11 +9610,11 @@ function exportPDF(forceBranch) {
   const roleColors = { user: '#2563eb', assistant: '#16a34a', system: '#6b7280', other: '#9333ea' };
   const roleBgs = { user: 'rgba(37,99,235,0.07)', assistant: 'rgba(22,163,74,0.07)', system: 'rgba(107,114,128,0.08)', other: 'rgba(147,51,234,0.07)' };
   const roleLabels = { user: 'User', assistant: 'Assistant', system: 'System', other: 'Other' };
-  const wrapMsg = (role, body, timeStr) => {
-    const color = roleColors[role] || '#6b7280';
+  const wrapMsg = (role, body, timeStr, kindLabel, kindId) => {
+    const color = KIND_COLORS[kindId]?.[0] || roleColors[role] || '#6b7280';
     const bg = roleBgs[role] || roleBgs.other;
     return `<div class="msg" data-role="${escapeHtml(role)}" data-color="${color}" data-time="${escapeHtml(timeStr || '')}" style="background:${bg};border-left-color:${color}">
-      <div class="msg-role" style="color:${color}">${escapeHtml(roleLabels[role] || role)}${timeStr ? `<span class="msg-role-time">${escapeHtml(timeStr)}</span>` : ''}</div>
+      <div class="msg-role" style="color:${color}">${escapeHtml(kindLabel || roleLabels[role] || role)}${timeStr ? `<span class="msg-role-time">${escapeHtml(timeStr)}</span>` : ''}</div>
       <div class="msg-body">${body}</div>
     </div>`;
   };
@@ -9246,31 +9624,23 @@ function exportPDF(forceBranch) {
     const node = conv?.data?.mapping?.[nodeId];
     const text = node ? getNodeText(node) : '';
     const role = node ? getNodeRole(node) : 'other';
-    if (mode === 'rendered') {
-      htmlContent = wrapMsg(role, safeMessageHtml(text || ''), formatNodeDate(node?.message?.create_time) || '');
+    if (effectiveMessageView(node, mode) === 'rendered') {
+      htmlContent = wrapMsg(role, safeMessageHtml(text || ''), formatNodeDate(node?.message?.create_time) || '', node ? getNodeKind(node).label : 'Message', node ? getNodeKind(node).kind : 'other');
     } else {
-      htmlContent = wrapMsg(role, `<pre>${escapeHtml(mode === 'json' ? JSON.stringify(node, null, 2) : (mode === 'html' ? safeMessageHtml(text || '') : (text || '')))}</pre>`, formatNodeDate(node?.message?.create_time) || '');
+      htmlContent = wrapMsg(role, `<pre>${escapeHtml(mode === 'json' ? JSON.stringify(node, null, 2) : (mode === 'html' ? safeMessageHtml(text || '') : (text || '')))}</pre>`, formatNodeDate(node?.message?.create_time) || '', node ? getNodeKind(node).label : 'Message', node ? getNodeKind(node).kind : 'other');
     }
   } else {
     const path = state._branchPath;
     if (!path) { showNotif('No branch selected', 'error'); return; }
-    const visibleRoles = state.branchVisibleRoles;
-    const q = state.branchSearchQuery?.trim().toLowerCase() || '';
-    const searchScopes = state.branchSearchScopes;
-    const visibleNodes = path.filter(n => {
-      const role = getNodeRole(n);
-      if (!visibleRoles.has(role)) return false;
-      if (q && (!searchScopes.has(role) || !getNodeText(n).toLowerCase().includes(q))) return false;
-      return true;
-    });
+    const visibleNodes = getVisibleBranchNodes();
     htmlContent = visibleNodes.map(n => {
       const role = getNodeRole(n);
       const text = getNodeText(n);
       let body = '';
-      if (mode === 'rendered') body = safeMessageHtml(text || '');
+      if (effectiveMessageView(n,mode) === 'rendered') body = safeMessageHtml(text || '');
       else if (mode === 'json') body = `<pre>${escapeHtml(JSON.stringify(n, null, 2))}</pre>`;
       else body = `<pre>${escapeHtml(text || '')}</pre>`;
-      return wrapMsg(role, body, formatNodeDate(n.message?.create_time) || '');
+      return wrapMsg(role, body, formatNodeDate(n.message?.create_time) || '', getNodeKind(n).label, getNodeKind(n).kind);
     }).join('');
   }
 
@@ -9596,38 +9966,41 @@ document.getElementById('btn-toggle-highlight-branch').addEventListener('click',
 document.getElementById('btn-copy-branch').addEventListener('click', () => {
   const path = state._branchPath;
   if (!path) return;
-  const text = path.map(n => `[${getNodeRole(n).toUpperCase()}]\n${getNodeText(n)}`).join('\n\n---\n\n');
+  const text = getVisibleBranchNodes().map(n => `[${getNodeKind(n).label.toUpperCase()}]\n${getNodeText(n)}`).join('\n\n---\n\n');
   navigator.clipboard.writeText(text).then(() => showNotif('Branch copied!', 'success'));
 });
 
 document.getElementById('btn-export-branch').addEventListener('click', () => {
-  const path = state._branchPath;
-  if (!path) return;
+  if (!state._branchPath) return;
+  const path = getVisibleBranchNodes();
   const conv = getActiveConv();
   const mode = state.branchViewMode;
   const safeName = (conv?.title || 'branch').replace(/[^a-z0-9]/gi, '_');
 
-  if (mode === 'rendered') {
+  if (mode === 'rendered' || mode === 'auto') {
     const htmlParts = path.map(n => {
       const role = getNodeRole(n);
       const text = getNodeText(n);
-      const s = { user: { bg:'rgba(59,130,246,0.08)', border:'rgba(96,165,250,0.6)', label:'#3b82f6' }, assistant: { bg:'rgba(34,197,94,0.08)', border:'rgba(74,222,128,0.6)', label:'#22c55e' }, system: { bg:'rgba(107,114,128,0.08)', border:'rgba(156,163,175,0.5)', label:'#9ca3af' }, other: { bg:'rgba(168,85,247,0.08)', border:'rgba(192,132,252,0.6)', label:'#a855f7' } }[role] || { bg:'rgba(168,85,247,0.08)', border:'rgba(192,132,252,0.6)', label:'#a855f7' };
-      return `<div style="margin-bottom:8px;padding:14px 16px;border-radius:8px;background:${s.bg};border-left:3px solid ${s.border}"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${s.label};margin-bottom:8px;letter-spacing:.07em">${escapeHtml(role)}</div><div>${safeMessageHtml(text || '')}</div></div>`;
+      const palette = kindColor(n);
+      const s = { bg:'rgba(100,116,139,0.09)', border:palette[0], label:palette[0] };
+      const body = effectiveMessageView(n,mode) === 'markdown'
+        ? `<pre>${escapeHtml(text || '')}</pre>` : safeMessageHtml(text || '');
+      return `<div style="margin-bottom:8px;padding:14px 16px;border-radius:8px;background:${s.bg};border-left:3px solid ${s.border}"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${s.label};margin-bottom:8px;letter-spacing:.07em">${escapeHtml(getNodeKind(n).label)}</div><div>${body}</div></div>`;
     }).join('');
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(conv?.title || 'Branch')}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;padding:32px;max-width:820px;margin:0 auto;line-height:1.7;color:#1a1d2e;background:#f0f2f8}h1{font-size:17px;font-weight:600;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #d0d4e8}p{margin-bottom:10px}pre{background:#dde0ee;padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0}code{font-family:monospace;font-size:12.5px}blockquote{border-left:3px solid #00c49a;padding-left:12px;color:#6b7280;font-style:italic;margin:8px 0}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{padding:6px 10px;border:1px solid #c8cce0}th{background:#dde0ee}</style></head><body><h1>${escapeHtml(conv?.title || 'Branch')}</h1>${htmlParts}</body></html>`;
     exportText(html, safeName + '-branch', 'html');
   } else if (mode === 'markdown') {
-    const text = path.map(n => `**[${getNodeRole(n).toUpperCase()}]**\n\n${getNodeText(n)}`).join('\n\n---\n\n');
+    const text = path.map(n => `**[${getNodeKind(n).label.toUpperCase()}]**\n\n${getNodeText(n)}`).join('\n\n---\n\n');
     exportText(text, safeName + '-branch', 'md');
   } else if (mode === 'html') {
     const text = path.map(n => {
       const rendered = safeMessageHtml(getNodeText(n) || '');
-      return `<!-- [${getNodeRole(n).toUpperCase()}] -->\n${rendered}`;
+      return `<!-- [${getNodeKind(n).label.toUpperCase()}] -->\n${rendered}`;
     }).join('\n\n');
     exportText(text, safeName + '-branch', 'html');
   } else if (mode === 'json') {
     const json = JSON.stringify(path.map(n => ({
-      id: n.id, role: getNodeRole(n), content: getNodeText(n),
+      id: n.id, role: getNodeRole(n), message_type: getNodeKind(n).label, content: getNodeText(n),
       create_time: n.message?.create_time, model: n.message?.metadata?.model,
     })), null, 2);
     exportText(json, safeName + '-branch', 'json');
@@ -9639,20 +10012,8 @@ document.getElementById('btn-popout-branch').addEventListener('click', () => {
   if (!path) return;
   const conv = getActiveConv();
   const mode = state.branchViewMode || 'rendered';
-  const visibleRoles = state.branchVisibleRoles;
   const q = state.branchSearchQuery?.trim().toLowerCase() || '';
-  const searchScopes = state.branchSearchScopes;
-
-  // Filter path the same way renderBranchContent does
-  const visibleNodes = path.filter(n => {
-    const role = getNodeRole(n);
-    if (!visibleRoles.has(role)) return false;
-    if (q) {
-      if (!searchScopes.has(role)) return false;
-      if (!getNodeText(n).toLowerCase().includes(q)) return false;
-    }
-    return true;
-  });
+  const visibleNodes = getVisibleBranchNodes();
 
   const messages = visibleNodes.map(n => {
     const role = getNodeRole(n);
@@ -9660,6 +10021,9 @@ document.getElementById('btn-popout-branch').addEventListener('click', () => {
     const ts = n.message?.create_time ? formatNodeDate(n.message.create_time) : '';
     return {
       role,
+      kind:getNodeKind(n).kind,
+      autoRaw:effectiveMessageView(n, 'auto') === 'markdown',
+      label: getNodeKind(n).label,
       ts,
       md: text || '',
       html: safeMessageHtml(text || ''),
@@ -9667,8 +10031,8 @@ document.getElementById('btn-popout-branch').addEventListener('click', () => {
     };
   });
 
-  const fullMd = visibleNodes.map(n => `[${getNodeRole(n).toUpperCase()}]\n${getNodeText(n)}`).join('\n\n---\n\n');
-  const fullHtml = messages.map(m => `<!-- [${m.role.toUpperCase()}] -->\n${m.html}`).join('\n\n');
+  const fullMd = visibleNodes.map(n => `[${getNodeKind(n).label.toUpperCase()}]\n${getNodeText(n)}`).join('\n\n---\n\n');
+  const fullHtml = messages.map(m => `<!-- [${m.label.toUpperCase()}] -->\n${m.html}`).join('\n\n');
   const fullJson = JSON.stringify(visibleNodes, null, 2);
 
   openPopoutPage({
@@ -9776,6 +10140,31 @@ document.querySelectorAll('[data-branch-mode]').forEach(btn => {
     state.branchViewMode = btn.dataset.branchMode;
     renderBranchContent();
   });
+});
+
+// Shared message-type controls in the graph, Branch tab, and saved Settings.
+document.getElementById('graph-kind-choices').innerHTML = kindChoiceMarkup();
+attachKindHandlers(document.getElementById('graph-kind-filters'));
+document.getElementById('branch-kind-choices').innerHTML = kindChoiceMarkup();
+attachKindHandlers(document.getElementById('branch-filter-bar'));
+
+const graphKindToggle = document.getElementById('graph-kind-toggle');
+graphKindToggle.addEventListener('click', () => {
+  const menu = document.getElementById('graph-kind-menu');
+  const opening = menu.hidden;
+  menu.hidden = !opening;
+  graphKindToggle.setAttribute('aria-expanded', String(opening));
+});
+// Close the popover without altering the selected visibility filters.
+document.addEventListener('pointerdown', e => {
+  const panel = document.getElementById('graph-kind-filters');
+  if (panel && !panel.contains(e.target)) closeGraphKindMenu();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !document.getElementById('graph-kind-menu').hidden) {
+    closeGraphKindMenu();
+    graphKindToggle.focus();
+  }
 });
 
 // Branch search
@@ -10494,7 +10883,32 @@ syncSearchRoleButtons();
 // MAINTAINER NOTES block at the top of this file.
 const changelog = [
   {
-    version: 'v8.5.0', date: '2026-11-18', latest: true,
+    version: 'v8.8.0', date: '2026-11-18', latest: true,
+    items: [
+      { type: 'new', text: '<strong>Message types on the graph</strong> — the top-right Types menu offers the same 15 color-coded record filters and All types / Replies / Final only presets as Settings and Branch. Counts and selections stay synchronized across all three views, including mobile.' },
+      { type: 'new', text: '<strong>All shortcut in Customize message types</strong> — a leading All chip restores every individual type directly from the Branch customizer, Graph Types, or Settings.' },
+      { type: 'change', text: '<strong>Help guide expanded</strong> — Overview, Graph, Node Interaction, Selected Node, Branch, Search and Settings explain the shared filters, All shortcut, colors, mobile use and automatic source display.' },
+      { type: 'change', text: '<strong>Persisted maintenance preference</strong> — version, changelog, Help and tooltip checks are now performed automatically for future edits as requested.' },
+    ]
+  },
+  {
+    version: 'v8.7.0', date: '2026-11-18', latest: false,
+    items: [
+      { type: 'new', text: '<strong>Message-type filters</strong> — toggle Thinking, recaps, progress, final answers, command calls, command output, tool activity and other message types under Settings or Branch. Quick presets include All types, Replies and Final only. The choices persist in this browser; original JSON is never modified.' },
+      { type: 'new', text: '<strong>Auto view for technical records</strong> — commands, tool calls and command output open as literal Markdown/source text instead of rendered prose. Final replies, user messages and thinking summaries still render normally; Rendered/Markdown/HTML/JSON remain selectable.' },
+      { type: 'change', text: '<strong>Per-record colors</strong> — the graph, Branch cards/index, selected message badge and message search use distinguishable colors for record kinds. Branch exports, PDF, copy and pop-outs respect the visible type filters.' },
+    ]
+  },
+  {
+    version: 'v8.6.0', date: '2026-11-18', latest: false,
+    items: [
+      { type: 'new', text: '<strong>ChatGPT message type labels</strong> — distinguishes Thinking, Thinking recap, Final answer, Progress update, Ran command, Tool call, Command output, and Tool output using content type, channel, recipient and author metadata, without guessing Work mode.' },
+      { type: 'change', text: '<strong>Graph and detail labels</strong> — node letters, tooltips, selected-message badges, Branch cards/index, search results and pop-outs show the detected type while existing role filters and branch paths continue working.' },
+      { type: 'change', text: '<strong>Readable thinking summaries</strong> — displays exported thought summaries as formatted text; original message objects remain in JSON view. The update does not claim access to complete private reasoning.' },
+    ]
+  },
+  {
+    version: 'v8.5.0', date: '2026-11-18', latest: false,
     items: [
       { type: 'new', text: '<strong>First-run privacy introduction</strong> - a plain-language choice is shown once per browser before loading external message images. Images remain blocked unless you explicitly allow them, and the choice is remembered for future visits.' },
       { type: 'change', text: '<strong>Privacy controls remain in Settings</strong> - change external image loading anytime under Tools → Settings → Security &amp; Privacy, or press Review to read the introduction again. No repetitive popup on every reload.' },
@@ -10888,7 +11302,7 @@ const changelog = [
 ];
 
 
-console.log('ChatGPT JSON Tree Viewer v8.5.0 loaded. Drop a JSON file to get started.');
+console.log('ChatGPT JSON Tree Viewer v8.8.0 loaded. Drop a JSON file to get started.');
 
 // ============================================================
 // MOBILE HAMBURGER MENU

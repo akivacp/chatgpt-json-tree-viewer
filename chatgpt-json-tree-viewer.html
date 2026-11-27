@@ -109,7 +109,7 @@
      The file splitter builds its Worker from a Blob URL (worker-src blob:).
      The Google Fonts @import in the <style> block needs style-src + font-src. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' blob: data: https:; connect-src 'self' blob: data: https://cdn.jsdelivr.net; worker-src 'self' blob:; frame-src 'self' blob: data:; child-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
-<title>ChatGPT JSON Tree Viewer v8.8.0</title>
+<title>ChatGPT JSON Tree Viewer v8.8.3</title>
 <!-- Third-party libraries, integrity-pinned (SRI sha384). If a CDN ever serves a
      different file than the hash below, the browser refuses to run it. Hashes are
      the cdnjs-published values; re-check them if you ever bump a library version.
@@ -1741,7 +1741,7 @@ g.node.is-selected .node-selection-indicator { display: inline; }
         <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.5"/>
       </svg>
       ChatGPT JSON Tree Viewer
-      <span class="logo-version">v8.8.0</span>
+      <span class="logo-version">v8.8.3</span>
     </div>
     <button class="topbar-btn primary" onclick="document.getElementById('file-input').click()" title="Load conversation files — JSON, Markdown/Text, or an opencode .db (you can also drag files onto the graph)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -2177,7 +2177,7 @@ g.node.is-selected .node-selection-indicator { display: inline; }
               <button class="action-btn" id="btn-popout-branch" title="Open this branch in a new browser tab (view switching and copy stay available inside)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </button>
-              <button class="action-btn" id="btn-pdf-branch" title="Save the visible branch as a paginated PDF">
+              <button class="action-btn" id="btn-pdf-branch" title="Open the visible branch for manual printing or saving as PDF (half-inch print margins)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               </button>
               <button class="action-btn" id="btn-toggle-branch-index" title="Toggle branch index">
@@ -2577,7 +2577,7 @@ g.node.is-selected .node-selection-indicator { display: inline; }
 <div class="modal-backdrop" id="modal-help">
   <div class="modal-box" style="max-width:900px;width:94vw;height:82vh;">
     <div class="modal-header">
-      <h2>ChatGPT JSON Tree Viewer v8.8.0 - Help</h2>
+      <h2>ChatGPT JSON Tree Viewer v8.8.3 - Help</h2>
       <button class="modal-close" title="Close this dialog" onclick="closeModal('modal-help')">✕</button>
     </div>
     <div class="modal-body" style="flex-direction:column;overflow:hidden;">
@@ -4049,7 +4049,7 @@ function buildSessionData() {
   return {
     _type: SESSION_FILE_TYPE,
     _version: 1,
-    app: 'ChatGPT JSON Tree Viewer v8.8.0',
+    app: 'ChatGPT JSON Tree Viewer v8.8.3',
     savedAt: new Date().toISOString(),
     activeConvId: state.activeConvId,
     starred,
@@ -7049,7 +7049,7 @@ function updateTopbarTitle(title) {
   if (title) {
     document.title = title + ' — ChatGPT JSON Tree Viewer';
   } else {
-    document.title = 'ChatGPT JSON Tree Viewer v8.8.0';
+    document.title = 'ChatGPT JSON Tree Viewer v8.8.3';
   }
 }
 
@@ -7638,7 +7638,7 @@ function buildSettings() {
 // Help content
 const helpTopics = [
   { id: 'overview', label: '🗂 Overview', content: `
-    <h2>ChatGPT JSON Tree Viewer v8.8.0</h2>
+    <h2>ChatGPT JSON Tree Viewer v8.8.3</h2>
     <p>A client-side conversation tree visualizer for AI chat exports. Load JSON files from any major AI platform and explore the branching structure of your conversations as an interactive node graph. <strong>Conversation files are processed in your browser</strong>; the viewer does not intentionally upload them. External libraries, fonts and message images may still make network requests. See <strong>Security &amp; Privacy</strong> for storage and network details.</p>
     <h3>ChatGPT message types</h3>
     <p>ChatGPT exports still use <code>mapping</code>, but newer records include <code>content.content_type</code>, <code>channel</code>, <code>recipient</code>, and the tool name in <code>author.name</code>. The graph center letters and message badges now identify <strong>Thinking</strong> (T), <strong>Thinking recap</strong> (R), <strong>Ran command</strong> (&gt;), <strong>Command output</strong> (O), <strong>Progress update</strong> (P) and <strong>Final answer</strong> (F) when those markers exist. Other tool calls and outputs have their own labels. Older exports without these markers still display as Assistant.</p>
@@ -7926,6 +7926,7 @@ const helpTopics = [
         HTML → raw rendered HTML per message<br>
         JSON → structured <code>.json</code> array</li>
       <li><strong>Pop-out</strong> — opens the full thread in a new browser tab with role-colored shading, timestamps, per-message Copy controls, and a settings bar at the top: theme (Main app / Light / Dark / System), per-message copy mode (dropdown, rendered, HTML, MD, or plain text only), timestamp toggle, and optional checkboxes for bulk-copying selected messages. The role / timestamp / Copy row stays pinned to the top of each message card while you scroll, then hands off to the next message.</li>
+      <li><strong>PDF</strong> — opens the visible branch as a continuous document. Use Ctrl+P (Cmd+P on Mac) for the browser’s native print dialog. On US Letter, default CSS print margins are 0.5 inches on all four sides; the browser handles pagination.</li>
       <li><strong>GPT↓</strong> — downloads the current conversation as an OpenAI-compatible <code>conversations.json</code> file (single conversation)</li>
       <li><strong>H</strong> — toggles search highlighting (synced with the Selected Node panel)</li>
     </ul>
@@ -9661,7 +9662,7 @@ function exportPDF(forceBranch) {
 <meta charset="UTF-8">
 <title>${escapeHtml(title)}</title>
 <style>
-  @page { size: letter portrait; margin: 0; }
+  @page { size: letter portrait; margin: ${forceBranch ? '0.5in' : '0'}; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { font-family: Georgia, 'Times New Roman', serif; font-size: 11pt; line-height: 1.6; color: #111; background: #fff; }
@@ -9693,12 +9694,16 @@ function exportPDF(forceBranch) {
   .msg-body td, .msg-body th { border: 1pt solid #ccc; padding: 4pt 8pt; }
   .msg-body th { background: #f0f0f0; font-weight: bold; }
   #measure { position: absolute; left: -9999px; top: 0; width: 7.1in; visibility: hidden; }
+  ${forceBranch ? '@media print { #pages, #measure { display: none; } }' : ''}
 </style>
 </head>
 <body>
   <div id="pages"></div>
   <div id="measure"></div>
-  <div id="msgs">${htmlContent}</div>
+  <div id="msgs">${htmlContent}</div>`);
+  // Branch: retain the original continuous document and let native printing paginate it.
+  // The node exporter is unchanged.
+  if (!forceBranch) printWindow.document.write(`
   <script>
     var DOC_TITLE = ${jsLiteral(title)};
     var DOC_MODE = ${jsLiteral(mode)};
@@ -9937,8 +9942,8 @@ function exportPDF(forceBranch) {
     msgs.forEach(function(m) { placeMessage(m); });
     if (!curBody) newPage('Message', '#999');
     window.print();
-  <\/script>
-</body>
+  <\/script>`);
+  printWindow.document.write(`</body>
 </html>`);
   printWindow.document.close();
 }
@@ -10883,7 +10888,25 @@ syncSearchRoleButtons();
 // MAINTAINER NOTES block at the top of this file.
 const changelog = [
   {
-    version: 'v8.8.0', date: '2026-11-18', latest: true,
+    version: 'v8.8.3', date: '2026-11-27', latest: true,
+    items: [
+      { type: 'fix', text: '<strong>Branch PDF pop-out</strong> — restores the original continuous view from v8.8.0, without a print toolbar or automatic print dialog. Chrome handles pagination with half-inch native print margins.' },
+    ]
+  },
+  {
+    version: 'v8.8.2', date: '2026-11-27', latest: false,
+    items: [
+      { type: 'change', text: '<strong>Manual PDF printing</strong> — Node and Branch PDF pop-outs open without automatically launching the browser print dialog. Review the pages first, then click Print / Save as PDF or use the browser print shortcut. The print toolbar is excluded from printed pages.' },
+    ]
+  },
+  {
+    version: 'v8.8.1', date: '2026-11-27', latest: false,
+    items: [
+      { type: 'fix', text: '<strong>Branch PDF print margins</strong> — uses half-inch margins on all four edges of US Letter pages, with matching pagination width and corrected code-block newline escaping in the print window.' },
+    ]
+  },
+  {
+    version: 'v8.8.0', date: '2026-11-18', latest: false,
     items: [
       { type: 'new', text: '<strong>Message types on the graph</strong> — the top-right Types menu offers the same 15 color-coded record filters and All types / Replies / Final only presets as Settings and Branch. Counts and selections stay synchronized across all three views, including mobile.' },
       { type: 'new', text: '<strong>All shortcut in Customize message types</strong> — a leading All chip restores every individual type directly from the Branch customizer, Graph Types, or Settings.' },
@@ -11302,7 +11325,7 @@ const changelog = [
 ];
 
 
-console.log('ChatGPT JSON Tree Viewer v8.8.0 loaded. Drop a JSON file to get started.');
+console.log('ChatGPT JSON Tree Viewer v8.8.3 loaded. Drop a JSON file to get started.');
 
 // ============================================================
 // MOBILE HAMBURGER MENU
